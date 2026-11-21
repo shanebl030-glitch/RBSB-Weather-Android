@@ -1,0 +1,54 @@
+{
+ "results": [
+  {
+   "name": "Auckland",
+   "latitude": -36.84853,
+   "longitude": 174.76349,
+   "country": "New Zealand",
+   "admin1": "Auckland",
+   "timezone": "Pacific/Auckland"
+  },
+  {
+   "name": "Hamilton",
+   "latitude": -37.78333,
+   "longitude": 175.28333,
+   "country": "New Zealand",
+   "admin1": "Waikato",
+   "timezone": "Pacific/Auckland"
+  },
+  {
+   "name": "Hamilton",
+   "latitude": 43.25011,
+   "longitude": -79.84963,
+   "country": "Canada",
+   "admin1": "Ontario",
+   "timezone": "America/Toronto"
+  },
+  {
+   "name": "Wellington",
+   "latitude": -41.28664,
+   "longitude": 174.77557,
+   "country": "New Zealand",
+   "admin1": "Wellington",
+   "timezone": "Pacific/Auckland"
+  },
+  {
+   "name": "Auckland",
+   "latitude": -36.84853,
+   "longitude": 174.76349,
+   "country": "New Zealand",
+   "admin1": "Auckland",
+   "timezone": "Pacific/Auckland"
+  },
+  {
+   "name": "",
+   "latitude": 1,
+   "longitude": 2
+  },
+  {
+   "name": "Bad",
+   "latitude": 99,
+   "longitude": 0
+  }
+ ]
+}
