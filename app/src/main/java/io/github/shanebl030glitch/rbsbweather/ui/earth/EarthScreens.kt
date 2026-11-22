@@ -146,7 +146,7 @@ fun rememberEarthImage(clouds: Boolean, clock: io.github.shanebl030glitch.rbsbwe
                     val alpha = if (clouds && store.hasImage()) EarthRender.cloudAlpha(store.imageFile) else null
                     val t = Instant.now()
                     EarthImage(EarthRender.compose(t, alpha), t, if (clouds) store.note(alpha != null, err, clock) else "")
-                } catch (e: Exception) { null }
+                } catch (e: OutOfMemoryError) { null } catch (e: Exception) { null }
             }
             if (result != null) img = result
             delay(Earth.RECOMPOSE_S * 1000L)
@@ -371,6 +371,8 @@ private fun GlobeView(img: EarthImage?, ms: List<Marker>, selected: String?, qua
     val renderer = remember(img) { img?.let { GlobeRenderer(it.bitmap) } }
     var turnTarget by remember { mutableStateOf<Pair<Double, Double>?>(null) }
     var turnTick by remember { mutableIntStateOf(0) }
+    var turning by remember { mutableStateOf(false) }
+    var renderError by remember { mutableStateOf("") }
     // turn smoothly to face the selected place
     LaunchedEffect(selected) { sel?.let { turnTarget = it.lat.coerceIn(-70.0, 70.0) to it.lon; turnTick++ } }
     // from an earthquake notification: turn to the quake
@@ -379,6 +381,8 @@ private fun GlobeView(img: EarthImage?, ms: List<Marker>, selected: String?, qua
         val target = turnTarget ?: return@LaunchedEffect
         val (fromLat, fromLon) = cLat to cLon
         val dLon = ((target.second - fromLon + 540) % 360) - 180
+        turning = true
+        try {
         val start = withFrameNanos { it }
         while (true) {
             val done = withFrameNanos { now ->
@@ -389,19 +393,27 @@ private fun GlobeView(img: EarthImage?, ms: List<Marker>, selected: String?, qua
             }
             if (done) break
         }
+        } finally { turning = false }
     }
     LaunchedEffect(spin) {
         if (!spin) return@LaunchedEffect
         var last = withFrameNanos { it }
         while (true) withFrameNanos { now -> cLon = Earth.normLon(cLon + 8.0 * (now - last) / 1e9); last = now }
     }
+    // load the Moon's textures for the sky behind the globe without holding up the screen
+    LaunchedEffect(Unit) { withContext(Dispatchers.Default) { try { MoonRender.render(GLOBE_MOON_PX, 90.0, 0.0) } catch (e: Throwable) { null } } }
     // render the globe off the main thread; lower resolution while it moves, sharp when it settles
     LaunchedEffect(renderer, box) {
         val r = renderer ?: return@LaunchedEffect
-        snapshotFlow { Triple(cLat to cLon, zoom, dragging || spin) }.collectLatest { (c, z, moving) ->
-            val full = (min(box.width, box.height) * 0.86f * z).roundToInt().coerceIn(64, 1300)
+        if (box.width <= 0 || box.height <= 0) return@LaunchedEffect
+        snapshotFlow { Triple(cLat to cLon, zoom, dragging || spin || turning) }.collectLatest { (c, z, moving) ->
+            val full = (min(box.width, box.height) * 0.86f * z).roundToInt().coerceIn(64, GlobeRenderer.MAX_SIZE)
             val px = if (moving) (full * 0.6f).roundToInt() else full
-            globe = withContext(Dispatchers.Default) { r.render(px, c.first, c.second).asImageBitmap() }
+            val made = withContext(Dispatchers.Default) {
+                try { r.render(px, c.first, c.second).asImageBitmap() }
+                catch (e: OutOfMemoryError) { null } catch (e: Exception) { null }
+            }
+            if (made != null) { globe = made; renderError = "" } else renderError = "The globe couldn't be drawn (not enough memory). Try zooming out."
         }
     }
     Box(Modifier.fillMaxWidth().height(420.dp).padding(horizontal = 8.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF02030A))
@@ -428,6 +440,7 @@ private fun GlobeView(img: EarthImage?, ms: List<Marker>, selected: String?, qua
                     .filter { (q, p) -> hypot(p.x - at.x, p.y - at.y) <= quakeRadius(q.mag) * density / 1.5f + 12 }.minByOrNull { (_, p) -> hypot(p.x - at.x, p.y - at.y) }?.first)
             }
         }) {
+            if (size.minDimension < 8f || rad < 4f) return@Canvas      // not measured yet (first frame)
             val now = img?.time ?: Instant.now()
             paintSky(now, c, rad, cLat, cLon)
             // atmosphere glow
@@ -444,7 +457,8 @@ private fun GlobeView(img: EarthImage?, ms: List<Marker>, selected: String?, qua
                 drawLine(Color.White.copy(alpha = 0.6f), p, Offset(p.x.coerceIn(cc.x, cc.x + cardSize.width), p.y.coerceIn(cc.y, cc.y + cardSize.height)), 1f)
             }
         }
-        if (img == null || globe == null) Text("Drawing the Earth…", color = Color(200, 205, 215), modifier = Modifier.align(Alignment.Center))
+        if (renderError.isNotEmpty() && globe == null) Text(renderError, color = Color(255, 200, 150), modifier = Modifier.align(Alignment.Center).padding(16.dp))
+        else if (img == null || globe == null) Text("Drawing the Earth…", color = Color(200, 205, 215), modifier = Modifier.align(Alignment.Center))
         if (sel != null && box != IntSize.Zero) point(sel.lat, sel.lon)?.let { p ->
             val cc = placeCard(cardSize.width.toFloat(), cardSize.height.toFloat(), p.x, p.y, ms.filter { it.key != sel.key }.mapNotNull { point(it.lat, it.lon) }, box.width.toFloat(), box.height.toFloat())
             PlaceCard(sel, state, Modifier.offset { IntOffset(cc.x.roundToInt(), cc.y.roundToInt()) }.onSizeChanged { cardSize = it })
@@ -462,6 +476,9 @@ private fun GlobeView(img: EarthImage?, ms: List<Marker>, selected: String?, qua
     Text("Drag to spin, pinch or +/− to zoom, double-tap to turn back to the selected place.", fontSize = 11.sp,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), modifier = Modifier.padding(horizontal = 12.dp))
 }
+
+/** The Moon picture behind the globe is always made at this size (its textures are loaded off the main thread first). */
+const val GLOBE_MOON_PX = 256
 
 private val moonCache = object : LinkedHashMap<String, ImageBitmap>(4, 0.75f, true) {
     override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, ImageBitmap>?) = size > 3
@@ -499,7 +516,7 @@ private fun DrawScope.paintSky(t: Instant, c: Offset, rad: Float, cLat: Double, 
         if (p.x in -sz..size.width + sz && p.y in -sz..size.height + sz && !Sky.hiddenByEarth(xy, Sky.MOON_SIZE)) {
             Sky.moonOrientation(moon, sun, b)?.let { (limb, north) ->
                 val ph = Moon.phase(t)
-                val pxSize = maxOf(16, (sz / 8).roundToInt() * 8)
+                val pxSize = GLOBE_MOON_PX                                         // one size, scaled on screen: quick, and loaded ahead
                 val key = "$pxSize/${ph.phaseAngle.roundToInt()}/${(limb / 2).roundToInt() * 2}"
                 val im = synchronized(moonCache) { moonCache[key] } ?: MoonRender.render(pxSize, ph.phaseAngle, (limb / 2).roundToInt() * 2.0, rotation = 0.0)?.asImageBitmap()?.also { synchronized(moonCache) { moonCache[key] = it } }
                 if (im != null) rotate(north.toFloat(), p) {

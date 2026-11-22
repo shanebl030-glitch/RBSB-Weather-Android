@@ -43,6 +43,7 @@ class MainActivity : ComponentActivity() {
     private val vm: AppViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        CrashLog.install(this)                    // first, so any later crash is recorded
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         io.github.shanebl030glitch.rbsbweather.ui.scene.MoonRender.init(applicationContext.assets)
@@ -51,7 +52,8 @@ class MainActivity : ComponentActivity() {
         ChecksWorker.schedule(this)
         askForNotifications()
         handle(intent)
-        setContent { RbsbApp(vm.model) }
+        val crash = CrashLog.pending(this)
+        setContent { RbsbApp(vm.model); CrashDialog(this, crash) }
     }
 
     override fun onNewIntent(intent: Intent) {

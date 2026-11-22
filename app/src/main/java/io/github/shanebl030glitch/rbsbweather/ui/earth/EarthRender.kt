@@ -98,12 +98,13 @@ object EarthRender {
 
 /** Renders the globe from a composed Earth map (the same day/night as the flat map). */
 class GlobeRenderer(src: Bitmap) {
+    companion object { const val MAX_SIZE = 1024 }   // bigger zooms are scaled up on screen: memory stays modest
     private val w = src.width; private val h = src.height
     private val px = IntArray(w * h).also { src.getPixels(it, 0, w, 0, 0, w, h) }
     private class Grid(val x: FloatArray, val y: FloatArray, val rho: FloatArray, val sinc: FloatArray, val cosc: FloatArray, val alpha: IntArray, val k: FloatArray)
     private val grids = LinkedHashMap<Int, Grid>()
 
-    private fun grid(size: Int): Grid = grids[size] ?: run {
+    @Synchronized private fun grid(size: Int): Grid = grids[size] ?: run {
         val n = size * size
         val g = Grid(FloatArray(n), FloatArray(n), FloatArray(n), FloatArray(n), FloatArray(n), IntArray(n), FloatArray(n))
         for (j in 0 until size) for (i in 0 until size) {
@@ -117,12 +118,13 @@ class GlobeRenderer(src: Bitmap) {
             g.sinc[idx] = rho.toFloat(); g.cosc[idx] = z.toFloat()
             g.alpha[idx] = (a * 255).toInt(); g.k[idx] = ((1 - Globe.LIMB * (1 - z)) * a).toFloat()
         }
-        if (grids.size >= 3) grids.remove(grids.keys.first())
+        if (grids.size >= 2) grids.remove(grids.keys.first())          // each grid is 28 bytes a pixel: keep two at most
         grids[size] = g; g
     }
 
     /** A size × size globe (transparent outside the disc) centred on (cLat, cLon). */
-    fun render(size: Int, cLat: Double, cLon: Double): Bitmap {
+    fun render(sizeIn: Int, cLat: Double, cLon: Double): Bitmap {
+        val size = sizeIn.coerceIn(16, MAX_SIZE)
         val g = grid(size)
         val p0 = Math.toRadians(cLat); val l0 = Math.toRadians(cLon)
         val sp0 = sin(p0); val cp0 = cos(p0)

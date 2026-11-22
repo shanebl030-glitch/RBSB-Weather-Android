@@ -19,6 +19,7 @@ import kotlin.math.sqrt
 
 object MoonRender {
     const val MAX_SIZE = 2048
+    const val CACHE_MAX_SIZE = 720
     const val CREDIT_DEFAULT = "Moon imagery: NASA's Scientific Visualization Studio, CGI Moon Kit (LRO LROC WAC and LOLA data)"
     @Volatile private var assets: AssetManager? = null
     private val texCache = LinkedHashMap<Int, Pair<IntArray, IntArray>>()
@@ -133,7 +134,7 @@ object MoonRender {
             bmp.recycle()
             bmp = turned
         }
-        synchronized(imgCache) { imgCache[key] = bmp }
+        if (size <= CACHE_MAX_SIZE) synchronized(imgCache) { imgCache[key] = bmp }   // big exports aren't kept (16 MB each at 2048)
         return bmp
     }
 }
