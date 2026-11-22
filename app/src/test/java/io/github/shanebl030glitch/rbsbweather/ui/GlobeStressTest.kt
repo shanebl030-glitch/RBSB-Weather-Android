@@ -1,0 +1,122 @@
+// Shane: "when I click on earth globe it crashes". The earlier tests ran with the sky animation off,
+// no earthquakes and a mid-density screen. This one is set up like a phone: a 3x (xxhdpi) screen,
+// animations on, earthquakes, four places, live clouds on, the Moon tab visited first, and then
+// works the globe hard (tap, zoom to the limit, spin, drag, pinch, double-tap, switch back and forth).
+// Created By Shane BlackbuRn
+package io.github.shanebl030glitch.rbsbweather.ui
+
+import android.graphics.Bitmap
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.doubleClick
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.pinch
+import androidx.compose.ui.test.swipe
+import io.github.shanebl030glitch.rbsbweather.data.AUCKLAND
+import io.github.shanebl030glitch.rbsbweather.data.FakeAlertServer
+import io.github.shanebl030glitch.rbsbweather.data.FakeQuakeServer
+import io.github.shanebl030glitch.rbsbweather.data.ForecastCache
+import io.github.shanebl030glitch.rbsbweather.data.LONDON
+import io.github.shanebl030glitch.rbsbweather.data.NEW_YORK
+import io.github.shanebl030glitch.rbsbweather.data.Settings
+import io.github.shanebl030glitch.rbsbweather.data.WELLINGTON
+import io.github.shanebl030glitch.rbsbweather.data.Watch
+import io.github.shanebl030glitch.rbsbweather.data.WeatherRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
+import java.io.File
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34], qualifiers = "w411dp-h891dp-xxhdpi")
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+class GlobeStressTest {
+    @get:Rule val compose = createAndroidComposeRule<androidx.activity.ComponentActivity>()
+    @get:Rule val tmp = TemporaryFolder()
+
+    /** Let time pass as on a phone: frames at 60 per second, with the background threads running. */
+    private fun pump(ms: Long) {
+        var left = ms
+        while (left > 0) { compose.mainClock.advanceTimeBy(48); Thread.sleep(8); left -= 48 }
+    }
+
+    private fun pumpUntil(what: String, timeoutMs: Long = 120_000, cond: () -> Boolean) {
+        val end = System.currentTimeMillis() + timeoutMs
+        while (!cond()) {
+            check(System.currentTimeMillis() < end) { "timed out waiting for $what" }
+            pump(100)
+        }
+    }
+
+    private fun exists(tag: String) = compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty()
+    private val drawn = SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "drawn") and hasTestTag("globe")
+    private fun globeDrawn() = compose.onAllNodes(drawn).fetchSemanticsNodes().isNotEmpty()
+
+    private fun save(name: String) {
+        val out = File("build/screens").apply { mkdirs() }
+        val v = compose.activity.window.decorView.rootView
+        val b = Bitmap.createBitmap(maxOf(1, v.width), maxOf(1, v.height), Bitmap.Config.ARGB_8888)
+        compose.runOnUiThread { v.draw(android.graphics.Canvas(b)) }
+        File(out, "$name.png").outputStream().use { b.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    @Test fun globeLikeOnAPhone() {
+        val w = Watch(tmp.newFolder(), FakeAlertServer().client(), FakeQuakeServer().client())
+        val m = AppModel(MemoryStore(Settings(animations = true, earthClouds = true).toJson().toString()),
+            WeatherRepository(listOf(FakeProvider()), ForecastCache(tmp.root)), SEARCH, CoroutineScope(Dispatchers.Unconfined), Dispatchers.Unconfined, watch = w)
+        for (p in listOf(AUCKLAND, WELLINGTON, LONDON, NEW_YORK)) m.add(p)
+        m.select(AUCKLAND.key)
+        compose.mainClock.autoAdvance = false
+        compose.setContent { RbsbApp(m) }
+        pump(1500)
+
+        compose.onNodeWithTag("tab-Moon").performClick()                  // the Moon tab first (its big picture changes the texture cache)
+        pumpUntil("the Moon") { exists("moonPhase") }
+        pump(1000)
+        compose.onNodeWithTag("tab-Earth").performClick()
+        pumpUntil("the flat map") { exists("flatMap") }
+        pump(3000)
+        compose.onNodeWithTag("earthGlobe").performClick()                // what crashed on Shane's phone
+        assertTrue(m.state.value.earthGlobe)
+        pump(500)                                                           // the turn to the selected place, with animation on
+        pumpUntil("the globe to draw") { globeDrawn() }
+        pump(1500)
+        save("stress_globe")
+
+        repeat(6) { compose.onNodeWithTag("zoomIn").performClick(); pump(400) }     // to the 300% limit
+        pumpUntil("the zoomed globe") { globeDrawn() }
+        save("stress_globe_zoomed")
+        repeat(8) { compose.onNodeWithTag("zoomOut").performClick(); pump(300) }    // to the 60% limit
+        compose.onNodeWithTag("rotateSlowly").performClick(); pump(3000)
+        compose.onNodeWithTag("rotateSlowly").performClick(); pump(500)
+        compose.onNodeWithTag("globe").performTouchInput { swipe(center, center + Offset(300f, 120f), 600) }; pump(1000)
+        compose.onNodeWithTag("globe").performTouchInput { swipe(center, center - Offset(500f, -400f), 300) }; pump(1000)
+        compose.onNodeWithTag("globe").performTouchInput { pinch(center - Offset(60f, 0f), center - Offset(250f, 0f), center + Offset(60f, 0f), center + Offset(250f, 0f), 400) }; pump(1000)
+        compose.onNodeWithTag("globe").performTouchInput { doubleClick(center) }; pump(1500)
+        compose.onNodeWithTag("globe").performTouchInput { click(center) }; pump(500)
+        compose.onNodeWithTag("earthFlat").performClick(); pump(1000)
+        compose.onNodeWithTag("earthGlobe").performClick(); pump(1500)
+        compose.onNodeWithTag("tab-Forecast").performClick(); pump(1000)
+        compose.onNodeWithTag("tab-Earth").performClick()                  // back to the globe it was on
+        pumpUntil("the globe again") { globeDrawn() }
+        m.openEarth(globe = true, focusQuake = m.state.value.quakes.firstOrNull()?.id)   // as from a quake notification
+        pump(2000)
+        save("stress_globe_end")
+        assertTrue(m.state.value.earthGlobe)
+    }
+}
