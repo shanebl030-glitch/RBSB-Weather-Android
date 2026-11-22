@@ -64,6 +64,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsPropertyReceiver
+import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -355,6 +357,8 @@ private fun FlatMap(img: EarthImage?, ms: List<Marker>, selected: String?, quake
 }
 
 // ------------------------------------------------------------------------ Earth Globe
+val GlobeViewKey = SemanticsPropertyKey<String>("GlobeView")
+var SemanticsPropertyReceiver.globeView by GlobeViewKey
 private val stars = Sky.StarField()
 
 @Composable
@@ -373,6 +377,8 @@ private fun GlobeView(img: EarthImage?, ms: List<Marker>, selected: String?, qua
     var turnTarget by remember { mutableStateOf<Pair<Double, Double>?>(null) }
     var turnTick by remember { mutableIntStateOf(0) }
     var turning by remember { mutableStateOf(false) }
+    var frames by remember { mutableIntStateOf(0) }
+    var renderedAt by remember { mutableStateOf(0.0 to 0.0) }
     var renderError by remember { mutableStateOf("") }
     // turn smoothly to face the selected place
     LaunchedEffect(selected) { sel?.let { turnTarget = it.lat.coerceIn(-70.0, 70.0) to it.lon; turnTick++ } }
@@ -414,11 +420,14 @@ private fun GlobeView(img: EarthImage?, ms: List<Marker>, selected: String?, qua
                 try { r.render(px, c.first, c.second).asImageBitmap() }
                 catch (e: OutOfMemoryError) { null } catch (e: Exception) { null }
             }
-            if (made != null) { globe = made; renderError = "" } else renderError = "The globe couldn't be drawn (not enough memory). Try zooming out."
+            if (made != null) { globe = made; renderedAt = c; frames++; renderError = "" } else renderError = "The globe couldn't be drawn (not enough memory). Try zooming out."
         }
     }
     Box(Modifier.fillMaxWidth().height(420.dp).padding(horizontal = 8.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF02030A))
-        .onSizeChanged { box = it }.testTag("globe").semantics { stateDescription = if (globe != null) "drawn" else "drawing" }) {
+        .onSizeChanged { box = it }.testTag("globe").semantics {
+            stateDescription = if (globe != null) "drawn" else "drawing"
+            globeView = String.format(Locale.US, "%.3f,%.3f,%d,%.3f,%.2f", renderedAt.first, renderedAt.second, frames, cLon, zoom)
+        }) {
         val rad = min(box.width, box.height) * 0.43f * zoom
         val c = Offset(box.width / 2f, box.height / 2f)
         fun point(lat: Double, lon: Double): Offset? {
