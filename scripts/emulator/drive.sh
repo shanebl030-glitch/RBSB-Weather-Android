@@ -39,7 +39,7 @@ adb shell am start -W -n $PKG/.MainActivity
 sleep 6; check "launch"; shot launch
 step "add Auckland"
 tap "Add a place" && sleep 2 && adb shell input text Auckland && sleep 8
-tap "Auckland" starts; sleep 10; check "adding a place"; shot forecast
+tap "Auckland, New Zealand"; sleep 10; check "adding a place"; shot forecast
 step "Moon tab"; tap "Moon"; sleep 8; check "Moon tab"; shot moon
 step "Earth tab"; tap "Earth"; sleep 15; check "Earth tab"; shot earth-flat
 step "Earth Globe (what crashed)"; tap "Earth Globe"; sleep 3; check "tapping Earth Globe (3 s)"; sleep 12; check "Earth Globe (15 s)"; shot earth-globe
