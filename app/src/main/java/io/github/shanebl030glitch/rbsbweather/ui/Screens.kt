@@ -209,6 +209,13 @@ fun SettingsScreen(state: UiState, model: AppModel, modifier: Modifier = Modifie
             }
             Switch(checked = s.animations, onCheckedChange = { model.setAnimations(it) }, modifier = Modifier.testTag("animSwitch"))
         }
+        SwitchRow("Temperature in the status bar",
+            "Keeps the temperature of the place on screen at the top of your phone (the desktop's tray icon).", s.tempNotification, "tempSwitch") {
+            model.setTempNotification(it) }
+        if (s.tempNotification && !notificationsAllowed()) Text("Notifications are turned off for RBSB-Weather. Allow them in Android's settings to see it.",
+            fontSize = 13.sp, color = MaterialTheme.colorScheme.error)
+        SwitchRow("Check for updates", "Once a day, ask GitHub whether there's a newer RBSB-Weather for Android. Nothing installs without you.",
+            s.updateCheck, "updateSwitch") { model.setUpdateCheck(it) }
     }
 }
 
@@ -275,6 +282,21 @@ fun AboutScreen(modifier: Modifier = Modifier) {
         Text("A separate app from RBSB-Weather for the desktop.", fontSize = 12.sp)
     }
 }
+
+@Composable
+private fun SwitchRow(title: String, sub: String, checked: Boolean, tag: String, onChange: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(title, fontWeight = FontWeight.Bold)
+            Text(sub, fontSize = 13.sp)
+        }
+        Switch(checked = checked, onCheckedChange = onChange, modifier = Modifier.testTag(tag))
+    }
+}
+
+@Composable
+private fun notificationsAllowed(): Boolean =
+    io.github.shanebl030glitch.rbsbweather.background.Notifier.allowed(androidx.compose.ui.platform.LocalContext.current)
 
 @Composable
 private fun SettingsLink(title: String, sub: String, tag: String, onClick: () -> Unit) {

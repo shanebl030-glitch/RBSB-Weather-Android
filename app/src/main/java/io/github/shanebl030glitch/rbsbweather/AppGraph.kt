@@ -44,6 +44,9 @@ class AppGraph private constructor(context: Context) {
         { settings().recovery })
     /** Warnings and earthquakes, shared by the app and the background check. */
     val watch = Watch(File(context.filesDir, "watch"), AlertClient(Http.bytes), QuakeClient(Http.bytes))
+    /** Update checks (0.6): GitHub's newest release, and when it was last asked. */
+    var updateClient = io.github.shanebl030glitch.rbsbweather.data.UpdateClient()
+    val updateStore = io.github.shanebl030glitch.rbsbweather.data.UpdateStore(File(context.filesDir, "updates"))
 
     companion object {
         @Volatile private var instance: AppGraph? = null

@@ -25,6 +25,7 @@ class ChecksWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx
         try {
             val g = AppGraph.get(applicationContext)
             val s = g.settings()
+            if (s.updateCheck) checkForUpdate(applicationContext, g)              // once a day (0.6)
             if (s.places.isEmpty()) return@withContext Result.success()
             val forecasts = s.places.mapNotNull { p -> g.repo.cached(p)?.let { p.key to it } }.toMap()
             val notices = mutableListOf<Notice>()
@@ -41,6 +42,21 @@ class ChecksWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx
 
     companion object {
         private const val NAME = "rbsb-checks"
+
+        /** If a check is due, ask GitHub; tell the user once about each newer version they haven't skipped. */
+        fun checkForUpdate(ctx: Context, g: AppGraph): String? {
+            if (!g.updateStore.due()) return null
+            g.updateStore.markAttempt()
+            return try {
+                val info = g.updateClient.latest()
+                g.updateStore.markOk(info.version)
+                if (io.github.shanebl030glitch.rbsbweather.data.Updates.isNewer(info) && info.version != g.updateStore.skipped
+                    && info.version != g.updateStore.notified) {
+                    if (Notifier.postUpdate(ctx, info.version)) g.updateStore.notified = info.version
+                }
+                info.version
+            } catch (e: Exception) { null }
+        }
 
         /** Start (or keep) the background check. Safe to call often. */
         fun schedule(ctx: Context) {

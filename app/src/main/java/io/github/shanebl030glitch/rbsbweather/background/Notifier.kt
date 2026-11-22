@@ -26,6 +26,7 @@ object Notifier {
     const val CH_WARNINGS = "warnings"
     const val CH_RED = "warnings_red"
     const val CH_QUAKES = "quakes"
+    const val CH_UPDATES = "updates"
     const val EXTRA_OPEN = "open"            // "warnings" | "quakes"
     const val EXTRA_PLACE = "place"
 
@@ -43,6 +44,9 @@ object Notifier {
         nm.createNotificationChannel(NotificationChannel(CH_QUAKES, "Earthquakes", NotificationManager.IMPORTANCE_HIGH).apply {
             description = "Quakes near your places, and major quakes anywhere"
         })
+        nm.createNotificationChannel(NotificationChannel(CH_UPDATES, "App updates", NotificationManager.IMPORTANCE_DEFAULT).apply {
+            description = "When a newer RBSB-Weather for Android is on GitHub"
+        })
     }
 
     fun allowed(ctx: Context): Boolean =
@@ -53,6 +57,20 @@ object Notifier {
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             .putExtra(EXTRA_OPEN, what).putExtra(EXTRA_PLACE, place),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+
+    /** A newer version is on GitHub: tap to see what's new and install it. */
+    fun postUpdate(ctx: Context, version: String): Boolean {
+        if (!allowed(ctx)) return false
+        channels(ctx)
+        return try {
+            NotificationManagerCompat.from(ctx).notify(4343, NotificationCompat.Builder(ctx, CH_UPDATES)
+                .setSmallIcon(R.drawable.ic_stat_weather)
+                .setContentTitle("RBSB-Weather for Android $version is available")
+                .setContentText("Tap to see what's new and install it.")
+                .setContentIntent(open(ctx, "updates", null, 4343)).setAutoCancel(true).build())
+            true
+        } catch (e: SecurityException) { false }
+    }
 
     /** Post notices. Returns how many were shown (0 when notifications aren't allowed). */
     fun post(ctx: Context, notices: List<Notice>, redAlarm: Boolean): Int {

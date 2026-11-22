@@ -16,6 +16,9 @@ open class WeatherException(message: String, val retryable: Boolean = false, val
 fun interface HttpClient {
     /** GET a URL; returns the body. Throws WeatherException with a user-friendly message. */
     fun get(url: String, headers: Map<String, String>): String
+
+    /** The reply headers of this thread's last request (lower-case names), e.g. usage limits. */
+    fun lastHeaders(): Map<String, String> = Http.lastHeaders()
 }
 
 /** GET as bytes with a size limit (warning feeds, quake feeds, maps). */
@@ -35,6 +38,10 @@ object Http {
 
     val default = HttpClient { url, headers -> String(bytes.get(url, headers, MAX_BYTES), Charsets.UTF_8) }
 
+    private val replyHeaders = ThreadLocal<Map<String, String>>()
+    /** Reply headers of the last request made on this thread (lower-case names). */
+    fun lastHeaders(): Map<String, String> = replyHeaders.get() ?: emptyMap()
+
     val bytes = BytesClient { url, headers, limit ->
         val conn = try {
             URL(url).openConnection() as HttpURLConnection
@@ -49,6 +56,8 @@ object Http {
             conn.setRequestProperty("Accept-Encoding", "identity")
             headers.forEach { (k, v) -> conn.setRequestProperty(k, v) }
             val code = conn.responseCode
+            replyHeaders.set(conn.headerFields.orEmpty().entries.filter { it.key != null && !it.value.isNullOrEmpty() }
+                .associate { it.key.lowercase() to it.value.last() })
             if (code == 204) throw WeatherException("The service had no data for this request.", status = 204)
             if (code !in 200..299) {
                 throw WeatherException(

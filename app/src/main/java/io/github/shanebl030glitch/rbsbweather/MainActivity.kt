@@ -26,7 +26,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val graph = AppGraph.get(app)
     val model = AppModel(graph.store, graph.repo, OpenMeteo(), viewModelScope, Dispatchers.IO,
         providers = graph.providers, onForecast = { Widgets.updateAll(app) }, watch = graph.watch,
-        notify = { notices, s -> Notifier.post(app, notices, s.alerts.redAlarm); Widgets.updateAll(app) })
+        notify = { notices, s -> Notifier.post(app, notices, s.alerts.redAlarm); Widgets.updateAll(app) },
+        onTempNotification = { io.github.shanebl030glitch.rbsbweather.background.TempNotification.update(app) })
 
     init {
         graph.liveSettings = { model.settingsNow }
@@ -66,6 +67,7 @@ class MainActivity : ComponentActivity() {
         when (intent?.getStringExtra(Notifier.EXTRA_OPEN)) {
             "warnings" -> vm.model.openWarnings(intent.getStringExtra(Notifier.EXTRA_PLACE))
             "quakes" -> vm.model.openEarth(globe = true, focusQuake = intent.getStringExtra(Notifier.EXTRA_PLACE))   // turn the globe to the quake
+            "updates" -> vm.model.go(Screen.UPDATES)
         }
         intent?.removeExtra(Notifier.EXTRA_OPEN)
     }

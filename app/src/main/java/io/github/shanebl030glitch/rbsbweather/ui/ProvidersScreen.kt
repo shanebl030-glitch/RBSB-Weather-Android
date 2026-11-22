@@ -113,6 +113,9 @@ private fun ProviderCard(info: ProviderInfo, state: UiState, model: AppModel) {
                     else -> "Last worked ${fmt.format(Date(st.lastOk))}"
                 }, fontSize = 13.sp)
             }
+            // usage or limits the service reported with its last reply (2.x desktop feature)
+            if (st.usage.isNotEmpty()) Text("Usage: " + st.usage.values.joinToString("; "), fontSize = 13.sp,
+                modifier = Modifier.testTag("usage-${info.id}"))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(top = 6.dp)) {
                 if (pos != 0) {

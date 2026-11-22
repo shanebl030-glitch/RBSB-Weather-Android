@@ -22,6 +22,8 @@ data class Settings(
     val alerts: AlertSettings = AlertSettings(),
     val quakes: QuakeSettings = QuakeSettings(),
     val earthClouds: Boolean = true,                      // Live clouds on the Earth map and globe
+    val updateCheck: Boolean = true,                      // check GitHub once a day for a newer version (0.6)
+    val tempNotification: Boolean = false,                // the temperature in the status bar (0.6; the desktop's tray icon)
 ) {
     fun option(provider: String, name: String): String? = providerOptions["$provider.$name"]?.takeIf { it.isNotBlank() }
 
@@ -66,6 +68,8 @@ data class Settings(
         .put("alerts", alerts.toJson())
         .put("quakes", quakes.toJson())
         .put("earth_clouds", earthClouds)
+        .put("update_check", updateCheck)
+        .put("temp_notification", tempNotification)
 
     companion object {
         fun fromJson(text: String?): Settings {
@@ -97,7 +101,9 @@ data class Settings(
             }
             return Settings(places, sel, units, refresh, anim, chain.ifEmpty { DEFAULT_PROVIDERS }, rec, opts,
                 AlertSettings.fromJson(o.optJSONObject("alerts")), QuakeSettings.fromJson(o.optJSONObject("quakes")),
-                if (o.opt("earth_clouds") is Boolean) o.getBoolean("earth_clouds") else true)
+                if (o.opt("earth_clouds") is Boolean) o.getBoolean("earth_clouds") else true,
+                if (o.opt("update_check") is Boolean) o.getBoolean("update_check") else true,
+                if (o.opt("temp_notification") is Boolean) o.getBoolean("temp_notification") else false)
         }
     }
 }

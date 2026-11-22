@@ -11,6 +11,8 @@ interface Provider {
     val name: String
     val id: String get() = name
     fun forecast(place: Place): Forecast
+    /** What the service said about usage or limits with its last reply, e.g. {"today": "487 of 500 left today"}. */
+    fun usage(): Map<String, String> = emptyMap()
 }
 
 class OpenMeteoProvider(private val api: OpenMeteo) : Provider {
@@ -26,7 +28,8 @@ class MetNorwayProvider(private val api: MetNorway) : Provider {
 }
 
 /** How a provider got on last time (shown in Settings → Weather Providers). */
-data class ProviderStatus(val lastOk: Long = 0L, val lastError: String? = null, val lastErrorAt: Long = 0L)
+data class ProviderStatus(val lastOk: Long = 0L, val lastError: String? = null, val lastErrorAt: Long = 0L,
+                          val usage: Map<String, String> = emptyMap())
 
 /** After the primary fails: try it again at the next update (0), after 15/30/60 minutes, or stay on the backup (-1). */
 val RECOVERY_CHOICES = listOf(0, 15, 30, 60, -1)
@@ -45,6 +48,8 @@ class WeatherRepository(
     @Volatile private var primaryFailedAt: Pair<String, Long>? = null
 
     fun status(id: String): ProviderStatus = statuses[id] ?: ProviderStatus()
+
+    private fun safeUsage(p: Provider): Map<String, String> = try { p.usage().mapValues { it.value.take(120) } } catch (e: Exception) { emptyMap() }
 
     /** Forget that the primary failed (the user changed providers or asked to go back). */
     fun resetRecovery() { primaryFailedAt = null }
@@ -82,14 +87,14 @@ class WeatherRepository(
             if (minMs > 0) asked[key] = clock()
             try {
                 val fc = p.forecast(place).copy(place = place)
-                statuses[p.id] = status(p.id).copy(lastOk = clock())
+                statuses[p.id] = status(p.id).copy(lastOk = clock(), usage = safeUsage(p))
                 if (p.id == primary) primaryFailedAt = null
                 cache?.save(fc)
                 return fc
             } catch (e: Exception) {
                 val msg = if (e is WeatherException) e.message ?: "failed" else "unexpected problem (${e.javaClass.simpleName})"
                 problems += "${p.name}: $msg"
-                statuses[p.id] = status(p.id).copy(lastError = msg, lastErrorAt = clock())
+                statuses[p.id] = status(p.id).copy(lastError = msg, lastErrorAt = clock(), usage = safeUsage(p).ifEmpty { status(p.id).usage })
                 if (p.id == primary && primaryFailedAt?.first != primary) primaryFailedAt = primary to clock()
             }
         }

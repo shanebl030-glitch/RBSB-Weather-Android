@@ -304,3 +304,33 @@ class ProvidersTest {
         repo2.fetch(AUCKLAND); repo2.fetch(AUCKLAND); assertEquals(2, om.calls)               // no limit for Open-Meteo
     }
 }
+
+/** Provider usage (0.6): what each service says about its limits, shown in Weather Providers. */
+class ProviderUsageTest {
+    private val key = { "abcdef123456" }
+
+    @Test fun tomorrowHeaders() {
+        val h = mapOf("x-ratelimit-remaining-day" to "487", "x-ratelimit-limit-day" to "500", "x-ratelimit-remaining-hour" to "24", "x-ratelimit-limit-hour" to "25")
+        assertEquals(listOf("487 of 500 requests left today", "24 of 25 left this hour"), tomorrowUsage(h).values.toList())
+        assertEquals(emptyMap<String, String>(), tomorrowUsage(emptyMap()))
+        val http = object : HttpClient {
+            override fun get(url: String, headers: Map<String, String>) = resource("tio_forecast.json")
+            override fun lastHeaders() = h
+        }
+        val p = TomorrowProvider(http, key).apply { clock = { FIXTURE_NOW } }
+        p.forecast(AUCKLAND)
+        assertEquals("487 of 500 requests left today", p.usage()["today"])
+    }
+
+    @Test fun visualCrossingCostOpenWeatherPlanAndRepository() {
+        val vc = VisualCrossingProvider(FakeHttp { resource("vc_timeline.json") }, key).apply { clock = { FIXTURE_NOW } }
+        assertTrue(vc.usage().isEmpty())
+        vc.forecast(AUCKLAND)
+        assertEquals("this update used 1 record(s) of the daily allowance", vc.usage()["cost"])
+        val owm = OpenWeatherProvider(FakeHttp { resource("owm_onecall.json") }, key).apply { clock = { FIXTURE_NOW } }
+        owm.forecast(AUCKLAND); assertEquals("One Call 3.0", owm.usage()["plan"])
+        val repo = WeatherRepository(listOf(vc), null)
+        repo.fetch(AUCKLAND)
+        assertEquals("this update used 1 record(s) of the daily allowance", repo.status(vc.id).usage["cost"])
+    }
+}

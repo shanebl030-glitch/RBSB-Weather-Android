@@ -53,6 +53,7 @@ object Widgets {
         val app = context.applicationContext
         executor.execute {
             try {
+                io.github.shanebl030glitch.rbsbweather.background.TempNotification.update(app)   // the status-bar temperature too
                 val m = AppWidgetManager.getInstance(app) ?: return@execute
                 renderIds(app, m, allIds(app, m))
             } catch (e: Throwable) {

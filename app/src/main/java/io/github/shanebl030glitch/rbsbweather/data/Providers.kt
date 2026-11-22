@@ -164,8 +164,11 @@ abstract class KeyedProvider(
     var clock: () -> Instant = Instant::now
     protected val apiKey: String get() = key()?.trim()?.takeIf { it.isNotEmpty() } ?: throw KeyMissing(info.name)
 
+    /** Reply headers of this provider's last request (usage limits). */
+    @Volatile protected var replyHeaders: Map<String, String> = emptyMap()
+
     protected fun get(url: String, headers: Map<String, String> = emptyMap()): String = try {
-        http.get(url, headers)
+        http.get(url, headers).also { replyHeaders = http.lastHeaders() }
     } catch (e: WeatherException) {
         throw when (e.status) {
             401, 403 -> WeatherException("${info.name} didn't accept the API key (HTTP ${e.status}). Check it in Settings → Weather Providers.", status = e.status)
@@ -227,17 +230,21 @@ class OpenWeatherProvider(http: HttpClient, key: () -> String?, base: String = "
             "After signing in: your name → My API keys. New keys can take up to 2 hours to work.", 5, 8)
     }
     private var oneCallOffUntil = 0L
+    @Volatile private var plan = ""
+    override fun usage() = if (plan.isNotEmpty()) mapOf("plan" to plan) else emptyMap()
 
     override fun fetch(place: Place, now: Instant): Forecast {
         val q = mapOf("lat" to f2(place.latitude), "lon" to f2(place.longitude), "appid" to apiKey, "units" to "metric")
         if (System.currentTimeMillis() >= oneCallOffUntil) {
             try {
+                plan = "One Call 3.0"
                 return parseOneCall(get(Http.query("$base/3.0/onecall", q + ("exclude" to "minutely,alerts"))), place, now)
             } catch (e: WeatherException) {
                 if (e.status != 401) throw e
                 oneCallOffUntil = System.currentTimeMillis() + 24 * 3_600_000L     // not subscribed: free endpoints for a day
             }
         }
+        plan = "free (current weather and 5-day forecast)"
         return parseOwmFree(get(Http.query("$base/2.5/weather", q)), get(Http.query("$base/2.5/forecast", q)), place, now)
     }
 }
@@ -393,8 +400,14 @@ class VisualCrossingProvider(http: HttpClient, key: () -> String?,
             "Free plan: 1,000 records a day (one forecast = 1 record), commercial use allowed.",
             "https://www.visualcrossing.com/sign-up", "After signing in: Account → Your details → Key.", 5, 15)
     }
-    override fun fetch(place: Place, now: Instant): Forecast = parseVisualCrossing(get(Http.query("$base/${f2(place.latitude)},${f2(place.longitude)}",
-        mapOf("unitGroup" to "metric", "include" to "current,hours,days", "iconSet" to "icons2", "contentType" to "json", "key" to apiKey))), place, now)
+    @Volatile private var cost: Double? = null
+    override fun usage() = cost?.let { mapOf("cost" to "this update used ${it.toInt()} record(s) of the daily allowance") } ?: emptyMap()
+    override fun fetch(place: Place, now: Instant): Forecast {
+        val body = get(Http.query("$base/${f2(place.latitude)},${f2(place.longitude)}",
+            mapOf("unitGroup" to "metric", "include" to "current,hours,days", "iconSet" to "icons2", "contentType" to "json", "key" to apiKey)))
+        cost = try { JSONObject(body).num("queryCost") } catch (e: Exception) { null }
+        return parseVisualCrossing(body, place, now)
+    }
 }
 
 fun parseVisualCrossing(body: String, place: Place, now: Instant = Instant.now()): Forecast {
@@ -439,8 +452,17 @@ class TomorrowProvider(http: HttpClient, key: () -> String?, base: String = "htt
             "Free plan: 500 requests a day, 25 an hour (personal, non-commercial). RBSB-Weather asks at most every 10 minutes per place.",
             "https://app.tomorrow.io/signup", "After signing in: Development → API Management.", 10, 5)
     }
+    override fun usage(): Map<String, String> = tomorrowUsage(replyHeaders)
     override fun fetch(place: Place, now: Instant): Forecast = parseTomorrow(get(Http.query("$base/weather/forecast",
         mapOf("location" to "${f2(place.latitude)},${f2(place.longitude)}", "units" to "metric", "apikey" to apiKey))), place, now)
+}
+
+/** Tomorrow.io's rate-limit headers in words, as on the desktop. */
+fun tomorrowUsage(h: Map<String, String>): Map<String, String> {
+    val out = linkedMapOf<String, String>()
+    h["x-ratelimit-remaining-day"]?.let { out["today"] = "$it of ${h["x-ratelimit-limit-day"] ?: "?"} requests left today" }
+    h["x-ratelimit-remaining-hour"]?.let { out["hour"] = "$it of ${h["x-ratelimit-limit-hour"] ?: "?"} left this hour" }
+    return out
 }
 
 private fun JSONObject.first(vararg names: String): Double? = names.firstNotNullOfOrNull { num(it) }
@@ -502,6 +524,8 @@ class WundergroundProvider(http: HttpClient, key: () -> String?, private val sta
             Triple("station", "Your station ID (optional, e.g. IAUCKL123)", Regex("[A-Za-z0-9]{3,24}")))
     }
     private val nearby = mutableMapOf<String, Pair<Long, List<String>>>()
+    @Volatile private var stationUsed = ""
+    override fun usage() = if (stationUsed.isNotEmpty()) mapOf("station" to "current conditions from station $stationUsed") else emptyMap()
 
     override fun fetch(place: Place, now: Instant): Forecast {
         val geo = "${f2(place.latitude)},${f2(place.longitude)}"
@@ -517,6 +541,7 @@ class WundergroundProvider(http: HttpClient, key: () -> String?, private val sta
             if (ob?.obj("metric") == null) { problems += "$sid: no data"; continue }
             val age = now.epochSecond - (ob.num("epoch") ?: 0.0).toLong()
             if (age > 2 * 3600) { problems += "$sid: last report ${age / 3600} h ago"; continue }
+            stationUsed = sid
             return parseWunderground(fc, ob, place, now)
         }
         throw WeatherException(if (own != null) "Your weather station $own isn't reporting (${problems.joinToString("; ").ifEmpty { "no data" }})."

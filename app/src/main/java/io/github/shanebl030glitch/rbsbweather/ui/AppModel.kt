@@ -13,6 +13,7 @@ import io.github.shanebl030glitch.rbsbweather.data.Watch
 import io.github.shanebl030glitch.rbsbweather.data.Forecast
 import io.github.shanebl030glitch.rbsbweather.data.ProviderManager
 import io.github.shanebl030glitch.rbsbweather.data.ProviderStatus
+import io.github.shanebl030glitch.rbsbweather.data.Diagnostics
 import io.github.shanebl030glitch.rbsbweather.data.RECOVERY_CHOICES
 import io.github.shanebl030glitch.rbsbweather.data.Units
 import io.github.shanebl030glitch.rbsbweather.data.WeatherCodes
@@ -51,7 +52,13 @@ class MemoryStore(var text: String? = null) : SettingsStore {
     override fun save(json: String) { text = json }
 }
 
-enum class Screen { HOME, MOON, EARTH, SEARCH, PLACES, SETTINGS, PROVIDERS, ALERT_SETTINGS, QUAKE_SETTINGS, WARNINGS, QUAKES, HELP, ABOUT }
+/** The address each provider's forecasts come from (for Test connection). */
+val API_HOSTS = mapOf("open-meteo" to "https://api.open-meteo.com/", "met.no" to "https://api.met.no/",
+    "openweather" to "https://api.openweathermap.org/", "weatherapi" to "https://api.weatherapi.com/",
+    "visualcrossing" to "https://weather.visualcrossing.com/", "tomorrow" to "https://api.tomorrow.io/",
+    "wunderground" to "https://api.weather.com/")
+
+enum class Screen { HOME, MOON, EARTH, SEARCH, PLACES, SETTINGS, PROVIDERS, ALERT_SETTINGS, QUAKE_SETTINGS, WARNINGS, QUAKES, HELP, ABOUT, UPDATES, CONNECTION }
 
 sealed interface SearchState {
     data object Idle : SearchState
@@ -70,6 +77,8 @@ data class UiState(
     val message: String? = null,                              // one-off note ("Removed Auckland")
     val keysSaved: Set<String> = emptySet(),                  // provider ids with an API key (never the key itself)
     val providerTests: Map<String, String> = emptyMap(),      // provider id → result of "Test connection"
+    val connection: List<String> = emptyList(),              // Test connection (0.6): the report so far
+    val connectionRunning: Boolean = false,
     val testing: Set<String> = emptySet(),
     val alerts: Map<String, List<Alert>> = emptyMap(),        // shown alerts by place (not muted)
     val allAlerts: Map<String, List<Alert>> = emptyMap(),     // including muted ones (Warnings screen)
@@ -94,6 +103,7 @@ class AppModel(
     private val onForecast: (Forecast) -> Unit = {},          // e.g. update the home-screen widgets
     private val watch: Watch? = null,                         // warnings and earthquakes
     private val notify: (List<Notice>, Settings) -> Unit = { _, _ -> },
+    private val onTempNotification: (Boolean) -> Unit = {},     // show or remove the temperature notification
 ) {
     private val _state = MutableStateFlow(UiState(settings = Settings.fromJson(store.load()),
         keysSaved = ALL_PROVIDERS.filter { it.needsKey && providers?.hasKey(it.id) == true }.map { it.id }.toSet()))
@@ -190,6 +200,7 @@ class AppModel(
     fun select(key: String) {
         if (_state.value.settings.places.none { it.key == key }) return
         saveSettings(_state.value.settings.copy(selected = key))
+        if (_state.value.settings.tempNotification) onTempNotification(true)
         refresh()
     }
 
@@ -264,6 +275,32 @@ class AppModel(
     }
 
     fun setEarthClouds(on: Boolean) = saveSettings(_state.value.settings.copy(earthClouds = on))
+    /** Menu → Test connection (0.6): DNS, IPv4/IPv6, handshakes, then timed real requests. */
+    fun testConnection(header: List<String>, resolve: (String) -> Array<java.net.InetAddress> = { java.net.InetAddress.getAllByName(it) },
+                       prober: Diagnostics.Prober = Diagnostics.realProber) {
+        if (_state.value.connectionRunning) return
+        _state.update { it.copy(connection = emptyList(), connectionRunning = true) }
+        val place = _state.value.settings.selectedPlace() ?: TEST_PLACE
+        val chain = try { providers?.chain() } catch (e: Exception) { null } ?: emptyList()
+        val urls = listOf("https://geocoding-api.open-meteo.com/v1/search", "https://api.open-meteo.com/v1/forecast") +
+            chain.mapNotNull { API_HOSTS[it.id] }
+        val checks = listOf<Pair<String, () -> Unit>>("Place search" to { search.search(place.name) }) +
+            chain.map { p -> "${p.name} forecast for ${place.name}" to { p.forecast(place); Unit } }
+        scope.launch {
+            withContext(io) {
+                try {
+                    Diagnostics.run(header, Diagnostics.hostsOf(urls), checks, resolve, prober,
+                        out = { line -> _state.update { it.copy(connection = it.connection + line) } })
+                } catch (e: Exception) {
+                    _state.update { it.copy(connection = it.connection + "The test stopped: ${e.javaClass.simpleName}") }
+                }
+            }
+            _state.update { it.copy(connectionRunning = false) }
+        }
+    }
+
+    fun setUpdateCheck(on: Boolean) = saveSettings(_state.value.settings.copy(updateCheck = on))
+    fun setTempNotification(on: Boolean) { saveSettings(_state.value.settings.copy(tempNotification = on)); onTempNotification(on) }
     fun setEarthQuakes(on: Boolean) = setQuakeSettings(_state.value.settings.quakes.copy(show = on))
 
     /** Earth screens: show the flat map or the globe; a quake to focus (from a notification). */
@@ -376,7 +413,8 @@ class AppModel(
                     val f = p.forecast(place)
                     "Working: ${Units.fmtTemp(f.current.temperature, _state.value.settings.units.temp)} " +
                         "${WeatherCodes.describe(f.current.weatherCode).lowercase()} at ${place.name}, " +
-                        "${f.daily.size} days, ${f.hourly.size} hours."
+                        "${f.daily.size} days, ${f.hourly.size} hours." +
+                        (try { p.usage() } catch (e: Exception) { emptyMap() }).values.joinToString("") { " " + it.replaceFirstChar { c -> c.uppercase() } + "." }
                 } catch (e: WeatherException) {
                     "Not working: ${e.message}"
                 } catch (e: Exception) {

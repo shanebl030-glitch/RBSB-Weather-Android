@@ -77,6 +77,8 @@ fun RbsbApp(model: AppModel) {
                             Screen.QUAKES -> "Earthquakes"
                             Screen.HELP -> "User guide"
                             Screen.ABOUT -> "About"
+                            Screen.UPDATES -> "Check for updates"
+                            Screen.CONNECTION -> "Test connection"
                         })
                     },
                     navigationIcon = {
@@ -101,7 +103,8 @@ fun RbsbApp(model: AppModel) {
                             }
                             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                                 listOf(Screen.PLACES to "My places", Screen.WARNINGS to "Warnings", Screen.QUAKES to "Earthquakes", Screen.SETTINGS to "Settings",
-                                    Screen.HELP to "User guide", Screen.ABOUT to "About").forEach { (sc, label) ->
+                                    Screen.HELP to "User guide", Screen.CONNECTION to "Test connection", Screen.UPDATES to "Check for updates",
+                                    Screen.ABOUT to "About").forEach { (sc, label) ->
                                     DropdownMenuItem(text = { Text(label) }, onClick = { menu = false; model.go(sc) },
                                         modifier = Modifier.testTag("menu-$label"))
                                 }
@@ -137,6 +140,8 @@ fun RbsbApp(model: AppModel) {
                 Screen.QUAKES -> QuakesScreen(state, model, m)
                 Screen.HELP -> HelpScreen(m)
                 Screen.ABOUT -> AboutScreen(m)
+                Screen.UPDATES -> UpdatesScreen(state, model, m)
+                Screen.CONNECTION -> ConnectionScreen(state, model, m)
             }
         }
     }
