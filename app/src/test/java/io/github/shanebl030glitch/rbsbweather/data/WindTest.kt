@@ -54,11 +54,14 @@ class Grib2Test {
         assertEquals(120.0, m.forecastHours!!, 0.0)
         val speeds = m.values.indices.map { hypot(msgs[0].values[it], msgs[1].values[it]) }
         assertTrue(speeds.max() < 60); assertTrue(speeds.average() > 2)
-        // a file stored south first reads the same as the usual north-first one
+        // Both files hold the same list of values; the first says its first row is the southernmost,
+        // so read north to south its rows come out reversed (as the desktop's test)
         val a = Grib2.messages(gribBytes("syn_small_south_first.grib2"))[0]; val b = Grib2.messages(gribBytes("syn_small_csd1.grib2"))[0]
-        val ra = a.rowsNorthToSouth(); val rb = b.rowsNorthToSouth()
-        assertEquals(rb.size, ra.size)
-        for (i in ra.indices) assertEquals(rb[i], ra[i], 1e-3)
+        assertEquals(listOf(0x40, 0), listOf(a.grid.scan, b.grid.scan))
+        val ra = a.rowsNorthToSouth(); val rb = b.rowsNorthToSouth(); val ni = a.grid.ni; val nj = a.grid.nj
+        assertEquals(19, nj)
+        fun at(r: DoubleArray, j: Int, i: Int) = r[(if (j < 0) nj + j else j) * ni + i]
+        assertEquals(at(rb, -1, 5), at(ra, 0, 5), 0.01); assertEquals(at(rb, 0, 7), at(ra, -1, 7), 0.01); assertEquals(at(rb, -4, 11), at(ra, 3, 11), 0.01)
     }
 
     @Test fun damagedFilesFailCleanly() {
