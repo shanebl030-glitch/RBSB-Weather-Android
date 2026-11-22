@@ -49,6 +49,42 @@ tap "Rotate slowly"; sleep 6; check "rotating"; tap "Rotate slowly"
 adb shell input swipe 500 1000 900 1100 500; sleep 3; check "dragging"
 tap "Earth Flat"; sleep 4; check "back to flat"; tap "Earth Globe"; sleep 6; check "globe again"; shot globe-again
 tap "Forecast"; sleep 4; tap "Earth"; sleep 8; check "leaving and coming back"; shot final
+
+step "every other screen"
+back_to_forecast() { tap "Forecast" >/dev/null || adb shell input keyevent KEYCODE_BACK; sleep 2; }
+tap "Warnings"; sleep 5; check "Warnings tab"; shot warnings
+back_to_forecast
+for item in "My places" "Earthquakes" "Settings" "User guide" "About"; do
+  tap "Menu" && sleep 1 && tap "$item"; sleep 5; check "menu: $item"; shot "menu-${item// /-}"
+  if [ "$item" = "Settings" ]; then
+    for sub in "Weather Alerts" "Earthquakes" "Weather Providers"; do
+      tap "$sub"; sleep 4; check "Settings: $sub"; shot "settings-${sub// /-}"; adb shell input keyevent KEYCODE_BACK; sleep 2
+    done
+  fi
+  adb shell input keyevent KEYCODE_BACK; sleep 2
+done
+back_to_forecast
+
+step "save a Moon picture"
+tap "Moon"; sleep 8
+for i in 1 2 3 4; do adb shell input swipe 540 1800 540 600 300; sleep 1; done
+tap "Save high-resolution image"; sleep 15; check "saving the Moon picture"; shot moon-saved
+
+step "turn the phone sideways and back"
+adb shell settings put system accelerometer_rotation 0
+tap "Earth"; sleep 4; tap "Earth Globe"; sleep 5
+adb shell settings put system user_rotation 1; sleep 8; check "landscape on the globe"; shot landscape-globe
+tap "Forecast"; sleep 5; check "landscape forecast"; shot landscape-forecast
+adb shell settings put system user_rotation 0; sleep 6; check "back to portrait"
+
+step "leave the app and come back"
+adb shell input keyevent KEYCODE_HOME; sleep 5
+adb shell am start -n $PKG/.MainActivity; sleep 6; check "reopening"; shot reopened
+tap "Earth"; sleep 3; tap "Earth Globe"; sleep 8; check "globe after reopening"; shot globe-reopened
+
+step "pull to refresh"
+tap "Forecast"; sleep 3; adb shell input swipe 540 700 540 1500 400; sleep 8; check "refresh"
+
 adb logcat -d > "$OUT/logcat.txt"
 grep -n "FATAL\|ANR in\|OutOfMemory\|Skipped [0-9]* frames\|Davey" "$OUT/logcat.txt" | head -40
 echo "APP ALIVE: no crash"
