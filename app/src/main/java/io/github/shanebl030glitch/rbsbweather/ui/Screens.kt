@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -272,6 +273,7 @@ fun AboutScreen(modifier: Modifier = Modifier) {
                 Text(io.github.shanebl030glitch.rbsbweather.data.Quakes.CREDIT + ".", fontSize = 13.sp)
                 Text(io.github.shanebl030glitch.rbsbweather.data.Earth.CREDIT + ".", fontSize = 13.sp)
                 Text(io.github.shanebl030glitch.rbsbweather.data.Clouds.CREDIT + ".", fontSize = 13.sp)
+                Text(io.github.shanebl030glitch.rbsbweather.data.Wind.CREDIT + ".", fontSize = 13.sp)
                 Text("With your own keys: OpenWeather, WeatherAPI.com, Visual Crossing, Tomorrow.io and Weather Underground " +
                     "(each credited under the forecast when it supplied it).", fontSize = 13.sp)
                 Text("The Sun, Moon, sunrise and sunset, and day and night on the Earth are worked out on your phone.")
@@ -285,12 +287,15 @@ fun AboutScreen(modifier: Modifier = Modifier) {
 
 @Composable
 private fun SwitchRow(title: String, sub: String, checked: Boolean, tag: String, onChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+    // the whole row (title and words too) turns it on and off, not just the small switch
+    Row(Modifier.fillMaxWidth().padding(top = 16.dp)
+        .toggleable(checked, role = androidx.compose.ui.semantics.Role.Switch, onValueChange = onChange).testTag(tag),
+        verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(title, fontWeight = FontWeight.Bold)
             Text(sub, fontSize = 13.sp)
         }
-        Switch(checked = checked, onCheckedChange = onChange, modifier = Modifier.testTag(tag))
+        Switch(checked = checked, onCheckedChange = null)
     }
 }
 

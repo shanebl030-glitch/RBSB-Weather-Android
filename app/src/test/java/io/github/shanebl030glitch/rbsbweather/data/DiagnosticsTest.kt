@@ -34,6 +34,8 @@ class DiagnosticsTest {
         assertEquals("https://x/y?apikey=•••&lat=1", Diagnostics.redact("https://x/y?apikey=SECRET123&lat=1"))
         assertEquals("appid=••• key=•••", Diagnostics.redact("appid=abc key=def"))
         assertFalse("SECRET" in Diagnostics.run(listOf("key=SECRET"), emptyList(), emptyList()))
+        assertEquals("network unreachable", Diagnostics.reason(java.net.ConnectException("failed to connect to x/2a03:4000::1 (port 443) from /fec0::1 (port 36144) after 5000ms: isConnected failed: ENETUNREACH (Network is unreachable)")))
+        assertEquals("connection refused", Diagnostics.reason(java.net.ConnectException("x: ECONNREFUSED (Connection refused)")))
         assertTrue("Everything works" in Diagnostics.run(listOf("x"), emptyList(), listOf("a" to {})))
     }
 }

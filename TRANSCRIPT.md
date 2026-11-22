@@ -2,6 +2,57 @@
 
 Created By Shane BlackbuRn
 
+## 0.6.2 (2026-11-23)
+
+**Shane:** "I was about to say before you made the change to keep it as is but we can mention it on the GitHub page update"
+
+→ The 0.6.0 updater is restored unchanged: the code is exactly 0.6.0's, apart from the version number.
+- The Play Protect warning is explained on the GitHub page: the README, and release notes ready to paste.
+- The 0.6.1 test that forbade the install permission was removed with the rest of 0.6.1's changes.
+- The checks that guard the updater (checksum, this app and newer, GitHub-only addresses) are back.
+
+**Shane:** "okay time to update GitHub"
+→ PR #3 merged into `main` (a merge commit, history kept, unsigned). Release `v0.6.2` published with the release notes, `rbsb-weather-android_0.6.2.apk` (the exact file Shane installed) and `SHA256SUMS`. The release was then read back the way the app's updater reads it.
+
+## 0.6.1 (2026-11-23)
+
+**Shane:** "First time I have had this when installing on the phone. 'Google Play Protect. Harmful app blocked. RBSB-Weather. This app may be harmful. Installing this app may put your device at risk. Learn more about Play Protect. Install anyway'"
+
+**Cause:**
+- The one big change from 0.5.2, which installed without a warning, was in-app updating. That meant the `REQUEST_INSTALL_PACKAGES` permission ("install other apps"), downloading APK files, and handing them to Android's installer through a file provider.
+- Play Protect treats a sideloaded app that can install other apps as a possible "dropper", even when the only app it installs is itself.
+
+**Decision:** rather than ask Shane to tap "Install anyway", take the capability out.
+- The update check and notifications stay.
+- The download goes through the phone's browser, the normal way to sideload. The app shows the published SHA-256 so the file can still be checked.
+- 0.6.1 has no install permission and never downloads or installs an APK. A test checks the manifest and the code so it can't come back by accident.
+
+**Not provable here:** whether Play Protect will accept 0.6.1. Its rules aren't published, and there's no Play Protect on the test emulator. Only installing on the phone shows it.
+
+## 0.6.0 (2026-11-23)
+
+**Shane:** "perfect." (He released 0.5.2 as v0.5.2.)
+→ Following the roadmap, I went on to 0.6, the last desktop features on the list.
+
+**What was done:**
+- **Ported from the desktop:**
+  - the update checks (`updates.py`), with Android's installer in place of the .deb;
+  - Test connection (`diagnostics.py`);
+  - the provider usage readouts;
+  - the Wind tab (`wind.py`, `grib2.py` and `wind_panel.py`).
+- **New for Android:** the temperature in the status bar, as the phone version of the tray icon.
+- **The GRIB2 reader** was checked against the desktop's reader on the same 11 NOAA and test files: every sample point, missing-value count and checksum.
+- **The emulator check (real Android 14):**
+  - downloaded the real wind map from NOAA, showed it, and the streaks moved;
+  - switched all three layers;
+  - ran Test connection to the end;
+  - checked GitHub for updates against the real v0.5.2 release (there was nothing newer).
+
+**Problems found while testing:**
+1. **A test of mine compared rows the wrong way round:** the south-first file is reversed on purpose. Fixed to match the desktop's test.
+2. **The new Settings switches only answered a tap on the switch**, the same problem as the globe tick boxes. The whole row now works.
+3. **Merging note:** PR #2 was merged after the first 0.6 commit had been pushed to that branch. So `main` and the `v0.5.2` tag include that unreleased code; the released APK is the tested 0.5.2 build (its checksum matches). The rest of 0.6 is on a new branch, `claude/android-0.6.0`.
+
 ## 0.5.2 (2026-11-23)
 
 **Shane:** "1. the touch and drag to rotate the globe doesn't work. 2. the globe itself doesn't rotate when you tick rotate slowly."

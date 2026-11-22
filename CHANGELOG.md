@@ -4,7 +4,65 @@ Created By Shane BlackbuRn
 
 A separate app from RBSB-Weather for the desktop, with its own versions.
 
-## 0.5.2 – 2026-11-23 (test build; on branch claude/android-0.2.0; not released)
+## 0.6.2 – 2026-11-23 (released as v0.6.2)
+
+Shane: "I was about to say before you made the change to keep it as is but we can mention it on the GitHub page update".
+
+### Changed
+- **The in-app Download and install is back**, exactly as in 0.6.0. The code is identical to 0.6.0's; only the version number differs.
+- **The README explains the Google Play Protect warning:**
+  - why it appears: the "install other apps" permission that self-updating needs;
+  - exactly what the app does with it;
+  - how to check the APK against `SHA256SUMS`;
+  - how to install anyway.
+- **The user guide** says the same in short.
+- **Release notes for the GitHub release page** are in `docs/RELEASE_NOTES_0.6.2.md`.
+
+## 0.6.1 – 2026-11-23 (test build; superseded by 0.6.2)
+
+Shane, installing 0.6.0: "Google Play Protect. Harmful app blocked. RBSB-Weather. This app may be harmful."
+
+### Changed
+- **Updates no longer download or install inside the app.**
+  - **Why:** 0.6.0 asked for Android's "install other apps" permission and downloaded APKs itself so it could update itself. Google Play Protect treats a sideloaded app that does that as possibly harmful (it can't tell an app updating itself from one installing something else).
+  - **Now:** Check for updates still asks GitHub, shows what's new, and notifies you once a day about a new version. **Download from GitHub** opens the download in your browser, and the screen shows the release's published SHA-256 so you can check it. Android installs it, as when you first installed the app.
+  - **Removed:** the permission, the in-app downloader, the installer hand-off and the shared-files provider.
+  - **A test now fails** if any of them comes back.
+
+## 0.6.0 – 2026-11-23 (test build; blocked by Play Protect – use 0.6.1)
+
+Shane: "perfect." (0.5.2 released as v0.5.2.) Following the roadmap: 0.6, the rest of the desktop's features.
+
+### Added
+- **The Wind tab** (🌬 along the bottom), ported from the desktop's `wind.py`, `grib2.py` and `wind_panel.py`:
+  - **What it shows:** the world's weather from NOAA's GFS forecast on the globe. There are three layers: **🌬 Wind**, **🌡 Temperature** and **🌧 Rain & snow**. They're shown over the dimmed Earth with coastlines.
+  - **Moving streaks** follow the wind on every layer. They only move while animations are on.
+  - **Using it:** drag to turn, pinch or +/− to zoom, and tap anywhere for the wind (speed and direction), the temperature and the rain or snow there. A colour key is shown in your units.
+  - **The data:** about 400 KB from NOAA NOMADS, or NOAA's copy on Amazon if that fails. It's downloaded every 3 hours, and the saved map is used offline or if a download fails.
+  - **The GRIB2 reader** was ported and checked against the desktop's reader on the same NOAA and test files.
+- **Check for updates** (menu): asks GitHub for the newest RBSB-Weather for Android release and shows what's new.
+  - **Download and install** fetches the APK and checks it against the release's `SHA256SUMS`, and that it's this app and newer. Android then asks you to install it.
+  - You can skip a version.
+  - It also checks once a day in the background and notifies you once per new version. It can be turned off.
+- **Test connection** (menu), as on the desktop:
+  - for each weather service: finding it (DNS), connecting over IPv4 and IPv6, and the secure handshake;
+  - then a real place search and a forecast from each provider you use, each timed;
+  - a plain-English summary, with **Copy** and **Share**. API keys never appear in it.
+- **Temperature in the status bar** (Settings): the phone version of the desktop's tray temperature. It's a silent notification with the temperature as its icon, and the conditions, high and low beside it. Off by default.
+- **Provider usage** in Weather Providers and in each provider's Test, as on the desktop:
+  - Tomorrow.io's requests left today and this hour;
+  - Visual Crossing's cost per update;
+  - OpenWeather's plan;
+  - the Weather Underground station used.
+- Wind credit in About.
+
+### Changed
+- **Settings switches** turn on and off with a tap anywhere on their row, not only on the small switch.
+
+### Tests
+- 180+ tests, plus the emulator check on real Android 14 (see TEST_REPORT.md).
+
+## 0.5.2 – 2026-11-23 (released as v0.5.2)
 
 Shane: "1. the touch and drag to rotate the globe doesn't work. 2. the globe itself doesn't rotate when you tick rotate slowly."
 

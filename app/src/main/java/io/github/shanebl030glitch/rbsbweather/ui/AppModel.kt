@@ -58,7 +58,7 @@ val API_HOSTS = mapOf("open-meteo" to "https://api.open-meteo.com/", "met.no" to
     "visualcrossing" to "https://weather.visualcrossing.com/", "tomorrow" to "https://api.tomorrow.io/",
     "wunderground" to "https://api.weather.com/")
 
-enum class Screen { HOME, MOON, EARTH, SEARCH, PLACES, SETTINGS, PROVIDERS, ALERT_SETTINGS, QUAKE_SETTINGS, WARNINGS, QUAKES, HELP, ABOUT, UPDATES, CONNECTION }
+enum class Screen { HOME, MOON, EARTH, WIND, SEARCH, PLACES, SETTINGS, PROVIDERS, ALERT_SETTINGS, QUAKE_SETTINGS, WARNINGS, QUAKES, HELP, ABOUT, UPDATES, CONNECTION }
 
 sealed interface SearchState {
     data object Idle : SearchState

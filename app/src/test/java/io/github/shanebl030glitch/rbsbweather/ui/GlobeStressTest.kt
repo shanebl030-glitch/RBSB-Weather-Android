@@ -123,14 +123,14 @@ class GlobeStressTest {
         val v2 = view()
         compose.onNodeWithTag("globe").performTouchInput { swipe(center, center + Offset(300f, 0f), 500) }   // one finger, to the right
         pump(1500)
+        pumpUntil("the picture to follow the drag", 30_000) { view().let { kotlin.math.abs(lonDiff(it[3], it[1])) < 0.5 } }
         val v3 = view()
         val dragged = lonDiff(v2[3], v3[3])
         assertTrue("dragging right turns the globe west: $dragged°", dragged < -10)
         assertTrue("and the picture follows: ${lonDiff(v3[3], v3[1])}°", kotlin.math.abs(lonDiff(v3[3], v3[1])) < 0.5)
         assertTrue("zoom unchanged by a one-finger drag", kotlin.math.abs(v3[4] - v2[4]) < 1e-6)
         compose.onNodeWithTag("globe").performTouchInput { swipe(center, center + Offset(0f, -250f), 400) }  // up and down works too (the page doesn't scroll instead)
-        pump(1200)
-        assertTrue(view()[0] != v3[0])
+        pumpUntil("the picture to follow the upward drag", 30_000) { view()[0] != v3[0] }     // the redraw happens in the background
         repeat(6) { compose.onNodeWithTag("zoomIn").performClick(); pump(400) }     // to the 300% limit
         pumpUntil("the zoomed globe") { globeDrawn() }
         save("stress_globe_zoomed")

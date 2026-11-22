@@ -8,7 +8,15 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 mkdir -p "$OUT"
 n=0
 shot() { n=$((n+1)); adb exec-out screencap -p > "$OUT/$(printf %02d $n)-$1.png"; }
-dump() { adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; adb shell cat /sdcard/ui.xml > "$OUT/ui.xml" 2>/dev/null; }
+dump() {
+  adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; adb shell cat /sdcard/ui.xml > "$OUT/ui.xml" 2>/dev/null
+  # a slow emulator sometimes shows Android's own "… isn't responding" dialog over everything: wait it out
+  if grep -q "isn.t responding" "$OUT/ui.xml" 2>/dev/null; then
+    echo "(dismissing an Android 'isn't responding' dialog: $(grep -o 'text="[^"]*isn.t responding[^"]*"' "$OUT/ui.xml" | head -1))"
+    xy=$(python3 "$HERE/find.py" "$OUT/ui.xml" "Wait") && adb shell input tap $xy; sleep 2
+    adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; adb shell cat /sdcard/ui.xml > "$OUT/ui.xml" 2>/dev/null
+  fi
+}
 alive() { adb shell pidof $PKG >/dev/null 2>&1; }
 tap() {   # tap <text> [starts]
   for i in 1 2 3 4 5 6 7 8 9 10; do
@@ -36,7 +44,7 @@ adb shell pm grant $PKG android.permission.POST_NOTIFICATIONS 2>/dev/null
 adb shell getprop dalvik.vm.heapgrowthlimit; adb shell getprop dalvik.vm.heapsize
 adb logcat -c
 adb shell am start -W -n $PKG/.MainActivity
-sleep 6; check "launch"; shot launch
+sleep 6; check "launch"; dump; shot launch
 step "add Auckland"
 tap "Add a place" && sleep 2 && adb shell input text Auckland && sleep 8
 tap "Auckland, New Zealand"; sleep 10; check "adding a place"; shot forecast
@@ -67,18 +75,42 @@ adb shell input swipe 540 1300 540 900 600; sleep 4; check "dragging up"
 tap "Earth Flat"; sleep 4; check "back to flat"; tap "Earth Globe"; sleep 6; check "globe again"; shot globe-again
 tap "Forecast"; sleep 4; tap "Earth"; sleep 8; check "leaving and coming back"; shot final
 
+step "Wind tab (a real download from NOAA)"
+tap "Wind"; for i in $(seq 1 12); do sleep 5; dump; grep -q "GFS forecast run" "$OUT/ui.xml" && break; done
+check "Wind tab"; shot wind
+grep -q "GFS forecast run" "$OUT/ui.xml" && echo "WIND DATA: downloaded and shown" || { echo "WIND DATA: not shown"; grep -o 'text="[^"]*NOAA[^"]*"' "$OUT/ui.xml" | head -3; GLOBE_FAILED=1; }
+sleep 8; adb exec-out screencap -p > "$OUT/wind-a.png"; sleep 2; adb exec-out screencap -p > "$OUT/wind-b.png"
+moved "wind streaks" "$OUT/wind-a.png" "$OUT/wind-b.png" 0.003
+for L in "🌡 Temperature" "🌧 Rain & snow" "🌬 Wind"; do tap "$L"; sleep 6; check "Wind layer $L"; done
+shot wind-layers
+adb shell input tap 540 1100; sleep 2; check "tapping the wind globe"
+
 step "every other screen"
-back_to_forecast() { tap "Forecast" >/dev/null || adb shell input keyevent KEYCODE_BACK; sleep 2; }
+back_to_forecast() { adb shell am start -n $PKG/.MainActivity >/dev/null 2>&1; sleep 2; tap "Forecast" >/dev/null || adb shell input keyevent KEYCODE_BACK; sleep 2; }
 tap "Warnings"; sleep 5; check "Warnings tab"; shot warnings
 back_to_forecast
-for item in "My places" "Earthquakes" "Settings" "User guide" "About"; do
+for item in "My places" "Earthquakes" "Settings" "User guide" "Test connection" "Check for updates" "About"; do
+  back_to_forecast
   tap "Menu" && sleep 1 && tap "$item"; sleep 5; check "menu: $item"; shot "menu-${item// /-}"
+  if [ "$item" = "Test connection" ]; then
+    tap "Run the test"; for i in $(seq 1 20); do sleep 3; dump; grep -q "Summary:" "$OUT/ui.xml" && break; done
+    check "Test connection"; shot connection-report
+    grep -q "Summary:" "$OUT/ui.xml" && echo "TEST CONNECTION: report finished" || echo "TEST CONNECTION: no summary"
+  fi
+  if [ "$item" = "Check for updates" ]; then
+    tap "Check now"; sleep 8; check "Check for updates"; shot updates-checked
+    dump; grep -o 'text="[^"]*\(newest version\|no release\|is available\|Couldn.t\)[^"]*"' "$OUT/ui.xml" | head -2
+  fi
   if [ "$item" = "Settings" ]; then
+    for i in 1 2 3 4; do adb shell input swipe 540 1800 540 700 300; sleep 1; done      # the switches are at the bottom
+    tap "Temperature in the status bar"; sleep 3
+    adb shell dumpsys notification --noredact 2>/dev/null | grep -A3 "pkg=$PKG" | grep -m3 "temperature\|android.title" && echo "TEMP NOTIFICATION: shown" || echo "TEMP NOTIFICATION: not found"
+    shot settings-temp
+    for i in 1 2 3 4 5; do adb shell input swipe 540 700 540 1800 300; sleep 1; done       # back to the top for the links
     for sub in "Weather Alerts" "Earthquakes" "Weather Providers"; do
-      tap "$sub"; sleep 4; check "Settings: $sub"; shot "settings-${sub// /-}"; adb shell input keyevent KEYCODE_BACK; sleep 2
+      tap "$sub" && { sleep 4; check "Settings: $sub"; shot "settings-${sub// /-}"; adb shell input keyevent KEYCODE_BACK; sleep 2; }
     done
   fi
-  adb shell input keyevent KEYCODE_BACK; sleep 2
 done
 back_to_forecast
 
