@@ -15,6 +15,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.printToString
 import io.github.shanebl030glitch.rbsbweather.data.AUCKLAND
 import io.github.shanebl030glitch.rbsbweather.data.ForecastCache
@@ -184,6 +185,9 @@ class ScreensTest {
         compose.onNodeWithTag("flatMap").assertIsDisplayed()
         compose.onNodeWithTag("earthGlobe").performClick()
         compose.waitForIdle()
+        val tapped = m.state.value.earthGlobe
+        if (!tapped) { compose.onNodeWithTag("earthGlobe").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick); compose.waitForIdle() }
+        if (!tapped) throw AssertionError("tap missed; semantics click gave earthGlobe=${m.state.value.earthGlobe}\n" + compose.onNodeWithTag("earthGlobe").printToString() + "\n" + compose.onNodeWithTag("earthGlobe", useUnmergedTree = true).printToString())
         if (!m.state.value.earthGlobe) throw AssertionError("globe switch not clicked\n" + compose.onRoot(useUnmergedTree = true).printToString(maxDepth = 12).lines().filter { "Bounds" in it || "Tag" in it || "Text" in it }.take(140).joinToString("\n"))
         try { compose.onNodeWithTag("globe").assertIsDisplayed() }
         catch (e: AssertionError) { throw AssertionError(compose.onRoot().printToString(), e) }
