@@ -62,8 +62,10 @@ object MoonRender {
         if (sa !== alb) sa.recycle()
         if (sh !== hgt) sh.recycle()
         if (size >= 512) { full?.first?.recycle(); full?.second?.recycle(); full = null }   // don't keep 32 MB around
-        if (texCache.size > 6) texCache.remove(texCache.keys.first())
-        texCache[size] = pa to ph
+        if (size <= CACHE_MAX_SIZE) {                       // a 2048 export's textures (33 MB) aren't kept
+            if (texCache.size > 6) texCache.remove(texCache.keys.first())
+            texCache[size] = pa to ph
+        }
         return pa to ph
     }
 

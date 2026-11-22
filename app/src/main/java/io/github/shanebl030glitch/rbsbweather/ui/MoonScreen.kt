@@ -133,7 +133,7 @@ fun MoonScreen(state: UiState, model: AppModel, modifier: Modifier = Modifier) {
     val minute = (System.currentTimeMillis() / 600_000)            // recalculated every 10 minutes
     val report by produceState<MoonReport?>(null, place.key, zone, minute) {
         value = null
-        value = withContext(Dispatchers.Default) { try { buildMoonReport(place, zone) } catch (e: Exception) { null } }
+        value = withContext(Dispatchers.Default) { try { buildMoonReport(place, zone) } catch (e: OutOfMemoryError) { null } catch (e: Exception) { null } }
     }
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).testTag("moon"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         val r = report
@@ -187,7 +187,8 @@ fun MoonScreen(state: UiState, model: AppModel, modifier: Modifier = Modifier) {
                         val ph = if (r.view.isNow) r.phase else Moon.phase(r.view.whenT.toInstant())
                         val bmp = MoonRender.render(EXPORT_PX, ph.phaseAngle, ph.brightLimb, rotation = r.view.rotation) ?: throw IllegalStateException("no picture")
                         "Saved to " + savePicture(ctx, bmp, "moon-${r.now.toLocalDate()}-${place.name.replace(Regex("[^A-Za-z0-9]+"), "-")}.png")
-                    } catch (e: Exception) { "Couldn't save the picture (${e.javaClass.simpleName})." }
+                    } catch (e: OutOfMemoryError) { "Couldn't save the picture: not enough memory." }
+                    catch (e: Exception) { "Couldn't save the picture (${e.javaClass.simpleName})." }
                 }
                 saving = false
                 model.say(msg)

@@ -75,7 +75,7 @@ jobs:
       # The latest test build of each push, on its own branch (replaced each time, no history),
       # so it can be downloaded without signing in. Not a release.
       - name: Publish the test build to the test-builds branch
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && !startsWith(github.ref, 'refs/heads/repro/')   # repro branches never replace the test build
         run: |
           VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
           mkdir -p /tmp/tb && cp out/* /tmp/tb/
