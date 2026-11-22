@@ -581,3 +581,9 @@ val ALL_PROVIDERS: List<ProviderInfo> = listOf(OPEN_METEO_INFO, MET_NORWAY_INFO,
     VisualCrossingProvider.INFO, TomorrowProvider.INFO, WundergroundProvider.INFO)
 
 fun providerInfo(id: String): ProviderInfo? = ALL_PROVIDERS.firstOrNull { it.id == id }
+
+/** Researched but not integrated (as listed on the desktop), with the reason. */
+val PLANNED_PROVIDERS = listOf(
+    Triple("AccuWeather", "Paid-only after a 14-day trial, and every location first needs a separate 'location key' lookup, so each update costs several calls. Planned for a later version if you'd like it.", "https://developer.accuweather.com/"),
+    Triple("Weatherbit", "The free plan's 50 requests a day is less than one update every 30 minutes needs (current + forecast = 2 requests), and has no hourly data. Planned for a later version, mainly useful with a paid key.", "https://www.weatherbit.io/account/create"),
+)

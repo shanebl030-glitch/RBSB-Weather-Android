@@ -311,6 +311,13 @@ class AppModel(
         setChain(l)
     }
 
+    /** "Use the primary now": ask the primary first at the next update (and update now). */
+    fun usePrimaryNow() {
+        repo.resetRecovery()
+        refresh(force = true)
+        _state.update { it.copy(message = "The primary provider will be asked first") }
+    }
+
     fun setRecovery(minutes: Int) {
         if (minutes !in RECOVERY_CHOICES) return
         saveSettings(_state.value.settings.copy(recovery = minutes))

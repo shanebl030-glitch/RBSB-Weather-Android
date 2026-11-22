@@ -287,4 +287,20 @@ class ProvidersTest {
         assertEquals(DEFAULT_PROVIDERS, Settings.fromJson("""{"providers":[]}""").providers)
         assertEquals(DEFAULT_PROVIDERS, Settings.fromJson("{}").providers)
     }
+
+    @get:org.junit.Rule val tmp = org.junit.rules.TemporaryFolder()
+
+    @Test fun smallAllowancesAreAskedLessOften() {
+        val tio = Named("tomorrow")
+        var now = 5_000_000L
+        val repo = WeatherRepository({ listOf(tio) }, ForecastCache(tmp.root), { 0 }, { now })
+        repo.fetch(AUCKLAND); assertEquals(1, tio.calls)
+        now += 5 * 60_000
+        assertEquals("tomorrow", repo.fetch(AUCKLAND).source); assertEquals(1, tio.calls)     // the saved forecast, no request
+        now += 5 * 60_000 + 1
+        repo.fetch(AUCKLAND); assertEquals(2, tio.calls)                                       // 10 minutes on: asked again
+        val om = Named("open-meteo")
+        val repo2 = WeatherRepository({ listOf(om) }, ForecastCache(tmp.newFolder()), { 0 }, { now })
+        repo2.fetch(AUCKLAND); repo2.fetch(AUCKLAND); assertEquals(2, om.calls)               // no limit for Open-Meteo
+    }
 }

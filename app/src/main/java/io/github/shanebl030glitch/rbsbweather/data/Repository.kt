@@ -40,6 +40,8 @@ class WeatherRepository(
     constructor(list: List<Provider>, cache: ForecastCache?) : this({ list }, cache)
 
     private val statuses = java.util.concurrent.ConcurrentHashMap<String, ProviderStatus>()
+    /** When each provider was last asked about each place (quota guard). */
+    private val asked = java.util.concurrent.ConcurrentHashMap<String, Long>()
     @Volatile private var primaryFailedAt: Pair<String, Long>? = null
 
     fun status(id: String): ProviderStatus = statuses[id] ?: ProviderStatus()
@@ -70,6 +72,14 @@ class WeatherRepository(
         val primary = providers().firstOrNull()?.id
         if (primary == null) throw WeatherException("No weather provider is chosen (Settings → Weather Providers).")
         for (p in order()) {
+            // protect small free allowances (Tomorrow.io 10 min, OpenWeather and Visual Crossing 5 min per place):
+            // a refresh in between shows the forecast it already has
+            val minMs = (providerInfo(p.id)?.minIntervalMinutes ?: 0) * 60_000L
+            val key = p.id + "|" + place.key
+            if (minMs > 0 && clock() - (asked[key] ?: 0L) < minMs) {
+                cache?.load(place)?.takeIf { it.source == p.name }?.let { return it.copy(fromCache = false) }
+            }
+            if (minMs > 0) asked[key] = clock()
             try {
                 val fc = p.forecast(place).copy(place = place)
                 statuses[p.id] = status(p.id).copy(lastOk = clock())

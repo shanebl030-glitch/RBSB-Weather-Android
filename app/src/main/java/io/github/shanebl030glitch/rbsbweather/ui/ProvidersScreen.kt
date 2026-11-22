@@ -64,6 +64,14 @@ fun ProvidersScreen(state: UiState, model: AppModel, modifier: Modifier = Modifi
         ordered.forEach { info -> ProviderCard(info, state, model) }
         Text("When the primary fails", fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
         Choice("", RECOVERY_CHOICES.map { it to recoveryLabel(it) }, state.settings.recovery) { model.setRecovery(it) }
+        OutlinedButton(onClick = { model.usePrimaryNow() }, modifier = Modifier.testTag("usePrimaryNow")) { Text("Use the primary now") }
+        Text("To protect small free allowances, Tomorrow.io is asked at most every 10 minutes per place, and OpenWeather and Visual Crossing at most every 5 minutes; a refresh in between shows the forecast it already has.",
+            fontSize = 12.sp)
+        Text("Planned", fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
+        io.github.shanebl030glitch.rbsbweather.data.PLANNED_PROVIDERS.forEach { (name, why, _) ->
+            Text("… $name", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text(why, fontSize = 12.sp)
+        }
     }
 }
 
