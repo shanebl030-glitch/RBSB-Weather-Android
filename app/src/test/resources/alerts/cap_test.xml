@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
+  <identifier>test-1</identifier>
+  <sent>2026-11-22T08:00:00+13:00</sent>
+  <status>Test</status>
+  <msgType>Alert</msgType>
+  <info><event>test</event><severity>Extreme</severity>
+    <area><areaDesc>Everywhere</areaDesc><polygon>-30,160 -30,180 -50,180 -50,160 -30,160</polygon></area></info>
+</alert>

@@ -1,0 +1,15 @@
+{"type": "FeatureCollection", "lang": "en", "lastChange": "2026-11-21T10:00:00+00:00", "features": [
+ {"type": "Feature",
+  "geometry": {"type": "Polygon", "coordinates": [[[10.0, 59.5], [11.5, 59.5], [11.5, 60.3], [10.0, 60.3], [10.0, 59.5]]]},
+  "properties": {"id": "2.49.0.1.578.0.261121.gale.1", "status": "Actual", "type": "Alert",
+   "event": "gale", "eventAwarenessName": "Wind", "awareness_level": "3; orange; Severe", "riskMatrixColor": "Orange",
+   "severity": "Severe", "certainty": "Likely", "title": "Wind, orange level, Oslo, 21 November 12:00 UTC to 22 November 06:00 UTC.",
+   "description": "Strong gusts of 25 m/s.", "consequences": "Trees may fall.", "instruction": "Secure loose objects.",
+   "area": "Oslo", "web": "https://www.met.no/en/weather-and-climate/warnings"},
+  "when": {"interval": ["{ONSET}", "{EXPIRES}"]}},
+ {"type": "Feature",
+  "geometry": {"type": "Polygon", "coordinates": [[[20.0, 69.0], [21.0, 69.0], [21.0, 70.0], [20.0, 70.0], [20.0, 69.0]]]},
+  "properties": {"id": "far-away", "status": "Actual", "event": "snow", "awareness_level": "2; yellow; Moderate",
+   "severity": "Moderate", "title": "Snow, yellow level, Troms", "area": "Troms"},
+  "when": {"interval": ["{ONSET}", "{EXPIRES}"]}}
+]}

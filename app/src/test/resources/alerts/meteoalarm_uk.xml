@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:cap="urn:oasis:names:tc:emergency:cap:1.2">
+  <id>https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-united-kingdom</id>
+  <title>MeteoAlarm United Kingdom</title>
+  <updated>2026-11-21T15:18:55Z</updated>
+  <entry>
+    <id>https://feeds.meteoalarm.org/api/v1/warnings/feeds-united-kingdom/abc?index_polygon=0</id>
+    <title>Yellow Rain Warning issued for United Kingdom - London &amp; South East England</title>
+    <updated>2026-11-21T15:18:55Z</updated>
+    <link href="https://feeds.meteoalarm.org/api/v1/warnings/feeds-united-kingdom/abc" type="application/cap+xml"/>
+    <cap:identifier>2.49.0.0.826.0.UK.261121151855.rain</cap:identifier>
+    <cap:sent>2026-11-21T15:18:55+00:00</cap:sent>
+    <cap:status>Actual</cap:status>
+    <cap:message_type>Alert</cap:message_type>
+    <cap:event>Rain</cap:event>
+    <cap:severity>Moderate</cap:severity>
+    <cap:urgency>Future</cap:urgency>
+    <cap:certainty>Likely</cap:certainty>
+    <cap:onset>{ONSET}</cap:onset>
+    <cap:expires>{EXPIRES}</cap:expires>
+    <cap:areaDesc>London &amp; South East England</cap:areaDesc>
+    <cap:polygon>51.8,-0.6 51.8,0.4 51.2,0.4 51.2,-0.6 51.8,-0.6</cap:polygon>
+  </entry>
+  <entry>
+    <id>https://feeds.meteoalarm.org/api/v1/warnings/feeds-united-kingdom/def?index_polygon=0</id>
+    <title>Orange Flooding Warning issued for United Kingdom - South Devon coast</title>
+    <updated>2026-11-21T15:18:55Z</updated>
+    <cap:identifier>2.49.0.0.826.0.UK.flood.1</cap:identifier>
+    <cap:status>Actual</cap:status>
+    <cap:message_type>Alert</cap:message_type>
+    <cap:event>Flood Warning</cap:event>
+    <cap:severity>Severe</cap:severity>
+    <cap:onset>{ONSET}</cap:onset>
+    <cap:expires>{EXPIRES}</cap:expires>
+    <cap:areaDesc>South Devon coast</cap:areaDesc>
+    <cap:polygon>50.3,-3.7 50.3,-3.5 50.2,-3.5 50.2,-3.7 50.3,-3.7</cap:polygon>
+  </entry>
+</feed>

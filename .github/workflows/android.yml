@@ -1,0 +1,96 @@
+# Builds RBSB-Weather for Android and runs its tests on every push.
+# Created By Shane BlackbuRn
+name: Build and test
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write          # only used to publish test builds to the test-builds branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      # Robolectric downloads Android's framework jars from Maven Central the first time;
+      # keep them between runs so a slow or refused download can't fail the tests
+      - name: Cache Robolectric's Android jars
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/robolectric
+          key: robolectric-4.14.1-sdk34
+      - name: Tests
+        run: ./gradlew --no-daemon --stacktrace testDebugUnitTest
+      - name: Test totals
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          t = f = e = sk = 0
+          for x in glob.glob("app/build/test-results/testDebugUnitTest/*.xml"):
+              r = ET.parse(x).getroot()
+              t += int(r.get("tests", 0)); f += int(r.get("failures", 0))
+              e += int(r.get("errors", 0)); sk += int(r.get("skipped", 0))
+          print(f"TEST TOTALS: {t} run, {t - f - e - sk} passed, {f} failed, {e} errors, {sk} skipped")
+          shown = 0
+          for x in glob.glob("app/build/test-results/testDebugUnitTest/*.xml"):
+              for tc in ET.parse(x).getroot().iter("testcase"):
+                  for bad in list(tc.findall("failure")) + list(tc.findall("error")):
+                      if shown < 6:
+                          print("FAILURE DETAIL:", tc.get("classname"), tc.get("name"))
+                          print("\n".join((bad.text or bad.get("message") or "").splitlines()[:150]))
+                          shown += 1
+          PY
+      - name: Build the APK
+        run: ./gradlew --no-daemon --stacktrace assembleRelease
+      - name: Name the APK and its checksum
+        run: |
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          mkdir -p out
+          cp app/build/outputs/apk/release/app-release.apk "out/rbsb-weather-android_${VERSION}.apk"
+          cd out && sha256sum *.apk > SHA256SUMS && cat SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rbsb-weather-android-apk
+          path: out/
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports
+          path: |
+            app/build/reports/tests/
+            app/build/test-results/
+          retention-days: 14
+      # The latest test build of each push, on its own branch (replaced each time, no history),
+      # so it can be downloaded without signing in. Not a release.
+      - name: Publish the test build to the test-builds branch
+        if: github.event_name == 'push' && !startsWith(github.ref, 'refs/heads/repro/')   # repro branches never replace the test build
+        run: |
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          mkdir -p /tmp/tb && cp out/* /tmp/tb/
+          if [ -d app/build/screens ]; then mkdir -p /tmp/tb/screens && cp app/build/screens/*.png /tmp/tb/screens/; fi
+          cat > /tmp/tb/BUILD_INFO.txt <<INFO
+          RBSB-Weather for Android ${VERSION} (test build)
+          Branch: ${GITHUB_REF_NAME}
+          Commit: ${GITHUB_SHA}
+          Built: $(date -u +%Y-%m-%dT%H:%M:%SZ) by GitHub Actions run ${GITHUB_RUN_ID}
+          Created By Shane BlackbuRn
+          INFO
+          cd /tmp/tb
+          git init -q -b test-builds
+          git config user.name "RBSB-Weather build"
+          git config user.email "shanebl030-glitch@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Test build ${VERSION} from ${GITHUB_REF_NAME} (${GITHUB_SHA::7})"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" test-builds
