@@ -49,6 +49,14 @@ class WeatherRepository(
     }
 
     fun cached(place: Place): Forecast? = cache?.load(place)
+
+    fun forget(place: Place) {
+        cache?.remove(place)
+    }
+
+    fun cleanUp(keep: List<Place>) {
+        cache?.cleanOrphans(keep)
+    }
 }
 
 /** One small JSON file per place in the app's private folder. */

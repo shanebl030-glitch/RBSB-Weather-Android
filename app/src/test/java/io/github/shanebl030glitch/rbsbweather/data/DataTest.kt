@@ -51,7 +51,7 @@ class DataTest {
         }
         // NaN / infinity / strings / missing columns are just gaps
         val o = JSONObject(res("openmeteo_forecast.json"))
-        o.getJSONObject("current").put("humidity", "NaN")
+        o.getJSONObject("current").put("relative_humidity_2m", "NaN")
         o.getJSONObject("hourly").remove("precipitation")
         o.getJSONObject("daily").put("uv_index_max", JSONObject.NULL)
         val fc = parseForecast(o.toString(), AUCKLAND)
