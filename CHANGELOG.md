@@ -17,6 +17,7 @@ Shane: "I was about to say before you made the change to keep it as is but we ca
   - how to install anyway.
 - **The user guide** says the same in short.
 - **Release notes for the GitHub release page** are in `docs/RELEASE_NOTES_0.6.2.md`.
+- **Screenshots** of 0.6.2 on Android 14 are on the GitHub page and in the release notes (`docs/screenshots/`). They come from the emulator check, plus the widget and sky pictures from the screen tests.
 
 ## 0.6.1 – 2026-11-23 (test build; superseded by 0.6.2)
 
