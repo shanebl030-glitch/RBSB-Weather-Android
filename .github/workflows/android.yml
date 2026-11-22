@@ -22,6 +22,13 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
+      # Robolectric downloads Android's framework jars from Maven Central the first time;
+      # keep them between runs so a slow or refused download can't fail the tests
+      - name: Cache Robolectric's Android jars
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/robolectric
+          key: robolectric-4.14.1-sdk34
       - name: Tests
         run: ./gradlew --no-daemon --stacktrace testDebugUnitTest
       - name: Test totals
@@ -35,6 +42,14 @@ jobs:
               t += int(r.get("tests", 0)); f += int(r.get("failures", 0))
               e += int(r.get("errors", 0)); sk += int(r.get("skipped", 0))
           print(f"TEST TOTALS: {t} run, {t - f - e - sk} passed, {f} failed, {e} errors, {sk} skipped")
+          shown = 0
+          for x in glob.glob("app/build/test-results/testDebugUnitTest/*.xml"):
+              for tc in ET.parse(x).getroot().iter("testcase"):
+                  for bad in list(tc.findall("failure")) + list(tc.findall("error")):
+                      if shown < 6:
+                          print("FAILURE DETAIL:", tc.get("classname"), tc.get("name"))
+                          print("\n".join((bad.text or bad.get("message") or "").splitlines()[:25]))
+                          shown += 1
           PY
       - name: Build the APK
         run: ./gradlew --no-daemon --stacktrace assembleRelease
