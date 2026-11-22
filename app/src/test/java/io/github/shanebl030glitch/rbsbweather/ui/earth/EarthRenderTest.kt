@@ -47,16 +47,18 @@ class EarthRenderTest {
 
     @Test fun earthMapDrawsDayAndNightFromTheRealTextures() {
         EarthRender.init(RuntimeEnvironment.getApplication().assets)
-        val t = Instant.parse("2026-11-15T00:15:00Z")
-        val img = EarthRender.compose(t, null)
-        assertEquals(EarthRender.W, img.width); assertEquals(EarthRender.H, img.height)
-        fun lum(lat: Double, lon: Double): Int {
+        val noon = EarthRender.compose(Instant.parse("2026-11-15T11:00:00Z"), null)     // midday over the Sahara
+        val night = EarthRender.compose(Instant.parse("2026-11-15T23:00:00Z"), null)    // midnight there
+        assertEquals(EarthRender.W, noon.width); assertEquals(EarthRender.H, noon.height)
+        fun lum(img: Bitmap, lat: Double, lon: Double): Int {
             val (x, y) = Earth.toMapXY(lat, lon, img.width.toDouble(), img.height.toDouble())
             val p = img.getPixel(x.toInt().coerceIn(0, img.width - 1), y.toInt().coerceIn(0, img.height - 1))
             return Color.red(p) + Color.green(p) + Color.blue(p)
         }
+        val day = lum(noon, 22.0, 12.0); val dark = lum(night, 22.0, 12.0)
+        assertTrue("day $day night $dark", day > 3 * dark + 60)                         // the sunlit desert is much brighter
+        val t = Instant.parse("2026-11-15T11:00:00Z"); val img = noon
         val (slat, slon) = Earth.subsolarPoint(t)
-        assertTrue(lum(slat, slon) > 3 * lum(-slat, slon + 180) + 30)       // the sunlit side is much brighter
         // and the globe made from it is filled
         val g = GlobeRenderer(img).render(120, slat, slon)
         assertEquals(255, Color.alpha(g.getPixel(60, 60)))
