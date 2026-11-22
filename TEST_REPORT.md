@@ -4,13 +4,31 @@ Created By Shane BlackbuRn
 
 | Item | Result |
 |---|---|
-| Version | 0.5.1 (test build) |
+| Version | 0.5.2 (test build) |
 | Date | 2026-11-22 |
 | Where | GitHub Actions: Ubuntu 26.04 runner, JDK 17 (Temurin), Gradle 8.14.3, Android Gradle Plugin 8.10.1, Kotlin 2.1.21, Compose BOM 2025.05.01, compile/target SDK 35, min SDK 29 |
 | Command | `./gradlew testDebugUnitTest`, then `./gradlew assembleRelease` |
-| Tests | 154 run, 154 passed, 0 failed, 0 skipped (GitHub Actions run 44995204740), plus the emulator check (run 44995821619): no crash |
+| Tests | 154 run, 154 passed, 0 failed, 0 skipped (GitHub Actions run 45056877312), plus the emulator check (run 45056877230): no crash, and the globe turns on screen with Rotate slowly and when dragged |
 
 ## What's tested
+
+**New in 0.5.2 (the globe must really turn):**
+- **Stress test** (GlobeStressTest, a simulated phone):
+  - with Rotate slowly, the globe's picture must be redrawn at least 4 times in 4 seconds and turn 12–45° east;
+  - a one-finger drag to the right must turn it west by more than 10°, the picture must follow within 0.5°, and the zoom must not change;
+  - an upward drag turns it north and south.
+- **ScreensTest:** tapping the words "Live clouds" ticks the box.
+- **Emulator check (real Android 14)**, comparing screenshots of the globe:
+
+| | 0.5.1 (temporary branch `repro/globe-turn-0.5.1`) | 0.5.2 |
+|---|---|---|
+| Nothing moving | 0.10% changed | 0.03% changed |
+| Rotate slowly, 5 s | 0.06%: **didn't move** | 12.2%: moved |
+| One-finger drag | 0.10%: **didn't move** | 19.3%: moved |
+| Stress test | **failed**: the view turned 32°, but only 1 picture was drawn | passed |
+
+(The first 0.5.2 emulator run showed no movement for Rotate slowly. Its screenshot showed the script had tapped the words, which didn't tick the box then. The words now tick it, and the numbers above are from the run after that.)
+
 
 **New in 0.5.1:**
 - **Emulator check: real Android 14 on a Pixel 6 emulator** (`.github/workflows/emulator.yml`, `scripts/emulator/drive.sh`).
