@@ -8,7 +8,15 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 mkdir -p "$OUT"
 n=0
 shot() { n=$((n+1)); adb exec-out screencap -p > "$OUT/$(printf %02d $n)-$1.png"; }
-dump() { adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; adb shell cat /sdcard/ui.xml > "$OUT/ui.xml" 2>/dev/null; }
+dump() {
+  adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; adb shell cat /sdcard/ui.xml > "$OUT/ui.xml" 2>/dev/null
+  # a slow emulator sometimes shows Android's own "… isn't responding" dialog over everything: wait it out
+  if grep -q "isn.t responding" "$OUT/ui.xml" 2>/dev/null; then
+    echo "(dismissing an Android 'isn't responding' dialog: $(grep -o 'text="[^"]*isn.t responding[^"]*"' "$OUT/ui.xml" | head -1))"
+    xy=$(python3 "$HERE/find.py" "$OUT/ui.xml" "Wait") && adb shell input tap $xy; sleep 2
+    adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; adb shell cat /sdcard/ui.xml > "$OUT/ui.xml" 2>/dev/null
+  fi
+}
 alive() { adb shell pidof $PKG >/dev/null 2>&1; }
 tap() {   # tap <text> [starts]
   for i in 1 2 3 4 5 6 7 8 9 10; do
@@ -36,7 +44,7 @@ adb shell pm grant $PKG android.permission.POST_NOTIFICATIONS 2>/dev/null
 adb shell getprop dalvik.vm.heapgrowthlimit; adb shell getprop dalvik.vm.heapsize
 adb logcat -c
 adb shell am start -W -n $PKG/.MainActivity
-sleep 6; check "launch"; shot launch
+sleep 6; check "launch"; dump; shot launch
 step "add Auckland"
 tap "Add a place" && sleep 2 && adb shell input text Auckland && sleep 8
 tap "Auckland, New Zealand"; sleep 10; check "adding a place"; shot forecast
