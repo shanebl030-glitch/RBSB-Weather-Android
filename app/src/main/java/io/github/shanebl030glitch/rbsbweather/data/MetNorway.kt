@@ -30,7 +30,6 @@ private val LOCAL = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
 private class Step(val t: Instant, val inst: JSONObject, val n1: JSONObject?, val n6: JSONObject?)
 
 private fun JSONObject.symbol(): Int? = WeatherCodes.fromMetSymbol(optJSONObject("summary")?.optString("symbol_code"))
-private fun kmh(ms: Double?) = ms?.let { Math.round(it * 3.6 * 10.0) / 10.0 }
 
 fun parseMetNorway(body: String, place: Place, days: Int = 7, now: Instant = Instant.now()): Forecast {
     val o = try { JSONObject(body) } catch (e: JSONException) { throw WeatherException("MET Norway's forecast couldn't be read.") }
