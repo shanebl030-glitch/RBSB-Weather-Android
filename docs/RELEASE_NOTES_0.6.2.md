@@ -1,4 +1,4 @@
-# RBSB-Weather for Android 0.6.2
+# RBSB-Weather-Android 0.6.2
 
 Created By Shane BlackbuRn
 
