@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import io.github.shanebl030glitch.rbsbweather.data.AUCKLAND
 import io.github.shanebl030glitch.rbsbweather.data.ForecastCache
@@ -67,7 +68,7 @@ class ScreensTest {
         compose.onNodeWithText("17°C").assertIsDisplayed()
         compose.onNodeWithTag("menu").performClick()
         compose.onNodeWithTag("menu-Settings").performClick()
-        compose.onNodeWithText("Fahrenheit (°F)").performClick()
+        compose.onNodeWithText("Fahrenheit (°F)").performScrollTo().performClick()   // Settings is longer now: scroll to it
         compose.onNodeWithTag("back").performClick()
         compose.onNodeWithText("62°F").assertIsDisplayed()
     }
@@ -154,7 +155,7 @@ class ScreensTest {
         compose.onNodeWithTag("warningBanner").performClick()
         compose.onNodeWithTag("warnings").assertIsDisplayed()
         compose.onAllNodesWithText("Orange Heavy Rain Warning")[0].assertIsDisplayed()
-        compose.onAllNodesWithTag("mute")[0].performClick()
+        compose.onAllNodesWithTag("mute")[0].performScrollTo().performClick()
         assertTrue(m.state.value.alerts[AUCKLAND.key]!!.none { it.official })        // off the banner
         assertTrue(m.state.value.allAlerts[AUCKLAND.key]!!.any { it.official })      // still listed
         compose.onNodeWithTag("back").performClick()
@@ -166,7 +167,7 @@ class ScreensTest {
         compose.onNodeWithTag("menu-Settings").performClick()
         compose.onNodeWithTag("openAlertSettings").performClick()
         compose.onNodeWithTag("alertSettings").assertIsDisplayed()
-        compose.onNodeWithTag("alertsRedAlarm").performClick()
+        compose.onNodeWithTag("alertsRedAlarm").performScrollTo().performClick()
         assertTrue(m.state.value.settings.alerts.redAlarm)
     }
 }
