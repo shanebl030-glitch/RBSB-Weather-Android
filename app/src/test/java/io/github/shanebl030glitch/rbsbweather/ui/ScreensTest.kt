@@ -193,6 +193,9 @@ class ScreensTest {
         compose.onNodeWithTag("liveClouds").performScrollTo().performClick()  // taps reach the controls under the globe too
         compose.waitForIdle()
         assertFalse(m.state.value.settings.earthClouds)
+        compose.onNodeWithText("Live clouds").performClick()                 // the words work too, not just the small box
+        compose.waitForIdle()
+        assertTrue(m.state.value.settings.earthClouds)
         compose.onNodeWithTag("earthFlat").performScrollTo().performClick()
         compose.onNodeWithTag("flatMap").assertIsDisplayed()
         compose.onNodeWithTag("tab-Forecast").performClick()

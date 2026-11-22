@@ -63,6 +63,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.semantics.SemanticsPropertyReceiver
 import androidx.compose.ui.semantics.SemanticsPropertyKey
@@ -197,14 +198,23 @@ fun EarthScreen(state: UiState, model: AppModel, modifier: Modifier = Modifier) 
         else FlatMap(img, ms, s.settingsSelected(), quakes, t, state, model, { quake = it })
         quake?.let { q -> QuakeCard(q, state, onClose = { quake = null }) }
         Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(s.earthClouds, { model.setEarthClouds(it) }, Modifier.testTag("liveClouds")); Text("Live clouds", fontSize = 13.sp)
-            Checkbox(s.quakes.show, { model.setEarthQuakes(it) }, Modifier.testTag("quakesOnMap"))
-            Text("Earthquakes" + if (s.quakes.show) " (${state.quakes.size})" else "", fontSize = 13.sp)
+            LabelledCheck(s.earthClouds, "Live clouds", "liveClouds") { model.setEarthClouds(it) }
+            LabelledCheck(s.quakes.show, "Earthquakes" + if (s.quakes.show) " (${state.quakes.size})" else "", "quakesOnMap") { model.setEarthQuakes(it) }
         }
         Text("☀ Sun overhead  ·  ● Moon overhead  ·  quakes: red in the last hour (pulsing), orange 6 hours, yellow a day; bigger dots are bigger quakes. Tap a place or a quake.",
             fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f), modifier = Modifier.padding(horizontal = 12.dp))
         Text(Earth.CREDIT + "\n" + Clouds.CREDIT + "\n" + Quakes.CREDIT, fontSize = 10.sp,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f), modifier = Modifier.padding(12.dp))
+    }
+}
+
+/** A tick box whose words can be tapped too (tapping only the small box was easy to miss, 0.5.1). */
+@Composable
+private fun LabelledCheck(checked: Boolean, label: String, tag: String, onChange: (Boolean) -> Unit) {
+    Row(Modifier.toggleable(checked, role = androidx.compose.ui.semantics.Role.Checkbox, onValueChange = onChange).padding(end = 10.dp).testTag(tag),
+        verticalAlignment = Alignment.CenterVertically) {
+        Checkbox(checked, onCheckedChange = null, modifier = Modifier.padding(10.dp))
+        Text(label, fontSize = 13.sp)
     }
 }
 
@@ -498,7 +508,7 @@ private fun GlobeView(img: EarthImage?, ms: List<Marker>, selected: String?, qua
         }
     }
     Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-        Checkbox(spin, { spin = it }, Modifier.testTag("rotateSlowly")); Text("Rotate slowly", fontSize = 13.sp)
+        LabelledCheck(spin, "Rotate slowly", "rotateSlowly") { spin = it }
         TextButton(onClick = { sel?.let { turnTarget = it.lat.coerceIn(-70.0, 70.0) to it.lon; turnTick++ } }, enabled = sel != null) { Text("Centre on selected") }
         Text(String.format(Locale.US, "%.0f%%", zoom * 100), fontSize = 12.sp)
     }

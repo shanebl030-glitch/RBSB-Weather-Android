@@ -10,7 +10,7 @@ with its own versions, releases and tests.
 
 **Designed and Created By Shane BlackbuRn** · **Coded By Claude AI**
 
-## What it does (0.5.1)
+## What it does (0.5.2)
 
 - Search for any city or town and save up to 50 places. Swipe between them.
 - The desktop app's animated sky, ported: the Sun and the Moon in its real
@@ -43,7 +43,7 @@ Needs **Android 10 or newer**.
 
 ## Install a test build
 
-1. On your phone, download `rbsb-weather-android_0.5.1.apk` from the
+1. On your phone, download `rbsb-weather-android_0.5.2.apk` from the
    [test-builds branch](https://github.com/shanebl030-glitch/RBSB-Weather-Android/tree/test-builds)
    (or use the file sent to you).
 2. Open it. Android asks to allow installing apps from this source (for example

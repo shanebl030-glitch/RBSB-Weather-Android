@@ -2,6 +2,21 @@
 
 Created By Shane BlackbuRn
 
+## 0.5.2 (2026-11-23)
+
+**Shane:** "1. the touch and drag to rotate the globe doesn't work. 2. the globe itself doesn't rotate when you tick rotate slowly."
+
+**Causes (from the code, then proved by tests):**
+1. **Drag:** the pinch-to-zoom handler also saw one-finger movement and took it before the drag handler.
+2. **Rotate slowly:** each new position cancelled the globe picture being drawn in the background. On a phone a picture takes longer than a frame, so none ever finished while it moved. The tests used a simulated clock, so pictures always seemed to finish in time.
+
+**Proof both ways:**
+- New checks were run on a temporary copy of 0.5.1 (branch `repro/globe-turn-0.5.1`):
+  - the stress test failed: the view turned 32° but only 1 picture was drawn;
+  - on the emulator, neither Rotate slowly nor a drag changed the globe on screen.
+- On 0.5.2 the drag check passed straight away.
+- Rotate slowly first looked unchanged on the emulator. The screenshots showed my script had tapped the words "Rotate slowly", which didn't tick the box. The words can now be tapped too, and the check was run again (see TEST_REPORT.md).
+
 ## 0.5.1 (2026-11-22)
 
 **Shane:** "Do a complete audit on the android because when I click on earth globe it crashes"

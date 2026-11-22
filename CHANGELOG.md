@@ -4,7 +4,23 @@ Created By Shane BlackbuRn
 
 A separate app from RBSB-Weather for the desktop, with its own versions.
 
-## 0.5.1 – 2026-11-22 (test build; on branch claude/android-0.2.0; not released)
+## 0.5.2 – 2026-11-23 (test build; on branch claude/android-0.2.0; not released)
+
+Shane: "1. the touch and drag to rotate the globe doesn't work. 2. the globe itself doesn't rotate when you tick rotate slowly."
+
+### Fixed
+- **Dragging the globe didn't turn it.** Two touch handlers (drag, and pinch to zoom) both watched the same finger, and the pinch one took the movement. One handler now does both: one finger turns the globe, two fingers pinch to zoom.
+- **The globe didn't turn with Rotate slowly (or while dragging).** The globe is drawn in the background, and each new position cancelled the picture being drawn. On a phone a picture takes longer than a frame, so while the globe kept moving no picture ever finished. Now each picture finishes, then the newest position is drawn.
+- **Tapping a place or quake** on the globe after turning it now finds the right one.
+
+### Changed
+- **Rotate slowly, Live clouds and Earthquakes** can be ticked by tapping their words, not only the small box.
+
+### Tests
+- **Stress test (simulated phone):** the globe's picture itself must turn about 8° a second with Rotate slowly, and follow a one-finger drag; a drag must not change the zoom. On 0.5.1 this fails: the view turned 32° but only one picture was ever drawn.
+- **Emulator check (real Android):** screenshots of the globe before and after Rotate slowly and a drag must differ. Both failed on 0.5.1.
+
+## 0.5.1 – 2026-11-22 (test build; globe didn't turn – use 0.5.2)
 
 Shane: "when I click on earth globe it crashes".
 

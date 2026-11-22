@@ -101,7 +101,7 @@ The **Earth** tab shows day and night across the world as it is right now, with 
 * **Your places** are marked; the place on screen is highlighted with a card showing its time, temperature and whether it's day, twilight or night there. Tap another place to switch to it.
 * ☀ marks where the Sun is overhead, and ● where the Moon is.
 * **Flat:** pinch to zoom in (up to 4×) and drag to move around; double-tap to go back to the whole world.
-* **Globe:** drag to turn it, pinch or use **+**/**−** to zoom, and double-tap to centre on the place on screen. **Rotate slowly** turns it by itself. Behind the globe are the real Sun, Moon and stars in their real positions, so you can see the Sun set behind the edge of the Earth as the day ends there.
+* **Globe:** drag with one finger to turn it, pinch or use **+**/**−** to zoom, and double-tap to centre on the place on screen. **Rotate slowly** turns it by itself. Behind the globe are the real Sun, Moon and stars in their real positions, so you can see the Sun set behind the edge of the Earth as the day ends there.
 * **Live clouds:** the Earth shows the latest satellite cloud picture. It's checked every hour and only downloaded when there's a newer one, and if it can't be downloaded the last one is kept. The line above the map says how old the clouds are. Untick **Live clouds** to turn them off (and stop the download).
 * The picture is redrawn every 5 minutes, so the line between day and night moves on.
 * A warning's **Show on Earth map** opens the map at that place.
