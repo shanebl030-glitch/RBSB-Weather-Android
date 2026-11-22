@@ -51,6 +51,8 @@ class ScreensTest {
         compose.waitUntil(5_000) { AUCKLAND.key in m.state.value.forecasts || m.state.value.forecasts.isNotEmpty() }
         compose.onNodeWithTag("temp").assertIsDisplayed()
         compose.onNodeWithText("17°C").assertIsDisplayed()
+        // the sky card is tall: lists only build what's on screen, so scroll to each part
+        compose.onNodeWithTag("page-${AUCKLAND.key}").performScrollToNode(hasTestTag("details"))
         compose.onNodeWithTag("details").assertIsDisplayed()
         // the credit is at the bottom of the page: scroll down to it
         compose.onNodeWithTag("page-${AUCKLAND.key}").performScrollToNode(hasTestTag("credit"))
@@ -136,6 +138,7 @@ class ScreensTest {
         compose.onNodeWithTag("playback").assertIsDisplayed()
         compose.onNodeWithTag("playbackLabel").assertIsDisplayed()
         compose.onNodeWithTag("playbackNow").assertIsDisplayed()
+        compose.onNodeWithTag("page-${AUCKLAND.key}").performScrollToNode(hasTestTag("daily"))
         compose.onAllNodesWithTag("dayIcon")[0].assertExists()          // animated icons in the 7-day list
     }
 }
