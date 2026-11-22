@@ -13,16 +13,23 @@ Tap **+** at the top to add a city or town. Type at least two letters, then tap 
 
 ## Reading the screen
 
-* **The sky** follows the real Sun where the place is: blue by day, orange at sunrise and sunset, dark with stars at night. The Sun or Moon moves across the sky between rising and setting. Clouds drift with the wind, and rain, snow, fog and lightning show when they're happening.
-* In the sky: the temperature, the conditions, what it **feels like**, and today's **high and low**. Along the bottom of the sky is a **mini forecast** for the next few days (as many as fit your screen).
-* **Forecast playback**: under the sky, tap ▶ to play the next 24 hours, or drag the slider to any time in 15-minute steps. The sky, the temperature and the conditions change to that time, and it says "Forecast for …". Tap **Now** to go back.
+* **The sky** is the same animated sky as RBSB-Weather on the desktop. Its colour follows the local time there, including dawn and dusk.
+* **The Sun and Moon** follow the same arc at their real times there: each rises just below the bottom left, is highest halfway between rising and setting, and sets at the bottom right. The Moon is shown in its real phase and tilt whenever it's really above the horizon, so you'll often see both. By day it's pale, like the real daytime Moon. Stars come out at night.
+* **Clouds** drift the way the wind is blowing towards (east is to the right, as on a weather map). The stronger the wind, the faster they go: about 2½ minutes to cross the sky in calm air, 70 seconds at 10 km/h, 30 seconds at 40 km/h, and no faster than 19 seconds in a gale. When the wind changes, they ease into it.
+* **Rain** is slanted by the wind and splashes, **snow** drifts down, **fog** rolls past, and **thunderstorms** flash with lightning. When the weather changes, the sky blends into the new weather.
+* In the sky: the temperature, the conditions, what it **feels like**, and today's **high and low**.
+* **Mini forecast**: the bottom-right corner of the sky shows the next days: the name (Today, Tomorrow, then the weekday), an **animated icon**, the high and low, and the chance of rain. As many days fit as there's room for.
+* Under the sky: when the weather was downloaded, or what went wrong.
+* **Forecast playback**: under the sky, tap ▶ to play the next 24 hours at an hour a second (⏸ pauses), or drag the slider to any time in 15-minute steps. The sky shows that hour's weather, with the Sun and Moon where they'll be. The card shows that hour's temperature, weather and chance of rain, marked "▶ Forecast for …". The clouds keep today's wind, because the hourly forecast has none. Tap **Now** to go back. Some providers have no hourly forecast, and the bar says so.
 * **Details**: humidity, wind and gusts with the direction they come from, pressure, cloud cover, rain in the last hour, the UV index and sunrise and sunset.
 * **Next 24 hours**: the orange line is the temperature; blue bars are the chance of rain. Swipe sideways to see later hours.
-* **7-day forecast**: each day's weather, high and low, chance of rain and how much is expected.
+* **7-day forecast**: each day's animated icon, weather, high and low, chance of rain and how much is expected, and the strongest wind.
 
 ## Refreshing
 
 * Pull the screen down, or tap ⟳, to update straight away.
+* When the app starts, every saved place updates: the one on screen first, then the others 1½ seconds apart. A place updated in the last 2 minutes is skipped.
+* If an update fails, it's tried again after 30 seconds, then 1 and 2 minutes, then every 5 minutes until it works (while automatic refresh is on).
 * The weather updates by itself when it's older than your refresh setting (30 minutes unless you change it), while the app is open and when you come back to it.
 * The last forecast for every place is kept on your phone, so it shows even without internet. It says **saved copy** and how old it is.
 
@@ -47,8 +54,9 @@ Menu (⋮) → **Settings** → **Weather Providers**.
 ## Home-screen widgets
 
 * Touch and hold an empty part of your home screen → **Widgets** → **RBSB-Weather**.
-* **Small:** the place, temperature, sky symbol, conditions, and high and low.
-* **With 5 days:** the same, plus the next five days.
+* The widget shows the same animated sky as the app, with the place and the provider under it, **↻** and the time of the last update (amber, with how long ago, when the weather is getting old), the temperature, conditions, and high and low. When there's room it also shows the mini forecast.
+* **Resize it** (touch and hold it, then drag the edges): bigger widgets show more forecast days.
+* **About the animation:** Android doesn't let widgets run live animation the way a desktop can. RBSB-Weather draws a few seconds of the sky and the widget loops them. It's redrawn every time the weather updates, so the Sun and Moon move on. If your phone's launcher won't take that many pictures, the widget shows a still picture instead. Turning off **Animated sky** in Settings also makes the widget still.
 * The widgets show the place you last looked at in the app. They update when the app does, and by themselves about every 30 minutes when the weather is older than your refresh setting. Tap a widget to open the app.
 
 ## Settings

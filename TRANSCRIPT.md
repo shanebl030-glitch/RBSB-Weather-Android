@@ -2,6 +2,41 @@
 
 Created By Shane BlackbuRn
 
+## 0.3.0 (2026-11-22)
+
+**Shane:** "the widget doesn't animate like it does on the desktop version. I want
+the android to be a replica of RBSB-Weather desktop version. nothing missing."
+
+**What I told him first:**
+- Android home-screen widgets can't run live animation. The nearest is a short
+  loop of frames drawn from the real sky.
+- I'd list every desktop feature in PARITY.md, then build towards all of them.
+
+**What was done:**
+- I ported the desktop's animated scene in full instead of keeping the simpler
+  Android sky: `scene.py`, `moon.py`, the Moon renderer, `forecast_strip.py`, the
+  icons, and the desktop's playback rules.
+- The widget became a looping animation drawn from that scene, with the desktop
+  widget's text.
+- Retries and staggered start-up now work as on the desktop.
+- I wrote PARITY.md, which lists everything still to come with its version:
+  0.4 warnings and earthquakes; 0.5 Moon and Earth; 0.6 Wind and the rest.
+
+**Problems found while testing:**
+1. **First CI run:** compiled first time; 92 of 94 passed. The sky card is now
+   taller, so two screen tests had to scroll down to the parts below it.
+2. **Looking at the pictures from the build:** the shade behind the mini forecast
+   had a hard edge, because the gradient was round but the shape was squashed.
+   It's now drawn squashed as a whole, as on the desktop, and blends in.
+3. **Final run:** 98 of 98 passed.
+
+**Tested:**
+- 98 tests (GitHub Actions run 44974363240).
+- I looked at the pictures of the sky, Moon, mini forecast and widget frames
+  that the build saves.
+- Not tested on a phone. Still to check there: the animation's smoothness,
+  battery use, and whether your launcher shows the widget's frames.
+
 ## 0.2.0 (2026-11-22)
 
 **Shane:** "It's a good start but there a lot that are missing".

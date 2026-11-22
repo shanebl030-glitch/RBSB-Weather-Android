@@ -4,13 +4,58 @@ Created By Shane BlackbuRn
 
 | Item | Result |
 |---|---|
-| Version | 0.2.0 (test build) |
+| Version | 0.3.0 (test build) |
 | Date | 2026-11-22 |
 | Where | GitHub Actions: Ubuntu 26.04 runner, JDK 17 (Temurin), Gradle 8.14.3, Android Gradle Plugin 8.10.1, Kotlin 2.1.21, Compose BOM 2025.05.01, compile/target SDK 35, min SDK 29 |
 | Command | `./gradlew testDebugUnitTest`, then `./gradlew assembleRelease` |
-| Tests | 60 run, 60 passed, 0 failed, 0 skipped (GitHub Actions run 44970300356) |
+| Tests | 98 run, 98 passed, 0 failed, 0 skipped (GitHub Actions run 44974363240) |
 
 ## What's tested
+
+**New in 0.3 (38 tests):**
+- **Moon:** compared with the desktop's PyEphem reference values:
+  - rise and set within 90 s (Tromsø within 300 s);
+  - illumination within 0.3 percentage points;
+  - new, quarter and full moon times within 2 minutes;
+  - the tilt (parallactic angle) within 2.5°.
+- **Moon, other checks:**
+  - phase names, and a principal phase named only on its own day;
+  - waxing and waning, and the bright limb pointing towards the setting Sun;
+  - the polar always-up/always-down case;
+  - time zones, the next phases, the north/south views, "now or at its highest", and the current pass.
+- **Scene conditions:**
+  - every weather code classified;
+  - day, night, dusk and dawn;
+  - the Sun's progress, and the clock moving on since download;
+  - falling back to day/night from the forecast when there are no sun times;
+  - wind direction to drift, and hemisphere;
+  - the desktop's cloud-speed table;
+  - cloud amounts in order;
+  - the Moon up or down at real times in Auckland;
+  - playback using that hour's weather.
+- **Moving parts:**
+  - rain, snow, cloud and fog stay in bounds for 10 simulated minutes;
+  - lightning only in storms;
+  - rain slants with the wind;
+  - the wind eases in;
+  - fades finish, and are instant when animation is off.
+- **Real drawing (Robolectric native graphics):**
+  - every weather code draws by day and by night;
+  - day and night skies differ;
+  - the Sun and Moon follow their arcs, and the Moon isn't drawn below the horizon;
+  - the NASA Moon picture is lit for full and new moon;
+  - the widget makes 20 moving frames, or 1 with animation off.
+- **Pictures:** seven skies and three widget frames are saved as PNGs and checked not to be blank. I looked at them.
+- **Widget text:**
+  - the provider and "(backup)";
+  - "↻ time", turning amber with its age at the desktop's thresholds;
+  - age texts;
+  - the frames fit the picture budget.
+- **Playback:** an hour a second, 96 steps, the time stamp (12- and 24-hour), that hour's forecast, and why playback is unavailable.
+- **Refreshing:**
+  - retries after 30 s, 1, 2 and 5 minutes, back to normal once it works;
+  - at start-up the visible place first, then the others 1.5 s apart.
+
 
 **New in 0.2 (29 tests):**
 - **Providers.** OpenWeather (One Call; and the free-key fallback, which isn't asked again), WeatherAPI.com, Visual Crossing, Tomorrow.io and Weather Underground (nearest station; your own station offline; a 5-hour-old report). These use the saved replies from the desktop app's provider fixtures, with the same expected values as the desktop tests.
@@ -93,12 +138,12 @@ Created By Shane BlackbuRn
 
 ## The APK
 
-`rbsb-weather-android_0.2.0.apk` (about 20 MB) was downloaded from the
+`rbsb-weather-android_0.3.0.apk` (about 22 MB with the Moon images) was downloaded from the
 `test-builds` branch and checked here:
 
 - its SHA-256 matches `SHA256SUMS`;
 - the zip is intact;
-- the manifest has the app ID `io.github.shanebl030glitch.rbsbweather`, version 0.2.0 (code 2), min SDK 29, target SDK 35, MainActivity and the INTERNET permission;
+- the manifest has the app ID `io.github.shanebl030glitch.rbsbweather`, version 0.3.0 (code 3), min SDK 29, target SDK 35, MainActivity and the INTERNET permission;
 - both widget receivers are there, and so are the backup rules that keep API keys out of backups;
 - it's signed (APK Signature Scheme v2) with the RBSB-Weather test key.
 
@@ -113,8 +158,9 @@ There's no Android device or emulator here. These need checking on a real phone:
 - rotation, dark mode, and battery use with the sky animated;
 - each keyed provider with your real keys (the tests use saved replies);
 - playback and the slider by touch;
+- the widget's looping animation on your launcher (some launchers may refuse many frames; it then shows a still picture), its battery use, and smoothness of the sky in the app;
 - the widgets on your launcher: adding them, their size and look, the 30-minute self-update (Android decides exactly when), and tapping to open the app.
 
 ## Latest run
 
-GitHub Actions run 44970300356 (commit 666d138): `TEST TOTALS: 60 run, 60 passed, 0 failed, 0 errors, 0 skipped`. The APK was built and published to `test-builds`. This report was updated afterwards (docs only), so the delivered APK comes from the next run of the same code.
+GitHub Actions run 44974363240: `TEST TOTALS: 98 run, 98 passed, 0 failed, 0 errors, 0 skipped`. The APK was built and published to `test-builds`. This report was updated afterwards (docs only), so the delivered APK comes from the next run of the same code.

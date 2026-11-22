@@ -4,6 +4,53 @@ Created By Shane BlackbuRn
 
 A separate app from RBSB-Weather for the desktop, with its own versions.
 
+## 0.3.0 – 2026-11-22 (test build; on branch claude/android-0.2.0; not released)
+
+Requested by Shane: "the widget doesn't animate like it does on the desktop version. I want the android to be a replica of RBSB-Weather desktop version. nothing missing."
+
+### Added
+- **The desktop's animated scene, ported in full** (`scene.py`). It's now the same sky as the desktop:
+  - the desktop's sky colours and dawn/dusk rules;
+  - the Sun's glow and slowly turning rays;
+  - **the Moon in its real phase, position and tilt**, drawn from NASA's Moon images. It's shown whenever it's really above the horizon, and paler by day;
+  - twinkling stars;
+  - three layers of soft cloud, plus a lower deck in heavy cloud, crossing at the desktop's speeds for the wind (150 seconds in calm air, down to 19 seconds in a gale), towards where the wind blows;
+  - a new wind eases in over a few seconds;
+  - rain slanted by the wind with splashes, drizzle, swaying snow, rolling fog, and lightning with bolts;
+  - weather changes fade into each other.
+- **Moon astronomy** (`moon.py`, ported): phase, illumination, moonrise and moonset, the next new, first quarter, full and last quarter moons, and the Moon's tilt in each place's sky. It's checked against the same PyEphem reference values as the desktop, and gets the Moon tab ready.
+- **The mini forecast as on the desktop** (`forecast_strip.py`): bottom-right of the sky, with day names (Today, Tomorrow or Tmrw, then the weekday), **animated icons**, the high and low, and the chance of rain with a drop. It shows as many days as fit (small 1–2, medium 3–5, large up to 7) and keeps clear of the text.
+- **Animated icons in the 7-day forecast:** turning sun rays, drifting cloud, falling rain and snow, rolling fog, thunder flashes and windy gusts. The maximum wind for each day is now shown too.
+- **Playback as on the desktop:**
+  - ▶ plays an hour a second and ⏸ pauses;
+  - the card shows that hour's temperature, weather and chance of rain, with "▶ Forecast for …";
+  - the Sun, Moon and day or night are as they'll be at that time;
+  - clouds keep today's wind (a note says so);
+  - providers with no hourly forecast say so.
+- **An animated home-screen widget:**
+  - Android widgets can't run live animation, so the widget loops 3 seconds drawn from the real scene, mini forecast included, and redraws them with each update.
+  - The text matches the desktop widget: the provider line ("(backup)"), and "↻ time" top right, amber with "(2 h ago)" when the weather is old.
+  - The size you give the widget decides how many forecast days fit.
+  - If a launcher refuses the frames, the widget falls back to a still picture.
+- **Refreshing as on the desktop:**
+  - At start-up every place updates, the one on screen first, then the others 1½ seconds apart. Places updated in the last 2 minutes are skipped.
+  - A failed update retries after 30 seconds, 1 minute, 2 minutes, then every 5 minutes.
+- **PARITY.md:** every desktop feature and its Android status, kept up to date.
+- The About page credits NASA's Moon imagery.
+
+### Changed
+- The weather status line moved under the sky, as the desktop's status bar, leaving the sky's bottom-right corner for the mini forecast.
+
+### Build and tests
+- 98 tests (38 new):
+  - the Moon against PyEphem (rise and set, illumination, phase times, tilt);
+  - the scene's conditions (day, night, twilight, Sun, wind, hemisphere, playback hours);
+  - cloud speeds, wind easing, weather fades, particles staying in bounds for 10 simulated minutes, lightning only in storms, rain slant;
+  - real drawing of every weather code by day and night, the Moon picture, and the widget frames;
+  - widget text, retries and staggered start-up.
+- Every build now saves pictures of the sky and widget frames, so they can be checked; they're published with the test build in `screens/`.
+- GitHub Actions run 44974363240: 98 run, 98 passed.
+
 ## 0.2.0 – 2026-11-22 (test build; on branch claude/android-0.2.0; not released)
 
 Requested by Shane: "It's a good start but there a lot that are missing". From the list he chose Weather Providers and Playback + mini forecast (for 0.2), Warnings + earthquakes (0.3), and Moon, Earth, Globe, Wind (0.4 and 0.5). He then added: "The widget are missing as wel".

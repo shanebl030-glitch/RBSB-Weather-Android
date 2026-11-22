@@ -8,11 +8,12 @@ with its own versions, releases and tests.
 
 **Designed and Created By Shane BlackbuRn** · **Coded By Claude AI**
 
-## What it does (0.2)
+## What it does (0.3)
 
 - Search for any city or town and save up to 50 places. Swipe between them.
-- An animated sky that follows the real Sun at the place, with the Sun or Moon,
-  stars, drifting clouds, rain, snow, fog and lightning.
+- The desktop app's animated sky, ported: the Sun and the Moon in its real
+  phase and tilt (NASA images), stars, layered clouds drifting with the real
+  wind, rain with splashes, snow, fog and lightning, blending as the weather changes.
 - The temperature, feels like, high and low, humidity, wind and gusts, pressure,
   cloud cover, rain, UV index, sunrise and sunset.
 - A 24-hour chart and the 7-day forecast.
@@ -22,16 +23,17 @@ with its own versions, releases and tests.
   WeatherAPI.com, Visual Crossing, Tomorrow.io and Weather Underground with your
   own free keys. Choose a primary and backups, test a connection, and choose
   when to go back to the primary after it fails.
-- Forecast playback: play or drag through the next 24 hours in the sky.
-- A mini forecast along the bottom of the sky.
-- Home-screen widgets: small, and one with the next five days.
+- Forecast playback: an hour a second, or drag through the next 24 hours.
+- The mini forecast in the sky, and animated icons in the 7-day list.
+- Animated home-screen widgets (a looping animation; see the user guide).
+- See [PARITY.md](PARITY.md) for every desktop feature and its Android status.
 - °C/°F, km/h · m/s · mph · knots, mm/inches, 12/24-hour time.
 
 Needs **Android 10 or newer**.
 
 ## Install a test build
 
-1. On your phone, download `rbsb-weather-android_0.2.0.apk` from the
+1. On your phone, download `rbsb-weather-android_0.3.0.apk` from the
    [test-builds branch](https://github.com/shanebl030-glitch/RBSB-Weather-Android/tree/test-builds)
    (or use the file sent to you).
 2. Open it. Android asks to allow installing apps from this source (for example
@@ -86,6 +88,7 @@ from phone backups. There's no tracking and no account.
 
 Weather data by Open-Meteo.com (CC BY 4.0) and MET Norway (CC BY 4.0); with
 your keys, OpenWeather (CC BY-SA 4.0), WeatherAPI.com, Visual Crossing,
-Tomorrow.io and Weather Underground / The Weather Company.
+Tomorrow.io and Weather Underground / The Weather Company. Moon imagery: NASA's
+Scientific Visualization Studio, CGI Moon Kit (LRO LROC WAC and LOLA data).
 
 Created By Shane BlackbuRn
