@@ -184,7 +184,7 @@ class ScreensTest {
         compose.onNodeWithTag("flatMap").assertIsDisplayed()
         compose.onNodeWithTag("earthGlobe").performClick()
         compose.waitForIdle()
-        assertTrue(m.state.value.earthGlobe)
+        if (!m.state.value.earthGlobe) throw AssertionError("globe switch not clicked\n" + compose.onRoot(useUnmergedTree = true).printToString(maxDepth = 12).lines().filter { "Bounds" in it || "Tag" in it || "Text" in it }.take(140).joinToString("\n"))
         try { compose.onNodeWithTag("globe").assertIsDisplayed() }
         catch (e: AssertionError) { throw AssertionError(compose.onRoot().printToString(), e) }
         compose.onNodeWithTag("tab-Forecast").performClick()
