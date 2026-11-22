@@ -93,6 +93,7 @@ for item in "My places" "Earthquakes" "Settings" "User guide" "Test connection" 
     dump; grep -o 'text="[^"]*\(newest version\|no release\|is available\|Couldn.t\)[^"]*"' "$OUT/ui.xml" | head -2
   fi
   if [ "$item" = "Settings" ]; then
+    for i in 1 2 3 4; do adb shell input swipe 540 1800 540 700 300; sleep 1; done      # the switches are at the bottom
     tap "Temperature in the status bar"; sleep 3
     adb shell dumpsys notification --noredact 2>/dev/null | grep -A3 "pkg=$PKG" | grep -m3 "temperature\|android.title" && echo "TEMP NOTIFICATION: shown" || echo "TEMP NOTIFICATION: not found"
     shot settings-temp

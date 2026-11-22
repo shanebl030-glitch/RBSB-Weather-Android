@@ -8,7 +8,7 @@ Tap **+** at the top to add a city or town. Type at least two letters, then tap 
 
 ## Moving around
 
-The tabs along the bottom: **Forecast**, **Moon**, **Earth** and **Warnings**. Everything else is in the menu (⋮).
+The tabs along the bottom: **Forecast**, **Moon**, **Earth**, **Wind** and **Warnings**. Everything else is in the menu (⋮).
 
 ## Your places
 
@@ -49,6 +49,7 @@ Menu (⋮) → **Settings** → **Weather Providers**.
 * **Primary and backups:** the primary is asked first. If it fails, the backups are tried in order. Tap **Make primary** on any service, turn **Backup** on or off, and use the arrows to change the order of the backups.
 * **Services with your own key:** OpenWeather, WeatherAPI.com, Visual Crossing, Tomorrow.io and Weather Underground. Each has a free plan. Tap **Details, key and test**, then **Get a key** to sign up on their website. Paste the key and tap **Save key**. A backup without a key is skipped.
 * **Test connection** asks that service for the place you're viewing and says whether it worked.
+* **Usage:** after each update, a service that reports its limits shows them under its name: Tomorrow.io's requests left today and this hour, Visual Crossing's cost of the last update, OpenWeather's plan, or the Weather Underground station used.
 * **Details** show each service's coverage, forecast length, hourly detail, free-use limits and credit.
 * **Weather Underground** works for people who send data from their own weather station. Enter your station ID to use it; otherwise the nearest reporting station is used. It has no hourly forecast, so the 24-hour chart stays empty.
 * **When the primary fails:** try it again at the next update, after 15, 30 or 60 minutes, or stay on the backup until you change something. **Use the primary now** asks the primary first straight away.
@@ -106,6 +107,16 @@ The **Earth** tab shows day and night across the world as it is right now, with 
 * The picture is redrawn every 5 minutes, so the line between day and night moves on.
 * A warning's **Show on Earth map** opens the map at that place.
 
+## Wind
+
+The **Wind** tab shows the world's weather on a globe, from NOAA's Global Forecast System (GFS):
+
+* **🌬 Wind**, **🌡 Temperature** (2 m above the ground) or **🌧 Rain & snow** (the average rate over the few hours before). The key under the globe shows the colours in your units.
+* **Moving streaks** follow the wind, whichever layer is showing. They move while **Animated sky** is on in Settings.
+* Drag to turn the globe, pinch or use **+**/**−** to zoom, and **tap anywhere** for the wind speed and direction, the temperature and any rain or snow there.
+* The line above the globe says which time the forecast is for. GFS gives a forecast every 3 hours, so it's never more than 90 minutes from now.
+* About 400 KB is downloaded every 3 hours (from NOAA, or NOAA's copy on Amazon if that's busy). The last one is kept, so the tab works offline, and if a download fails the saved one is shown.
+
 ## Home-screen widgets
 
 * Touch and hold an empty part of your home screen → **Widgets** → **RBSB-Weather**.
@@ -117,6 +128,28 @@ The **Earth** tab shows day and night across the world as it is right now, with 
 ## Settings
 
 Menu (⋮) → **Settings**: temperature (°C or °F), wind speed (km/h, m/s, mph or knots), rain (mm or inches), 12- or 24-hour time, how often to refresh, and whether the sky is animated (turn it off to save battery).
+
+* **Temperature in the status bar:** keeps the temperature of the place on screen at the top of your phone, as a quiet notification (the phone version of the desktop's tray icon). Tap it to open the app. Android 13 and newer need notifications allowed for RBSB-Weather.
+* **Check for updates:** once a day, RBSB-Weather asks GitHub whether there's a newer version, and notifies you once if there is.
+
+## Updates
+
+Menu (⋮) → **Check for updates** shows your version and asks GitHub for the newest release. If there's a newer one, you see what's new, and:
+
+* **Download and install** downloads it and checks it against the release's published checksums (`SHA256SUMS`), and that it really is RBSB-Weather for Android and newer. Then Android asks you to install it. The first time, Android asks you to allow installs from RBSB-Weather ("Install unknown apps"). Your places and settings are kept.
+* **Skip this version** stops the reminder for that version.
+* Nothing is ever installed without you, and Android refuses an update that isn't signed like the app you have.
+
+## Test connection
+
+Menu (⋮) → **Test connection** checks how your phone reaches each weather service:
+
+* finding it (DNS);
+* connecting over IPv4 and over IPv6;
+* the secure handshake;
+* a real place search, and a forecast from each provider you use, each timed.
+
+The summary says in plain words what's working and where any delay comes from. **Copy** or **Share** the report to send it to Shane. API keys never appear in it.
 
 ## If the weather won't load
 

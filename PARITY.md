@@ -80,7 +80,7 @@ and where it stands on Android. It's updated with every version.
 |---|---|---|
 | Open-Meteo, MET Norway, OpenWeather, WeatherAPI.com, Visual Crossing, Tomorrow.io, Weather Underground (station ID) | ✅ 0.2 | |
 | Status for each (working, not working, needs key, not used yet) and details | ✅ 0.2 | |
-| Usage reported by the service (e.g. Tomorrow.io's requests left today) | ⏳ 0.6 | Needs the services' reply headers. |
+| Usage reported by the service (e.g. Tomorrow.io's requests left today) | ✅ 0.6 | Tomorrow.io's requests left (today and this hour), Visual Crossing's cost per update, OpenWeather's plan, Weather Underground's station; in Weather Providers and in Test. |
 | Primary, ordered backups, recovery choices, "Use the primary now" | ✅ 0.4 | |
 | Ask small allowances less often (Tomorrow.io 10 min; OpenWeather and Visual Crossing 5 min) | ✅ 0.4 | |
 | Keys kept private and never shown | ✅ 0.2 | App-private storage, excluded from backups. |
@@ -105,20 +105,20 @@ and where it stands on Android. It's updated with every version.
 | Earth Flat: day/night map, city lights, Sun and Moon points, places with cards | ✅ | 0.5. Pinch to zoom (up to 4×) and drag; double-tap to reset. Needs checking on your phone. |
 | Earth Globe: drag, zoom, rotate slowly, real Sun, Moon and stars behind | ✅ | 0.5. Drag, pinch or +/−, double-tap to centre; the desktop's sky geometry, tested with its reference values. Speed on a real phone needs checking. |
 | Live satellite clouds | ✅ | 0.5: checked hourly, only downloaded when newer; the last map is kept if a download fails. |
-| Wind globe (NOAA GFS): wind, temperature, rain and snow, moving streaks, key | ⏳ | 0.6 |
+| Wind globe (NOAA GFS): wind, temperature, rain and snow, moving streaks, key | ✅ | 0.6: the Wind tab; the desktop's GRIB2 reader ported and checked on the same files; tap for the weather at a point (the desktop shows it on hover). |
 
 ## Desktop-only features and their phone versions
 
 | Desktop feature | Android |
 |---|---|
-| Tabs across the top (Forecast, Moon, Earth Flat, Earth Globe, Wind) | 📱 0.5: tabs along the bottom (Forecast, Moon, Earth, Warnings), the usual place on a phone; Flat and Globe are a switch at the top of Earth. |
-| System tray temperature, Close to tray | 📱 Planned for 0.6: an optional notification with the temperature (Android's version of a tray icon). |
+| Tabs across the top (Forecast, Moon, Earth Flat, Earth Globe, Wind) | 📱 0.5–0.6: tabs along the bottom (Forecast, Moon, Earth, Wind, Warnings), the usual place on a phone; Flat and Globe are a switch at the top of Earth. |
+| System tray temperature, Close to tray | 📱 0.6: Settings → Temperature in the status bar, an optional silent notification with the temperature as its icon. Close to tray isn't needed on a phone. |
 | Start at login | 📱 Not needed: the widgets and background checks run without opening the app. |
-| Updates: daily check of GitHub, download, checksum, install | ⏳ 0.6: check GitHub for a newer APK and verify it against `SHA256SUMS`; Android then asks you to install. |
-| Help → Test connection (DNS, IPv4/IPv6, timings, small-packet workaround) | ⏳ 0.6 |
+| Updates: daily check of GitHub, download, checksum, install | ✅ 0.6: menu → Check for updates, and once a day in the background with a notification; checked against `SHA256SUMS`, that it's this app and newer; Android asks you to install. |
+| Help → Test connection (DNS, IPv4/IPv6, timings, small-packet workaround) | ✅ 0.6: menu → Test connection, with Copy and Share. The small-packet workaround isn't possible on Android (apps can't set the packet size); the report says when a handshake stalls. |
 | Keyboard shortcuts | 📱 Not applicable (touch); Refresh is pull-down or ⟳. |
 | Files and settings locations | 📱 App-private storage; described in the user guide. |
 | Coming from WeatherDesk | 📱 Not applicable (new app). |
 | Buy me a coffee (PayPal) | ✅ 0.1 About. |
 | App icon (Shane's artwork) | ✅ 0.5: the round version on Android (desktop 2.5.1 uses the rounded square). |
-| Credits (weather, Earth maps, Moon imagery, wind, warnings, quakes) | 🟡 All in except wind, which arrives with the wind globe (0.6). |
+| Credits (weather, Earth maps, Moon imagery, wind, warnings, quakes) | ✅ 0.6 |
