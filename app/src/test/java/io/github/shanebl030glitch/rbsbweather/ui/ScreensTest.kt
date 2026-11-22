@@ -4,6 +4,8 @@
 package io.github.shanebl030glitch.rbsbweather.ui
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
@@ -49,7 +51,10 @@ class ScreensTest {
         compose.onNodeWithTag("temp").assertIsDisplayed()
         compose.onNodeWithText("17°C").assertIsDisplayed()
         compose.onNodeWithTag("details").assertIsDisplayed()
-        compose.onNodeWithText("Created By Shane BlackbuRn", useUnmergedTree = true).assertExists()
+        // the credit is at the bottom of the page: scroll down to it
+        compose.onNodeWithTag("page-${AUCKLAND.key}").performScrollToNode(hasTestTag("credit"))
+        compose.onNodeWithTag("credit").assertIsDisplayed()
+        compose.onNodeWithText("Created By Shane BlackbuRn").assertIsDisplayed()
     }
 
     @Test fun unitsChangeEverywhere() {

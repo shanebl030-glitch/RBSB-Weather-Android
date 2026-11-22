@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write          # only used to publish test builds to the test-builds branch
 
 jobs:
   build:
@@ -45,3 +45,24 @@ jobs:
             app/build/reports/tests/
             app/build/test-results/
           retention-days: 14
+      # The latest test build of each push, on its own branch (replaced each time, no history),
+      # so it can be downloaded without signing in. Not a release.
+      - name: Publish the test build to the test-builds branch
+        if: github.event_name == 'push'
+        run: |
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          mkdir -p /tmp/tb && cp out/* /tmp/tb/
+          cat > /tmp/tb/BUILD_INFO.txt <<INFO
+          RBSB-Weather for Android ${VERSION} (test build)
+          Branch: ${GITHUB_REF_NAME}
+          Commit: ${GITHUB_SHA}
+          Built: $(date -u +%Y-%m-%dT%H:%M:%SZ) by GitHub Actions run ${GITHUB_RUN_ID}
+          Created By Shane BlackbuRn
+          INFO
+          cd /tmp/tb
+          git init -q -b test-builds
+          git config user.name "RBSB-Weather build"
+          git config user.email "shanebl030-glitch@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Test build ${VERSION} from ${GITHUB_REF_NAME} (${GITHUB_SHA::7})"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" test-builds
