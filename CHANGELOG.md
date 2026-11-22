@@ -4,7 +4,21 @@ Created By Shane BlackbuRn
 
 A separate app from RBSB-Weather for the desktop, with its own versions.
 
-## 0.6.1 – 2026-11-23 (test build; on branch claude/android-0.6.0; not released)
+## 0.6.2 – 2026-11-23 (test build; on branch claude/android-0.6.0; not released)
+
+Shane: "I was about to say before you made the change to keep it as is but we can mention it on the GitHub page update".
+
+### Changed
+- **The in-app Download and install is back**, exactly as in 0.6.0. The code is identical to 0.6.0's; only the version number differs.
+- **The README explains the Google Play Protect warning:**
+  - why it appears: the "install other apps" permission that self-updating needs;
+  - exactly what the app does with it;
+  - how to check the APK against `SHA256SUMS`;
+  - how to install anyway.
+- **The user guide** says the same in short.
+- **Release notes for the GitHub release page** are in `docs/RELEASE_NOTES_0.6.2.md`.
+
+## 0.6.1 – 2026-11-23 (test build; superseded by 0.6.2)
 
 Shane, installing 0.6.0: "Google Play Protect. Harmful app blocked. RBSB-Weather. This app may be harmful."
 

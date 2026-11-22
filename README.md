@@ -38,7 +38,7 @@ with its own versions, releases and tests.
   places and earthquakes.
 - A Wind tab: the world's wind, temperature, and rain and snow from NOAA on a globe,
   with moving wind streaks.
-- Check for updates (from GitHub, with the published SHA-256; your browser downloads it), Test connection, and an
+- Check for updates (from GitHub, checked against SHA256SUMS, then Android asks you to install it), Test connection, and an
   optional temperature in the status bar.
 - See [PARITY.md](PARITY.md) for every desktop feature and its Android status.
 - °C/°F, km/h · m/s · mph · knots, mm/inches, 12/24-hour time.
@@ -47,7 +47,7 @@ Needs **Android 10 or newer**.
 
 ## Install a test build
 
-1. On your phone, download `rbsb-weather-android_0.6.1.apk` from the
+1. On your phone, download `rbsb-weather-android_0.6.2.apk` from the
    [test-builds branch](https://github.com/shanebl030-glitch/RBSB-Weather-Android/tree/test-builds)
    (or use the file sent to you).
 2. Open it. Android asks to allow installing apps from this source (for example
@@ -57,6 +57,42 @@ Needs **Android 10 or newer**.
 New test builds install over the old one, and your places are kept.
 
 To check the download, compare its SHA-256 with `SHA256SUMS`.
+
+### "Google Play Protect: Harmful app blocked"
+
+From version 0.6, Google Play Protect may show this when you install RBSB-Weather
+for Android:
+
+> Harmful app blocked. RBSB-Weather. This app may be harmful. Installing this app
+> may put your device at risk. — **Install anyway**
+
+**Why it appears.** Since 0.6 the app can update itself: **Menu → Check for updates
+→ Download and install**. To do that it needs Android's "install other apps"
+permission (`REQUEST_INSTALL_PACKAGES`). Play Protect warns about any app installed
+from outside the Play Store that has that permission, because it can't tell an app
+updating itself from one installing something else. Versions up to 0.5.2 didn't
+have it and installed without the warning.
+
+**What the app actually does with it.** It only ever installs RBSB-Weather for
+Android, and only when you tap **Download and install**:
+
+1. It downloads only from this repository's releases on GitHub (no other address
+   is followed).
+2. It checks the file against the release's published `SHA256SUMS`. If they don't
+   match, it deletes the file.
+3. It checks that the file is RBSB-Weather for Android and newer than the version
+   you have.
+4. It hands the file to Android's own installer, which asks you first. Android
+   refuses an update that isn't signed with the same key as the app you have.
+
+All the code is in this repository: `data/Updates.kt` and `background/Installer.kt`.
+
+**To install,** tap **Install anyway** (on some phones: **More details → Install
+anyway**). You can check the APK first: its SHA-256 must match the line for it in
+`SHA256SUMS` on the release page.
+
+**If you'd rather not allow it,** don't install. Up to 0.5.2 the app has no
+update feature and no warning.
 
 **Uninstall:** long-press the app icon → App info → Uninstall.
 

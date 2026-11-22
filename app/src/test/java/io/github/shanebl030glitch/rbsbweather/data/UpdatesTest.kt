@@ -18,6 +18,7 @@ import java.security.MessageDigest
 class FakeGitHub(var version: String = "0.7.0", var apk: ByteArray = "PK-fake-apk-${"x".repeat(5000)}".toByteArray()) {
     var sumsOverride: String? = null
     var latestStatus = 200
+    var downloads = 0
     fun sha(b: ByteArray) = MessageDigest.getInstance("SHA-256").digest(b).joinToString("") { "%02x".format(it) }
     val name get() = "rbsb-weather-android_$version.apk"
     fun release(extra: (JSONObject) -> Unit = {}) = JSONObject().put("tag_name", "v$version").put("name", "RBSB-Weather for Android $version")
@@ -34,7 +35,12 @@ class FakeGitHub(var version: String = "0.7.0", var apk: ByteArray = "PK-fake-ap
             else -> throw WeatherException("unexpected $url")
         }
     }
-    fun client() = UpdateClient(bytes)
+    val downloader = Downloader { url, to, limit, progress ->
+        assertTrue(Updates.hostAllowed(url)); downloads++
+        to.parentFile?.mkdirs(); to.writeBytes(apk)
+        assertTrue(apk.size <= limit); progress.update(apk.size.toLong(), apk.size.toLong())
+    }
+    fun client() = UpdateClient(bytes, downloader)
 }
 
 class UpdatesTest {
@@ -82,28 +88,30 @@ class UpdatesTest {
         assertTrue(Updates.due(now + 7200, 0.0, now))                                  // the clock went back
     }
 
-    /** 0.6.1: the app never downloads or installs an APK; it gives the published checksum and the browser does the rest. */
-    @Test fun checksumForTheBrowserDownload() {
+    @Test fun downloadIsCheckedBeforeInstall() {
         val gh = FakeGitHub()
         val cl = gh.client()
         val info = cl.latest()
-        assertEquals(gh.sha(gh.apk), cl.checksum(info))
-        assertTrue(Updates.hostAllowed(info.apkUrl))                               // only GitHub's own address is opened
-        gh.sumsOverride = "${"0".repeat(64)}  something-else.apk\n"
-        assertNull(cl.checksum(info))                                            // not listed: no checksum shown
-        assertNull(cl.checksum(info.copy(sumsUrl = "")))
+        val dir = tmp.newFolder("updates")
+        File(dir, "old.apk").writeText("left over")
+        val f = cl.download(info, dir, { _, _ -> true })
+        assertTrue(f.isFile); assertTrue(gh.apk.contentEquals(f.readBytes()))
+        assertFalse(File(dir, "old.apk").exists())                                     // old downloads are cleared
+        // wrong checksum: deleted and refused
+        gh.sumsOverride = "${"0".repeat(64)}  ${gh.name}\n"
+        try { cl.download(info, dir, { _, _ -> true }); fail() } catch (e: UpdateException) { assertTrue(e.message!!, "checksum" in e.message!!) }
+        assertFalse(File(dir, gh.name).exists())
+        // not listed in SHA256SUMS: not even downloaded
+        gh.sumsOverride = "${"0".repeat(64)}  something-else.apk\n"; val before = gh.downloads
+        try { cl.download(info, dir, { _, _ -> true }); fail() } catch (e: UpdateException) { assertTrue("doesn't list" in e.message!!) }
+        assertEquals(before, gh.downloads)
+        // the APK check (this app, newer) can refuse it
+        gh.sumsOverride = null
+        try { cl.download(info, dir, { _, _ -> true }) { "The download is a different app" }; fail() } catch (e: UpdateException) { assertTrue("different app" in e.message!!) }
+        assertFalse(File(dir, gh.name).exists())
+        // no release yet
         gh.latestStatus = 404
         try { cl.latest(); fail() } catch (e: UpdateException) { assertTrue("no release" in e.message!!) }
-    }
-
-    /** Play Protect blocked 0.6.0 for downloading and installing APKs itself: none of that is in the app now. */
-    @Test fun noInstallPermissionOrInstaller() {
-        val root = listOf(File("src/main"), File("app/src/main")).first { it.isDirectory }
-        val manifest = File(root, "AndroidManifest.xml").readText()
-        assertFalse("REQUEST_INSTALL_PACKAGES" in manifest); assertFalse("FileProvider" in manifest)
-        val code = root.walkTopDown().filter { it.name.endsWith(".kt") }.map { it.readText() }.joinToString("\n")
-        for (bad in listOf("application/vnd.android.package-archive", "canRequestPackageInstalls", "ACTION_INSTALL_PACKAGE", "PackageInstaller"))
-            assertFalse(bad, bad in code)
     }
 
     @Test fun storeRemembersChecksAndSkips() {

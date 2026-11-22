@@ -1,15 +1,18 @@
 // Update checks, ported from the desktop's updates.py: once a day (3 hours after a failed check)
-// RBSB-Weather asks GitHub for the newest release of RBSB-Weather for Android, and offers a newer
-// version with its notes and its published SHA-256. The download itself is left to the phone's
-// browser, and installing to Android, as for any sideloaded app: in 0.6.0 the app downloaded and
-// installed updates itself, which needs Android's "install other apps" permission, and Google Play
-// Protect blocked it as possibly harmful for that. So 0.6.1 never downloads or installs apps.
+// RBSB-Weather asks GitHub for the newest release of RBSB-Weather for Android. A newer version is
+// offered with its notes; "Download and install" fetches the APK, checks it against the release's
+// SHA256SUMS and that it really is this app, newer, and then hands it to Android's installer
+// (Android itself refuses an APK signed with a different key). Nothing is installed by itself.
 // Created By Shane BlackbuRn
 package io.github.shanebl030glitch.rbsbweather.data
 
 import org.json.JSONObject
 import java.io.File
+import java.io.IOException
+import java.net.HttpURLConnection
 import java.net.URI
+import java.net.URL
+import java.security.MessageDigest
 
 object Updates {
     const val REPO = "shanebl030-glitch/RBSB-Weather-Android"
@@ -19,10 +22,11 @@ object Updates {
     const val RETRY_AFTER_FAIL_S = 3 * 3600.0
     const val MAX_RELEASE_BYTES = 1024 * 1024
     const val MAX_SUMS_BYTES = 64 * 1024
+    const val MAX_APK_BYTES = 150L * 1024 * 1024
     const val MAX_NOTES_CHARS = 20_000
     private val VERSION_RE = Regex("""\d{1,4}(\.\d{1,4}){0,3}""")
     private val APK_RE = Regex("""rbsb-weather-android_\d{1,4}(\.\d{1,4}){0,3}\.apk""")
-    /** Only GitHub's own addresses are opened for a download. */
+    /** GitHub sends release downloads through its own download servers. */
     private val ALLOWED_HOSTS = listOf("github.com", "api.github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com")
 
     fun versionFromTag(tag: String?): String? {
@@ -83,6 +87,11 @@ object Updates {
         val u = URI(url); u.scheme == "https" && (u.host ?: "").lowercase() in ALLOWED_HOSTS
     } catch (e: Exception) { false }
 
+    fun sha256(f: File): String {
+        val md = MessageDigest.getInstance("SHA-256")
+        f.inputStream().use { input -> val buf = ByteArray(64 * 1024); while (true) { val n = input.read(buf); if (n < 0) break; md.update(buf, 0, n) } }
+        return md.digest().joinToString("") { "%02x".format(it) }
+    }
 }
 
 class UpdateException(message: String) : Exception(message)
@@ -113,9 +122,60 @@ class UpdateStore(dir: File, private val clock: () -> Double = ::nowS) {
     val lastOk: Double get() = read().optDouble("last_ok", 0.0)
 }
 
-/** Asks GitHub for the newest release and its published checksum. Swappable for tests. */
+/** A download with progress: (bytes so far, total or 0 if unknown). Return false to cancel. */
+fun interface DownloadProgress { fun update(done: Long, total: Long): Boolean }
+
+/** Streams a file from GitHub, following redirects only to GitHub's own hosts. */
+fun interface Downloader { fun download(url: String, to: File, limit: Long, progress: DownloadProgress) }
+
+val githubDownloader = Downloader { start, to, limit, progress ->
+    var url = start
+    var hops = 0
+    while (true) {
+        if (!Updates.hostAllowed(url)) throw UpdateException("The download pointed somewhere other than GitHub, so it was stopped.")
+        val c = URL(url).openConnection() as HttpURLConnection
+        try {
+            c.instanceFollowRedirects = false
+            c.connectTimeout = 15_000; c.readTimeout = 30_000
+            c.setRequestProperty("User-Agent", Http.USER_AGENT)
+            val code = c.responseCode
+            if (code in 300..399) {
+                val loc = c.getHeaderField("Location") ?: throw UpdateException("GitHub's download link didn't lead anywhere.")
+                url = URL(URL(url), loc).toString()
+                if (++hops > 5) throw UpdateException("GitHub's download link went round in circles.")
+                continue
+            }
+            if (code !in 200..299) throw UpdateException("GitHub returned an error (HTTP $code) for the download.")
+            val total = c.contentLengthLong.coerceAtLeast(0L)
+            if (total > limit) throw UpdateException("The download is far bigger than expected, so it was stopped.")
+            to.parentFile?.mkdirs()
+            val part = File(to.path + ".part")
+            try {
+                var done = 0L
+                c.inputStream.use { input -> part.outputStream().use { out ->
+                    val buf = ByteArray(64 * 1024)
+                    while (true) {
+                        val n = input.read(buf); if (n < 0) break
+                        out.write(buf, 0, n); done += n
+                        if (done > limit) throw UpdateException("The download is far bigger than expected, so it was stopped.")
+                        if (!progress.update(done, total)) throw UpdateException("Download cancelled.")
+                    }
+                } }
+                if (total > 0 && done != total) throw UpdateException("The download was cut short. Please try again.")
+                if (to.exists()) to.delete()
+                if (!part.renameTo(to)) throw UpdateException("Couldn't save the download.")
+            } finally { part.delete() }
+            return@Downloader
+        } catch (e: UpdateException) { throw e
+        } catch (e: IOException) { throw UpdateException("The download didn't finish (${e.javaClass.simpleName}). Please try again.")
+        } finally { c.disconnect() }
+    }
+}
+
+/** Checks GitHub and downloads a verified APK. The network parts are swappable for tests. */
 class UpdateClient(
     private val bytes: BytesClient = Http.bytes,
+    private val downloader: Downloader = githubDownloader,
     private val latestUrl: String = Updates.LATEST_URL,
 ) {
     fun latest(): UpdateInfo {
@@ -128,10 +188,22 @@ class UpdateClient(
         return Updates.parseRelease(body)
     }
 
-    /** The release's published SHA-256 for its APK (from SHA256SUMS), so the download can be checked; null if not listed. */
-    fun checksum(info: UpdateInfo): String? {
-        if (info.sumsUrl.isEmpty() || info.apkName.isEmpty()) return null
-        return try { Updates.parseSums(String(bytes.get(info.sumsUrl, emptyMap(), Updates.MAX_SUMS_BYTES), Charsets.UTF_8), info.apkName) }
-            catch (e: WeatherException) { null }
+    /**
+     * Download the release's APK into `dir`, check its SHA-256 against SHA256SUMS, and (via
+     * `checkApk`) that it's this app and newer. Returns the verified file; a failed check deletes it.
+     */
+    fun download(info: UpdateInfo, dir: File, progress: DownloadProgress, checkApk: (File) -> String? = { null }): File {
+        if (!info.installable) throw UpdateException("This release has no Android app file to install. Open it on GitHub instead.")
+        val sums = try { String(bytes.get(info.sumsUrl, emptyMap(), Updates.MAX_SUMS_BYTES), Charsets.UTF_8) }
+            catch (e: WeatherException) { throw UpdateException("Couldn't download the release's checksums (${e.message}).") }
+        val want = Updates.parseSums(sums, info.apkName) ?: throw UpdateException("The release's SHA256SUMS doesn't list ${info.apkName}, so it can't be checked.")
+        dir.mkdirs()
+        dir.listFiles()?.forEach { if (it.name.endsWith(".apk") || it.name.endsWith(".part")) it.delete() }   // old downloads
+        val f = File(dir, info.apkName)
+        downloader.download(info.apkUrl, f, Updates.MAX_APK_BYTES, progress)
+        val got = Updates.sha256(f)
+        if (got != want) { f.delete(); throw UpdateException("The download doesn't match its published checksum, so it wasn't installed. Please try again.") }
+        checkApk(f)?.let { problem -> f.delete(); throw UpdateException(problem) }
+        return f
     }
 }

@@ -2,6 +2,15 @@
 
 Created By Shane BlackbuRn
 
+## 0.6.2 (2026-11-23)
+
+**Shane:** "I was about to say before you made the change to keep it as is but we can mention it on the GitHub page update"
+
+→ The 0.6.0 updater is restored unchanged: the code is exactly 0.6.0's, apart from the version number.
+- The Play Protect warning is explained on the GitHub page: the README, and release notes ready to paste.
+- The 0.6.1 test that forbade the install permission was removed with the rest of 0.6.1's changes.
+- The checks that guard the updater (checksum, this app and newer, GitHub-only addresses) are back.
+
 ## 0.6.1 (2026-11-23)
 
 **Shane:** "First time I have had this when installing on the phone. 'Google Play Protect. Harmful app blocked. RBSB-Weather. This app may be harmful. Installing this app may put your device at risk. Learn more about Play Protect. Install anyway'"

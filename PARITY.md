@@ -114,7 +114,7 @@ and where it stands on Android. It's updated with every version.
 | Tabs across the top (Forecast, Moon, Earth Flat, Earth Globe, Wind) | 📱 0.5–0.6: tabs along the bottom (Forecast, Moon, Earth, Wind, Warnings), the usual place on a phone; Flat and Globe are a switch at the top of Earth. |
 | System tray temperature, Close to tray | 📱 0.6: Settings → Temperature in the status bar, an optional silent notification with the temperature as its icon. Close to tray isn't needed on a phone. |
 | Start at login | 📱 Not needed: the widgets and background checks run without opening the app. |
-| Updates: daily check of GitHub, download, checksum, install | 📱 0.6.1: menu → Check for updates, and once a day in the background with a notification. Shows what's new and the published SHA-256; the browser downloads it and Android installs it. (Installing from inside the app needs Android's "install other apps" permission, and Google Play Protect blocked 0.6.0 for it.) |
+| Updates: daily check of GitHub, download, checksum, install | ✅ 0.6.2: menu → Check for updates, and once a day in the background with a notification; checked against `SHA256SUMS`, that it's this app and newer; Android asks you to install. Because of the install permission, Google Play Protect may warn when installing; explained in the README. |
 | Help → Test connection (DNS, IPv4/IPv6, timings, small-packet workaround) | ✅ 0.6: menu → Test connection, with Copy and Share. The small-packet workaround isn't possible on Android (apps can't set the packet size); the report says when a handshake stalls. |
 | Keyboard shortcuts | 📱 Not applicable (touch); Refresh is pull-down or ⟳. |
 | Files and settings locations | 📱 App-private storage; described in the user guide. |

@@ -4,7 +4,7 @@ Created By Shane BlackbuRn
 
 | Item | Result |
 |---|---|
-| Version | 0.6.1 (test build) |
+| Version | 0.6.2 (test build) |
 | Date | 2026-11-22 |
 | Where | GitHub Actions: Ubuntu 26.04 runner, JDK 17 (Temurin), Gradle 8.14.3, Android Gradle Plugin 8.10.1, Kotlin 2.1.21, Compose BOM 2025.05.01, compile/target SDK 35, min SDK 29 |
 | Command | `./gradlew testDebugUnitTest`, then `./gradlew assembleRelease` |
@@ -12,12 +12,9 @@ Created By Shane BlackbuRn
 
 ## What's tested
 
-**New in 0.6.1 (after Play Protect blocked 0.6.0):**
-- UpdatesTest checks that the manifest has no `REQUEST_INSTALL_PACKAGES` or FileProvider, and that the code has no installer calls (APK MIME type, `canRequestPackageInstalls`, `ACTION_INSTALL_PACKAGE`, `PackageInstaller`).
-- The published checksum is read from SHA256SUMS. A file that isn't listed gives no checksum, and only GitHub addresses are opened.
-- **Screen:** a newer release shows its checksum, and **Download from GitHub** opens the exact APK address in the browser. Up to date, a failed check, and skipping a version are also tested.
-- **Not testable here:** Play Protect itself. Its rules aren't published, and the test emulator has no Play Protect.
-
+**0.6.2:**
+- The same code and tests as 0.6.0. 0.6.1 had removed the in-app installer, and Shane chose to keep it and explain the Play Protect warning instead.
+- **Not testable here:** Play Protect itself. The test emulator doesn't have it.
 
 **New in 0.6:**
 - **GRIB2 reader** (Grib2Test), checked on the desktop's 11 files (real NOAA GFS and synthetic files in every supported packing) against the desktop's reader, itself checked against ECMWF's ecCodes:
@@ -62,7 +59,7 @@ Created By Shane BlackbuRn
   - the temperature notification was posted;
   - every other step passed, with no crash.
 - **Not tested here:**
-  - a real update through the browser: there's no newer release on GitHub yet, and 0.5.2 has no update checker;
+  - installing a real update: there's no newer release on GitHub yet, and 0.5.2 has no update checker. The first real download-and-install will be the release after 0.6.2, installed from 0.6.2;
   - the speed of the wind streaks on a phone (the emulator draws in software).
 
 
