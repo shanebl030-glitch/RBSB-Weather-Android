@@ -31,10 +31,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -182,9 +181,10 @@ fun EarthScreen(state: UiState, model: AppModel, modifier: Modifier = Modifier) 
         while (true) withFrameNanos { now -> if (now - last > 80_000_000L) { last = now; t = (now - start) / 1e9f } }
     }
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).testTag("earth")) {
-        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)) {
-            SegmentedButton(!state.earthGlobe, { model.setEarthGlobe(false) }, SegmentedButtonDefaults.itemShape(0, 2), Modifier.testTag("earthFlat")) { Text("Earth Flat") }
-            SegmentedButton(state.earthGlobe, { model.setEarthGlobe(true) }, SegmentedButtonDefaults.itemShape(1, 2), Modifier.testTag("earthGlobe")) { Text("Earth Globe") }
+        // Flat / Globe switch (tabs: a segmented button didn't take a real tap in the screen tests)
+        TabRow(if (state.earthGlobe) 1 else 0, Modifier.fillMaxWidth()) {
+            Tab(!state.earthGlobe, { model.setEarthGlobe(false) }, Modifier.testTag("earthFlat"), text = { Text("Earth Flat") })
+            Tab(state.earthGlobe, { model.setEarthGlobe(true) }, Modifier.testTag("earthGlobe"), text = { Text("Earth Globe") })
         }
         Text(img?.let { Earth.infoText(it.time, s.units.clock) + (if (it.cloudNote.isNotEmpty()) " " + it.cloudNote else "") } ?: "Drawing the Earth…",
             fontSize = 12.sp, modifier = Modifier.padding(horizontal = 12.dp))

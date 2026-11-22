@@ -25,6 +25,7 @@ import io.github.shanebl030glitch.rbsbweather.data.WeatherRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -184,20 +185,16 @@ class ScreensTest {
         compose.onNodeWithTag("moonPhase").assertIsDisplayed()
         compose.onNodeWithTag("tab-Earth").performClick()
         compose.onNodeWithTag("flatMap").assertIsDisplayed()
-        // Find out which kind of tap reaches the Flat/Globe switch under Robolectric
-        val report = StringBuilder()
-        fun attempt(name: String, act: () -> Unit) {
-            if (m.state.value.earthGlobe) return
-            act(); compose.waitForIdle(); report.append("$name -> ${m.state.value.earthGlobe}\n")
-        }
-        attempt("performClick") { compose.onNodeWithTag("earthGlobe").performClick() }
-        attempt("slow touch") { compose.onNodeWithTag("earthGlobe").performTouchInput { down(center); advanceEventTime(80); up() } }
-        attempt("click text") { compose.onNodeWithText("Earth Globe").performClick() }
-        attempt("semantics") { compose.onNodeWithTag("earthGlobe").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick) }
-        println("GLOBE SWITCH: " + report)
-        if (!report.startsWith("performClick -> true")) throw AssertionError("GLOBE SWITCH\n$report")
+        compose.onNodeWithTag("earthGlobe").performClick()                 // a real tap
+        compose.waitForIdle()
+        assertTrue(m.state.value.earthGlobe)
         try { compose.onNodeWithTag("globe").assertIsDisplayed() }
         catch (e: AssertionError) { throw AssertionError(compose.onRoot().printToString(), e) }
+        compose.onNodeWithTag("liveClouds").performScrollTo().performClick()  // taps reach the controls under the globe too
+        compose.waitForIdle()
+        assertFalse(m.state.value.settings.earthClouds)
+        compose.onNodeWithTag("earthFlat").performScrollTo().performClick()
+        compose.onNodeWithTag("flatMap").assertIsDisplayed()
         compose.onNodeWithTag("tab-Forecast").performClick()
         compose.onNodeWithTag("temp").assertIsDisplayed()
     }
