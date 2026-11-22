@@ -45,8 +45,25 @@ step "Earth tab"; tap "Earth"; sleep 15; check "Earth tab"; shot earth-flat
 step "Earth Globe (what crashed)"; tap "Earth Globe"; sleep 3; check "tapping Earth Globe (3 s)"; sleep 12; check "Earth Globe (15 s)"; shot earth-globe
 step "zoom, spin, drag"
 for i in 1 2 3 4 5 6; do tap "+" >/dev/null; sleep 1; done; sleep 4; check "zooming in"; shot zoomed
-tap "Rotate slowly"; sleep 6; check "rotating"; tap "Rotate slowly"
-adb shell input swipe 500 1000 900 1100 500; sleep 3; check "dragging"
+for i in 1 2 3 4 5 6 7 8; do tap "−" >/dev/null; sleep 1; done; sleep 4          # back to the smallest zoom
+# the globe box: between the Earth Flat/Globe tabs and the Rotate slowly row (about 420 dp tall)
+GLOBE="60 620 1020 1600"
+moved() {  # moved <name> <before> <after> <min fraction>
+  f=$(python3 "$HERE/compare.py" "$2" "$3" $GLOBE); echo "$1: $f of the globe changed"
+  python3 -c "import sys; sys.exit(0 if float('$f') >= float('$4') else 1)" && echo "GLOBE MOVED: $1" || { echo "GLOBE DID NOT MOVE: $1"; FAILED=1; }
+}
+FAILED=0
+adb exec-out screencap -p > "$OUT/still-a.png"; sleep 4; adb exec-out screencap -p > "$OUT/still-b.png"
+echo "still: $(python3 "$HERE/compare.py" "$OUT/still-a.png" "$OUT/still-b.png" $GLOBE) of the globe changed with nothing moving"
+tap "Rotate slowly"; sleep 2; adb exec-out screencap -p > "$OUT/spin-a.png"; sleep 5; adb exec-out screencap -p > "$OUT/spin-b.png"
+check "rotating"; moved "Rotate slowly" "$OUT/spin-a.png" "$OUT/spin-b.png" 0.05
+tap "Rotate slowly"; sleep 3
+adb exec-out screencap -p > "$OUT/drag-a.png"
+adb shell input swipe 250 1350 800 1350 700; sleep 4
+adb exec-out screencap -p > "$OUT/drag-b.png"
+check "dragging"; moved "drag" "$OUT/drag-a.png" "$OUT/drag-b.png" 0.05
+adb shell input swipe 540 1300 540 900 600; sleep 4; check "dragging up"
+[ "$FAILED" = 0 ] || { echo "GLOBE CHECK FAILED"; GLOBE_FAILED=1; }
 tap "Earth Flat"; sleep 4; check "back to flat"; tap "Earth Globe"; sleep 6; check "globe again"; shot globe-again
 tap "Forecast"; sleep 4; tap "Earth"; sleep 8; check "leaving and coming back"; shot final
 
@@ -88,3 +105,4 @@ tap "Forecast"; sleep 3; adb shell input swipe 540 700 540 1500 400; sleep 8; ch
 adb logcat -d > "$OUT/logcat.txt"
 grep -n "FATAL\|ANR in\|OutOfMemory\|Skipped [0-9]* frames\|Davey" "$OUT/logcat.txt" | head -40
 echo "APP ALIVE: no crash"
+[ "${GLOBE_FAILED:-0}" = 0 ] || exit 3

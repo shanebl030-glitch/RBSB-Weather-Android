@@ -13,8 +13,8 @@ android {
         applicationId = "io.github.shanebl030glitch.rbsbweather"
         minSdk = 29                     // Android 10 and newer
         targetSdk = 35
-        versionCode = 7
-        versionName = "0.5.1"
+        versionCode = 8
+        versionName = "0.5.2"
     }
 
     signingConfigs {

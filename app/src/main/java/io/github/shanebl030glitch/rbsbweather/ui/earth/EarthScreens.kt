@@ -10,7 +10,6 @@ package io.github.shanebl030glitch.rbsbweather.ui.earth
 import android.graphics.Bitmap
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -64,6 +63,10 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.semantics.SemanticsPropertyReceiver
+import androidx.compose.ui.semantics.SemanticsPropertyKey
+import kotlinx.coroutines.flow.conflate
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -97,7 +100,6 @@ import io.github.shanebl030glitch.rbsbweather.ui.scene.MoonRender
 import io.github.shanebl030glitch.rbsbweather.ui.scene.safeRadial
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.Instant
@@ -355,6 +357,10 @@ private fun FlatMap(img: EarthImage?, ms: List<Marker>, selected: String?, quake
 }
 
 // ------------------------------------------------------------------------ Earth Globe
+/** "renderedLat,renderedLon,frames,viewLon,zoom" of the globe, so tests can see it really turn. */
+val GlobeViewKey = SemanticsPropertyKey<String>("GlobeView")
+var SemanticsPropertyReceiver.globeView by GlobeViewKey
+
 private val stars = Sky.StarField()
 
 @Composable
@@ -373,6 +379,9 @@ private fun GlobeView(img: EarthImage?, ms: List<Marker>, selected: String?, qua
     var turnTarget by remember { mutableStateOf<Pair<Double, Double>?>(null) }
     var turnTick by remember { mutableIntStateOf(0) }
     var turning by remember { mutableStateOf(false) }
+    var frames by remember { mutableIntStateOf(0) }                      // pictures drawn (for the tests)
+    var renderedAt by remember { mutableStateOf(0.0 to 0.0) }             // where the shown picture faces
+    val lastGesture = remember { longArrayOf(0L) }
     var renderError by remember { mutableStateOf("") }
     // turn smoothly to face the selected place
     LaunchedEffect(selected) { sel?.let { turnTarget = it.lat.coerceIn(-70.0, 70.0) to it.lon; turnTick++ } }
@@ -407,37 +416,56 @@ private fun GlobeView(img: EarthImage?, ms: List<Marker>, selected: String?, qua
     LaunchedEffect(renderer, box) {
         val r = renderer ?: return@LaunchedEffect
         if (box.width <= 0 || box.height <= 0) return@LaunchedEffect
-        snapshotFlow { Triple(cLat to cLon, zoom, dragging || spin || turning) }.collectLatest { (c, z, moving) ->
+        // conflate, not collectLatest: each picture is finished, then the newest position is drawn. With
+        // collectLatest every new frame cancelled the picture in progress, so while the globe kept moving
+        // (Rotate slowly, dragging) no picture ever finished on a phone and the globe looked stuck (0.5.1).
+        snapshotFlow { Triple(cLat to cLon, zoom, dragging || spin || turning) }.conflate().collect { (c, z, moving) ->
             val full = (min(box.width, box.height) * 0.86f * z).roundToInt().coerceIn(64, GlobeRenderer.MAX_SIZE)
-            val px = if (moving) (full * 0.6f).roundToInt() else full
+            val px = if (moving) (full * 0.5f).roundToInt() else full
             val made = withContext(Dispatchers.Default) {
                 try { r.render(px, c.first, c.second).asImageBitmap() }
                 catch (e: OutOfMemoryError) { null } catch (e: Exception) { null }
             }
-            if (made != null) { globe = made; renderError = "" } else renderError = "The globe couldn't be drawn (not enough memory). Try zooming out."
+            if (made != null) { globe = made; renderedAt = c; frames++; renderError = "" }
+            else renderError = "The globe couldn't be drawn (not enough memory). Try zooming out."
         }
     }
+    // a drag or pinch has ended once no movement has come for a moment: then draw it sharp again
+    LaunchedEffect(dragging) {
+        if (!dragging) return@LaunchedEffect
+        while (System.nanoTime() - lastGesture[0] < 250_000_000L) delay(60)
+        dragging = false
+    }
     Box(Modifier.fillMaxWidth().height(420.dp).padding(horizontal = 8.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF02030A))
-        .onSizeChanged { box = it }.testTag("globe").semantics { stateDescription = if (globe != null) "drawn" else "drawing" }) {
+        .onSizeChanged { box = it }.testTag("globe").semantics {
+            stateDescription = if (globe != null) "drawn" else "drawing"
+            globeView = String.format(Locale.US, "%.3f,%.3f,%d,%.3f,%.2f", renderedAt.first, renderedAt.second, frames, cLon, zoom)
+        }) {
         val rad = min(box.width, box.height) * 0.43f * zoom
         val c = Offset(box.width / 2f, box.height / 2f)
         fun point(lat: Double, lon: Double): Offset? {
             val (x, y, vis) = Globe.project(lat, lon, cLat, cLon)
             return if (vis) Offset(c.x + x.toFloat() * rad, c.y - y.toFloat() * rad) else null
         }
-        Canvas(Modifier.fillMaxSize().pointerInput(box) {
-            detectDragGestures(onDragStart = { dragging = true; spin = false }, onDragEnd = { dragging = false }, onDragCancel = { dragging = false }) { ch, d ->
-                ch.consume()
-                val k = 57.3 / maxOf(rad, 1f)
-                cLon = Earth.normLon(cLon - d.x * k); cLat = (cLat + d.y * k).coerceIn(-85.0, 85.0)
+        val radNow = rememberUpdatedState(rad)
+        val pointNow = rememberUpdatedState<(Double, Double) -> Offset?> { a, o -> point(a, o) }   // taps see the globe as it is now
+        Canvas(Modifier.fillMaxSize().pointerInput(Unit) {
+            // one handler for both: one finger turns the globe, two fingers pinch to zoom. (Two separate
+            // handlers fought over the same moves and the pinch one took the drag, 0.5.1.)
+            detectTransformGestures { _, pan, z, _ ->
+                lastGesture[0] = System.nanoTime()
+                if (!dragging) { dragging = true; spin = false }
+                if (z != 1f) zoom = (zoom * z).coerceIn(0.6f, 3f)
+                if (pan != Offset.Zero) {
+                    val k = 57.3 / maxOf(radNow.value, 1f)
+                    cLon = Earth.normLon(cLon - pan.x * k); cLat = (cLat + pan.y * k).coerceIn(-85.0, 85.0)
+                }
             }
-        }.pointerInput(box) {
-            detectTransformGestures { _, _, z, _ -> if (z != 1f) zoom = (zoom * z).coerceIn(0.6f, 3f) }
-        }.pointerInput(box, ms, quakes, cLat, cLon, zoom) {
+        }.pointerInput(ms, quakes, sel) {
             detectTapGestures(onDoubleTap = { sel?.let { turnTarget = it.lat.coerceIn(-70.0, 70.0) to it.lon; turnTick++ } }) { at ->
-                val key = nearest(ms.mapNotNull { m -> point(m.lat, m.lon)?.let { m.key to it } }, at, 24f)
+                val key = nearest(ms.mapNotNull { m -> pointNow.value(m.lat, m.lon)?.let { m.key to it } }, at, 24f)
                 if (key != null) { model.select(key); onQuake(null) }
-                else onQuake(quakes.mapNotNull { q -> point(q.lat, q.lon)?.let { q to it } }
+                else onQuake(quakes.mapNotNull { q -> pointNow.value(q.lat, q.lon)?.let { q to it } }
                     .filter { (q, p) -> hypot(p.x - at.x, p.y - at.y) <= quakeRadius(q.mag) * density / 1.5f + 12 }.minByOrNull { (_, p) -> hypot(p.x - at.x, p.y - at.y) }?.first)
             }
         }) {

@@ -69,6 +69,13 @@ class GlobeStressTest {
     private val drawn = SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "drawn") and hasTestTag("globe")
     private fun globeDrawn() = compose.onAllNodes(drawn).fetchSemanticsNodes().isNotEmpty()
 
+    /** (rendered lat, rendered lon, pictures drawn, view lon, zoom) from the globe's semantics. */
+    private fun view(): List<Double> {
+        val node = compose.onAllNodes(hasTestTag("globe")).fetchSemanticsNodes().first()
+        return node.config[io.github.shanebl030glitch.rbsbweather.ui.earth.GlobeViewKey].split(",").map { it.toDouble() }
+    }
+    private fun lonDiff(a: Double, b: Double) = ((b - a + 540) % 360) - 180
+
     private fun save(name: String) {
         val out = File("build/screens").apply { mkdirs() }
         val v = compose.activity.window.decorView.rootView
@@ -100,6 +107,30 @@ class GlobeStressTest {
         pump(1500)
         save("stress_globe")
 
+        // Shane (0.5.1): "the touch and drag to rotate the globe doesn't work" and "the globe itself doesn't
+        // rotate when you tick rotate slowly". The picture itself must turn, not just the numbers.
+        pump(1500)
+        val v0 = view()
+        compose.onNodeWithTag("rotateSlowly").performClick()
+        pump(4000)                                                         // 8° a second
+        val v1 = view()
+        assertTrue("pictures drawn while spinning: $v0 -> $v1", v1[2] - v0[2] >= 4)
+        val turned = lonDiff(v0[1], v1[1])
+        assertTrue("the shown globe turned east by $turned°", turned in 12.0..45.0)
+        compose.onNodeWithTag("rotateSlowly").performClick()               // stop
+        pump(1500)
+        save("stress_globe_spun")
+        val v2 = view()
+        compose.onNodeWithTag("globe").performTouchInput { swipe(center, center + Offset(300f, 0f), 500) }   // one finger, to the right
+        pump(1500)
+        val v3 = view()
+        val dragged = lonDiff(v2[3], v3[3])
+        assertTrue("dragging right turns the globe west: $dragged°", dragged < -10)
+        assertTrue("and the picture follows: ${lonDiff(v3[3], v3[1])}°", kotlin.math.abs(lonDiff(v3[3], v3[1])) < 0.5)
+        assertTrue("zoom unchanged by a one-finger drag", kotlin.math.abs(v3[4] - v2[4]) < 1e-6)
+        compose.onNodeWithTag("globe").performTouchInput { swipe(center, center + Offset(0f, -250f), 400) }  // up and down works too (the page doesn't scroll instead)
+        pump(1200)
+        assertTrue(view()[0] != v3[0])
         repeat(6) { compose.onNodeWithTag("zoomIn").performClick(); pump(400) }     // to the 300% limit
         pumpUntil("the zoomed globe") { globeDrawn() }
         save("stress_globe_zoomed")
