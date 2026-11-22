@@ -18,6 +18,11 @@ fun interface HttpClient {
     fun get(url: String, headers: Map<String, String>): String
 }
 
+/** GET as bytes with a size limit (warning feeds, quake feeds, maps). */
+fun interface BytesClient {
+    fun get(url: String, headers: Map<String, String>, limit: Int): ByteArray
+}
+
 object Http {
     const val MAX_BYTES = 5 * 1024 * 1024
     val USER_AGENT = "RBSB-Weather-Android/${Version.NAME} (github.com/shanebl030-glitch/RBSB-Weather-Android; " +
@@ -28,7 +33,9 @@ object Http {
             URLEncoder.encode(it.key, "UTF-8") + "=" + URLEncoder.encode(it.value, "UTF-8")
         }
 
-    val default = HttpClient { url, headers ->
+    val default = HttpClient { url, headers -> String(bytes.get(url, headers, MAX_BYTES), Charsets.UTF_8) }
+
+    val bytes = BytesClient { url, headers, limit ->
         val conn = try {
             URL(url).openConnection() as HttpURLConnection
         } catch (e: Exception) {
@@ -58,11 +65,11 @@ object Http {
                     val n = input.read(buf)
                     if (n < 0) break
                     out.write(buf, 0, n)
-                    if (out.size() > MAX_BYTES) throw WeatherException("The weather service sent far more data than expected.")
+                    if (out.size() > limit) throw WeatherException("The service sent far more data than expected.")
                 }
                 out.toByteArray()
             }
-            String(bytes, Charsets.UTF_8)
+            bytes
         } catch (e: WeatherException) {
             throw e
         } catch (e: UnknownHostException) {

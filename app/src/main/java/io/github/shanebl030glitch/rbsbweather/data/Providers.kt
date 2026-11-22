@@ -143,7 +143,7 @@ fun normalise(fc: Forecast, place: Place, days: Int = 7, now: Instant = Instant.
         }
         d.copy(weatherCode = dcode, tempMax = hi, tempMin = lo, precipitationSum = d.precipitationSum.inRange(PRECIP),
             precipitationProbabilityMax = pp, windSpeedMax = d.windSpeedMax.inRange(WIND), sunrise = rise, sunset = set,
-            uvIndexMax = d.uvIndexMax.inRange(UV))
+            uvIndexMax = d.uvIndexMax.inRange(UV), gustMax = d.gustMax.inRange(WIND))
     }
     val offset = if (fc.utcOffsetSeconds != 0 || fc.timezone == "UTC") fc.utcOffsetSeconds
         else zone.rules.getOffset(now).totalSeconds

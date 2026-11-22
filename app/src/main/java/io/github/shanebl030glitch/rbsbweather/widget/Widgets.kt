@@ -101,6 +101,12 @@ object Widgets {
         views.setTextViewText(R.id.w_updated, data.updated)
         views.setViewVisibility(R.id.w_updated, if (data.updated.isBlank()) View.GONE else View.VISIBLE)
         views.setTextColor(R.id.w_updated, if (data.updatedWarn) 0xFFFFD27A.toInt() else 0xEBFFFFFF.toInt())
+        views.setTextViewText(R.id.w_alert, data.alert)
+        views.setViewVisibility(R.id.w_alert, if (data.alert.isBlank()) View.GONE else View.VISIBLE)
+        io.github.shanebl030glitch.rbsbweather.data.Alerts.COLOURS[data.alertLevel]?.let { (bg, fg) ->
+            views.setInt(R.id.w_alert, "setBackgroundColor", bg.toInt())
+            views.setTextColor(R.id.w_alert, fg.toInt())
+        }
         views.setTextViewText(R.id.w_temp, data.temp)
         views.setTextViewText(R.id.w_condition, data.condition)
         views.setTextViewText(R.id.w_hilo, data.hiLo)
@@ -116,7 +122,8 @@ object Widgets {
         val g = AppGraph.get(context)
         val s = g.settings()
         val fc = s.selectedPlace()?.let { g.repo.cached(it) }
-        val data = widgetData(s, fc)
+        val alerts = s.selectedPlace()?.let { p -> try { g.watch.alertsFor(p, s, fc) } catch (e: Exception) { emptyList() } } ?: emptyList()
+        val data = widgetData(s, fc, alerts = alerts)
         val density = context.resources.displayMetrics.density
         for (id in ids) {
             val (wDp, hDp) = sizeDp(manager, id)

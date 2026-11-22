@@ -4,6 +4,12 @@
 package io.github.shanebl030glitch.rbsbweather.ui
 
 import io.github.shanebl030glitch.rbsbweather.data.ALL_PROVIDERS
+import io.github.shanebl030glitch.rbsbweather.data.Alert
+import io.github.shanebl030glitch.rbsbweather.data.AlertSettings
+import io.github.shanebl030glitch.rbsbweather.data.Notice
+import io.github.shanebl030glitch.rbsbweather.data.Quake
+import io.github.shanebl030glitch.rbsbweather.data.QuakeSettings
+import io.github.shanebl030glitch.rbsbweather.data.Watch
 import io.github.shanebl030glitch.rbsbweather.data.Forecast
 import io.github.shanebl030glitch.rbsbweather.data.ProviderManager
 import io.github.shanebl030glitch.rbsbweather.data.ProviderStatus
@@ -45,7 +51,7 @@ class MemoryStore(var text: String? = null) : SettingsStore {
     override fun save(json: String) { text = json }
 }
 
-enum class Screen { HOME, SEARCH, PLACES, SETTINGS, PROVIDERS, HELP, ABOUT }
+enum class Screen { HOME, SEARCH, PLACES, SETTINGS, PROVIDERS, ALERT_SETTINGS, QUAKE_SETTINGS, WARNINGS, QUAKES, HELP, ABOUT }
 
 sealed interface SearchState {
     data object Idle : SearchState
@@ -65,6 +71,14 @@ data class UiState(
     val keysSaved: Set<String> = emptySet(),                  // provider ids with an API key (never the key itself)
     val providerTests: Map<String, String> = emptyMap(),      // provider id → result of "Test connection"
     val testing: Set<String> = emptySet(),
+    val alerts: Map<String, List<Alert>> = emptyMap(),        // shown alerts by place (not muted)
+    val allAlerts: Map<String, List<Alert>> = emptyMap(),     // including muted ones (Warnings screen)
+    val alertErrors: Map<String, String> = emptyMap(),
+    val alertChecked: Double = 0.0,
+    val quakes: List<Quake> = emptyList(),
+    val quakeErrors: Map<String, String> = emptyMap(),
+    val quakeChecked: Double = 0.0,
+    val checking: Boolean = false,
 )
 
 class AppModel(
@@ -76,6 +90,8 @@ class AppModel(
     private val now: () -> Long = System::currentTimeMillis,
     private val providers: ProviderManager? = null,
     private val onForecast: (Forecast) -> Unit = {},          // e.g. update the home-screen widgets
+    private val watch: Watch? = null,                         // warnings and earthquakes
+    private val notify: (List<Notice>, Settings) -> Unit = { _, _ -> },
 ) {
     private val _state = MutableStateFlow(UiState(settings = Settings.fromJson(store.load()),
         keysSaved = ALL_PROVIDERS.filter { it.needsKey && providers?.hasKey(it.id) == true }.map { it.id }.toSet()))
@@ -94,6 +110,7 @@ class AppModel(
                 _state.value.settings.places.mapNotNull { p -> repo.cached(p)?.let { p.key to it } }.toMap()
             }
             _state.update { it.copy(forecasts = cached + it.forecasts) }
+            recomputeAlerts()
         }
     }
 
@@ -131,6 +148,7 @@ class AppModel(
                     onSuccess = { f ->
                         failures.remove(place.key)
                         if (stillSaved) try { onForecast(f) } catch (e: Exception) { }
+                        if (stillSaved) scope.launch { recomputeAlerts() }
                         if (!stillSaved) st.copy(loading = st.loading - place.key)
                         else st.copy(loading = st.loading - place.key, forecasts = st.forecasts + (place.key to f),
                             errors = st.errors - place.key)
@@ -185,6 +203,7 @@ class AppModel(
             val cached = withContext(io) { repo.cached(place) }
             if (cached != null) _state.update { it.copy(forecasts = it.forecasts + (place.key to cached)) }
             refresh(place, force = true)
+            checkWatch(force = true)
         }
     }
 
@@ -203,6 +222,62 @@ class AppModel(
     fun setUnits(u: UnitPrefs) = saveSettings(_state.value.settings.copy(units = u))
     fun setRefreshMinutes(m: Int) = saveSettings(_state.value.settings.copy(refreshMinutes = m))
     fun setAnimations(on: Boolean) = saveSettings(_state.value.settings.copy(animations = on))
+
+    // ------------------------------------------------- warnings and earthquakes
+    /** Work out every place's alerts from the last check and the forecasts (no network). */
+    fun recomputeAlerts() {
+        val w = watch ?: return
+        val st = _state.value
+        val shown = st.settings.places.associate { p -> p.key to w.alertsFor(p, st.settings, st.forecasts[p.key]) }
+        val all = st.settings.places.associate { p -> p.key to w.allAlertsFor(p, st.settings, st.forecasts[p.key]) }
+        _state.update { it.copy(alerts = shown, allAlerts = all, alertErrors = w.alertStore.errors, alertChecked = w.alertStore.checked,
+            quakes = w.shownQuakes(it.settings), quakeErrors = w.quakeStore.errors, quakeChecked = w.quakeStore.checked) }
+    }
+
+    /** Check warnings and quakes when they're due (or now, when forced), then notify. */
+    fun checkWatch(force: Boolean = false) {
+        val w = watch ?: return
+        if (_state.value.checking) return
+        val s = _state.value.settings
+        if (s.places.isEmpty() && !force) { recomputeAlerts(); return }
+        _state.update { it.copy(checking = true) }
+        scope.launch {
+            val notices = withContext(io) {
+                val out = mutableListOf<Notice>()
+                try { if (s.alerts.official || s.alerts.own) out += w.checkAlerts(s, _state.value.forecasts, force) } catch (e: Exception) { }
+                try { out += w.checkQuakes(s, force) } catch (e: Exception) { }
+                out
+            }
+            _state.update { it.copy(checking = false) }
+            recomputeAlerts()
+            if (notices.isNotEmpty()) try { notify(notices, s) } catch (e: Exception) { }
+        }
+    }
+
+    fun setAlertSettings(a: AlertSettings) {
+        val old = _state.value.settings.alerts
+        saveSettings(_state.value.settings.copy(alerts = a))
+        recomputeAlerts()
+        if (a.official && !old.official) checkWatch(force = true)
+    }
+
+    fun setQuakeSettings(q: QuakeSettings) {
+        val old = _state.value.settings.quakes
+        saveSettings(_state.value.settings.copy(quakes = q))
+        recomputeAlerts()
+        if (q.period != old.period || q.minMag != old.minMag) checkWatch(force = true)
+    }
+
+    /** Take a warning off the banner, badges and notifications (it stays listed on the Warnings screen). */
+    fun mute(id: String, on: Boolean = true) {
+        val a = _state.value.settings.alerts
+        setAlertSettings(a.copy(muted = if (on) a.muted + id else a.muted - id))
+    }
+
+    fun openWarnings(placeKey: String? = null) {
+        if (placeKey != null && _state.value.settings.places.any { it.key == placeKey }) saveSettings(_state.value.settings.copy(selected = placeKey))
+        go(Screen.WARNINGS)
+    }
 
     // ----------------------------------------------------- weather providers
     fun providerStatus(id: String): ProviderStatus = repo.status(id)
@@ -308,7 +383,7 @@ class AppModel(
     fun back(): Boolean {
         val sc = _state.value.screen
         if (sc == Screen.HOME) return false
-        _state.update { it.copy(screen = if (sc == Screen.PROVIDERS) Screen.SETTINGS else Screen.HOME) }
+        _state.update { it.copy(screen = if (sc in setOf(Screen.PROVIDERS, Screen.ALERT_SETTINGS, Screen.QUAKE_SETTINGS)) Screen.SETTINGS else Screen.HOME) }
         return true
     }
     fun messageShown() = _state.update { it.copy(message = null) }

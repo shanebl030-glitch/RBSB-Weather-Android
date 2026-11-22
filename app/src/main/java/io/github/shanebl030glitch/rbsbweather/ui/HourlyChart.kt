@@ -39,8 +39,17 @@ fun next24(hours: List<Hour>, currentTime: String): List<Hour> {
     return hours.drop(start).take(24)
 }
 
+/** Is a warning in force at any time during this hour? */
+fun warningHour(time: String, utcOffsetSeconds: Int, warnings: List<Pair<Double?, Double?>>): Boolean {
+    if (warnings.isEmpty()) return false
+    val t = try { java.time.LocalDateTime.parse(time).toEpochSecond(java.time.ZoneOffset.ofTotalSeconds(utcOffsetSeconds.coerceIn(-64800, 64800))).toDouble() }
+        catch (e: Exception) { return false }
+    return warnings.any { (on, off) -> (on == null || on < t + 3600) && (off == null || off > t) }
+}
+
 @Composable
-fun HourlyChart(hours: List<Hour>, units: UnitPrefs, modifier: Modifier = Modifier) {
+fun HourlyChart(hours: List<Hour>, units: UnitPrefs, modifier: Modifier = Modifier,
+                warnings: List<Pair<Double?, Double?>> = emptyList(), utcOffsetSeconds: Int = 0, shadeColour: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color(0x33F28C28)) {
     if (hours.isEmpty()) {
         Text("No hourly forecast", modifier.testTag("chartEmpty"), style = MaterialTheme.typography.bodyMedium)
         return
@@ -64,6 +73,10 @@ fun HourlyChart(hours: List<Hour>, units: UnitPrefs, modifier: Modifier = Modifi
             if (hi - lo < 4) { val mid = (hi + lo) / 2; lo = mid - 2; hi = mid + 2 }
             fun yFor(v: Double) = (top + h * 0.12f + h * 0.55f * (1 - (v - lo) / (hi - lo))).toFloat()
 
+            // hours a warning is in force (as on the desktop's chart)
+            hours.forEachIndexed { i, p ->
+                if (warningHour(p.time, utcOffsetSeconds, warnings)) drawRect(shadeColour, Offset(i * step, 0f), Size(step, size.height))
+            }
             // chance of rain
             hours.forEachIndexed { i, p ->
                 val pp = p.precipitationProbability ?: 0.0

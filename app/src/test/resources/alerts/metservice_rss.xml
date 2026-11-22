@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>Metservice Public CAP Alerts</title>
+    <link>https://www.metservice.com</link>
+    <description>Current Watches, Warnings and Advisories for New Zealand issued by MetService</description>
+    <copyright>Copyright Meteorological Service of New Zealand Limited, 2026. Licensed under Creative Commons BY 4.0.</copyright>
+    <pubDate>Sun, 22 Nov 2026 09:30:00 +1300</pubDate>
+    <item>
+      <title>Heavy Rain Warning - Orange</title>
+      <link>{BASE}/cap/rain-auckland.xml</link>
+      <guid>{BASE}/cap/rain-auckland.xml</guid>
+      <pubDate>Sun, 22 Nov 2026 09:30:00 +1300</pubDate>
+    </item>
+    <item>
+      <title>Strong Wind Watch</title>
+      <link>{BASE}/cap/wind-wellington.xml</link>
+      <guid>{BASE}/cap/wind-wellington.xml</guid>
+      <pubDate>Sun, 22 Nov 2026 08:10:00 +1300</pubDate>
+    </item>
+    <item>
+      <title>Test message</title>
+      <link>{BASE}/cap/test.xml</link>
+      <guid>{BASE}/cap/test.xml</guid>
+      <pubDate>Sun, 22 Nov 2026 08:00:00 +1300</pubDate>
+    </item>
+  </channel>
+</rss>

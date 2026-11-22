@@ -115,7 +115,9 @@ fun PlacePage(place: Place, state: UiState, model: AppModel) {
         modifier = Modifier.fillMaxSize()) {
         LazyColumn(Modifier.fillMaxSize().testTag("page-${place.key}"), contentPadding = androidx.compose.foundation.layout.PaddingValues(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            item { SkyCard(fc, place, units, state.settings.animations, status.first, status.second) }
+            val shown = if (state.settings.alerts.banner) state.alerts[place.key] ?: emptyList() else emptyList()
+            item { SkyCard(fc, place, units, state.settings.animations, status.first, status.second,
+                alert = shown.firstOrNull(), moreAlerts = (shown.size - 1).coerceAtLeast(0), onAlert = { model.openWarnings(place.key) }) }
             if (fc != null) {
                 item { DetailsCard(fc, units) }
                 item {
@@ -123,11 +125,13 @@ fun PlacePage(place: Place, state: UiState, model: AppModel) {
                         Column(Modifier.padding(12.dp)) {
                             Text("Next 24 hours", fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(6.dp))
-                            HourlyChart(next24(fc.hourly, fc.current.time), units)
+                            HourlyChart(next24(fc.hourly, fc.current.time), units,
+                                warnings = (state.alerts[place.key] ?: emptyList()).filter { it.official }.map { it.onset to it.expires },
+                                utcOffsetSeconds = fc.utcOffsetSeconds)
                         }
                     }
                 }
-                item { DailyCard(fc, units, state.settings.animations) }
+                item { DailyCard(fc, units, state.settings.animations, if (state.settings.alerts.banner) state.alerts[place.key] ?: emptyList() else emptyList()) }
             }
             item { Footer(fc, state.settings.providers.firstOrNull()?.let { providerInfo(it)?.name }) }
         }
@@ -202,24 +206,25 @@ fun dayLabel(date: String, today: LocalDate?): String {
 }
 
 @Composable
-private fun DailyCard(fc: Forecast, u: UnitPrefs, animate: Boolean) {
+private fun DailyCard(fc: Forecast, u: UnitPrefs, animate: Boolean, alerts: List<io.github.shanebl030glitch.rbsbweather.data.Alert> = emptyList()) {
     val today = try { LocalDate.parse(fc.current.time.take(10)) } catch (e: Exception) { null }
     Card(Modifier.fillMaxWidth().testTag("daily")) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
             Text("${fc.daily.size}-day forecast", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 4.dp))
             fc.daily.forEachIndexed { i, d ->
                 if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-                DayRow(d, dayLabel(d.date, today), u, animate, i * 0.37)
+                DayRow(d, dayLabel(d.date, today), u, animate, i * 0.37, dayAlert(d.date, fc.utcOffsetSeconds, alerts))
             }
         }
     }
 }
 
 @Composable
-private fun DayRow(d: Day, label: String, u: UnitPrefs, animate: Boolean, phase: Double) {
+private fun DayRow(d: Day, label: String, u: UnitPrefs, animate: Boolean, phase: Double, alert: io.github.shanebl030glitch.rbsbweather.data.Alert? = null) {
     Row(Modifier.fillMaxWidth().padding(vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.width(92.dp)) {
             Text(label, fontWeight = FontWeight.Medium, fontSize = 14.sp)
+            if (alert != null) Badge(alert.level, alert.badge, Modifier.testTag("dayBadge"))
             val pp = d.precipitationProbabilityMax
             Text("💧 ${pp?.toInt()?.let { "$it%" } ?: "–"}  ${Units.fmtPrecip(d.precipitationSum, u.precip)}",
                 fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), maxLines = 1)
@@ -249,4 +254,11 @@ private fun Footer(fc: Forecast?, primary: String?) {
         }
         Text(Version.AUTHOR_CREDIT, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("credit"))
     }
+}
+
+/** The most severe warning covering any part of a local day. */
+fun dayAlert(date: String, utcOffsetSeconds: Int, alerts: List<io.github.shanebl030glitch.rbsbweather.data.Alert>): io.github.shanebl030glitch.rbsbweather.data.Alert? {
+    val start = try { java.time.LocalDate.parse(date).atStartOfDay().toEpochSecond(java.time.ZoneOffset.ofTotalSeconds(utcOffsetSeconds.coerceIn(-64800, 64800))).toDouble() }
+        catch (e: Exception) { return null }
+    return io.github.shanebl030glitch.rbsbweather.data.worstAlert(alerts.filter { (it.onset == null || it.onset < start + 86400) && (it.expires == null || it.expires > start) })
 }

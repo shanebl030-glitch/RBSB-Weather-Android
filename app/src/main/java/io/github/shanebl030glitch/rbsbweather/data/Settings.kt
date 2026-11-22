@@ -19,6 +19,8 @@ data class Settings(
     val providers: List<String> = DEFAULT_PROVIDERS,      // first = primary, then backups in order
     val recovery: Int = 0,                                // RECOVERY_CHOICES
     val providerOptions: Map<String, String> = emptyMap(),  // e.g. "wunderground.station" → "IAUCKL123"
+    val alerts: AlertSettings = AlertSettings(),
+    val quakes: QuakeSettings = QuakeSettings(),
 ) {
     fun option(provider: String, name: String): String? = providerOptions["$provider.$name"]?.takeIf { it.isNotBlank() }
 
@@ -60,6 +62,8 @@ data class Settings(
         .put("providers", JSONArray(providers))
         .put("recovery", recovery)
         .put("providerOptions", JSONObject(providerOptions as Map<*, *>))
+        .put("alerts", alerts.toJson())
+        .put("quakes", quakes.toJson())
 
     companion object {
         fun fromJson(text: String?): Settings {
@@ -89,7 +93,72 @@ data class Settings(
             o.optJSONObject("providerOptions")?.let { po ->
                 po.keys().forEach { k -> po.str(k)?.takeIf { k.length <= 64 && it.isNotBlank() }?.let { opts[k] = it.take(64) } }
             }
-            return Settings(places, sel, units, refresh, anim, chain.ifEmpty { DEFAULT_PROVIDERS }, rec, opts)
+            return Settings(places, sel, units, refresh, anim, chain.ifEmpty { DEFAULT_PROVIDERS }, rec, opts,
+                AlertSettings.fromJson(o.optJSONObject("alerts")), QuakeSettings.fromJson(o.optJSONObject("quakes")))
+        }
+    }
+}
+
+/** Settings → Weather Alerts (the desktop's alerts_* settings). Own-limit values are in °C, km/h and mm. */
+data class AlertSettings(
+    val official: Boolean = true,
+    val minLevel: String = "watch",             // all | watch | orange | red
+    val interval: Int = 15,                     // minutes between checks
+    val own: Boolean = true,
+    val limits: Map<String, Limit> = DEFAULT_LIMITS,
+    val banner: Boolean = true,                 // banner in the sky, badges in My places
+    val notify: Boolean = true,
+    val redAlarm: Boolean = false,              // the desktop's "beep for Red": Red warnings use an alarm sound
+    val selectedOnly: Boolean = false,          // notify only for the place on screen
+    val muted: Set<String> = emptySet(),
+) {
+    fun toJson(): JSONObject = JSONObject().put("official", official).put("min_level", minLevel).put("interval", interval)
+        .put("own", own).put("limits", limitsToJson(limits)).put("banner", banner).put("notify", notify)
+        .put("red_alarm", redAlarm).put("selected_only", selectedOnly).put("muted", JSONArray(muted.toList().takeLast(500)))
+
+    companion object {
+        fun fromJson(o: JSONObject?): AlertSettings {
+            o ?: return AlertSettings()
+            fun b(k: String, d: Boolean) = if (o.opt(k) is Boolean) o.getBoolean(k) else d
+            val muted = o.optJSONArray("muted")?.let { a -> (0 until a.length()).mapNotNull { a.optString(it).takeIf { s -> s.isNotEmpty() }?.take(300) } }?.takeLast(500)?.toSet() ?: emptySet()
+            return AlertSettings(b("official", true), o.optString("min_level").takeIf { it in Alerts.MIN_LEVEL_CHOICES } ?: "watch",
+                o.optInt("interval", 15).takeIf { it in Alerts.INTERVAL_CHOICES } ?: 15, b("own", true),
+                o.optJSONObject("limits")?.takeIf { it.length() > 0 }?.let { limitsFromJson(it) } ?: DEFAULT_LIMITS,
+                b("banner", true), b("notify", true), b("red_alarm", false), b("selected_only", false), muted)
+        }
+    }
+}
+
+/** Settings → Earthquakes (the desktop's quakes_* settings). */
+data class QuakeSettings(
+    val show: Boolean = true,
+    val period: String = "day",                 // day | week
+    val minMag: Double = 2.5,                   // 2.5 | 4.5
+    val interval: Int = 5,                      // minutes between checks while the app is open
+    val notifyNear: Boolean = true,
+    val nearMag: Double = 4.5,
+    val nearKm: Int = 300,
+    val notifyMajor: Boolean = true,
+    val majorMag: Double = 7.0,
+) {
+    val rules: NotifyRules get() = NotifyRules(notifyNear, nearMag, nearKm.toDouble(), notifyMajor, majorMag)
+
+    fun toJson(): JSONObject = JSONObject().put("show", show).put("period", period).put("min_mag", minMag).put("interval", interval)
+        .put("notify_near", notifyNear).put("near_mag", nearMag).put("near_km", nearKm).put("notify_major", notifyMajor).put("major_mag", majorMag)
+
+    companion object {
+        val NEAR_MAGS = listOf(3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0)
+        val NEAR_KMS = listOf(50, 100, 200, 300, 500, 1000)
+        val MAJOR_MAGS = listOf(6.0, 6.5, 7.0, 7.5, 8.0)
+
+        fun fromJson(o: JSONObject?): QuakeSettings {
+            o ?: return QuakeSettings()
+            fun b(k: String, d: Boolean) = if (o.opt(k) is Boolean) o.getBoolean(k) else d
+            fun d(k: String, def: Double, allowed: List<Double>) = o.num(k)?.takeIf { v -> allowed.any { kotlin.math.abs(it - v) < 1e-9 } } ?: def
+            return QuakeSettings(b("show", true), o.optString("period").takeIf { it in Quakes.PERIODS } ?: "day",
+                d("min_mag", 2.5, Quakes.MIN_MAGS), o.optInt("interval", 5).takeIf { it in Quakes.INTERVALS } ?: 5,
+                b("notify_near", true), d("near_mag", 4.5, NEAR_MAGS), o.optInt("near_km", 300).takeIf { it in NEAR_KMS } ?: 300,
+                b("notify_major", true), d("major_mag", 7.0, MAJOR_MAGS))
         }
     }
 }

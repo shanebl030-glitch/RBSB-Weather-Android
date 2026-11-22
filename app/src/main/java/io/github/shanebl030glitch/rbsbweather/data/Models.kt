@@ -72,6 +72,7 @@ data class Day(
     val sunrise: String?,
     val sunset: String?,
     val uvIndexMax: Double?,
+    val gustMax: Double? = null,       // km/h (Open-Meteo gives it for every day; others only today's current gust)
 )
 
 data class Forecast(
@@ -110,7 +111,7 @@ data class Forecast(
                     .putN("min", it.tempMin).putN("rain", it.precipitationSum)
                     .putN("pp", it.precipitationProbabilityMax).putN("wind", it.windSpeedMax)
                     .put("sunrise", it.sunrise ?: JSONObject.NULL).put("sunset", it.sunset ?: JSONObject.NULL)
-                    .putN("uv", it.uvIndexMax)
+                    .putN("uv", it.uvIndexMax).putN("gust", it.gustMax)
             }))
     }
 
@@ -132,7 +133,7 @@ data class Forecast(
             val days = (0 until d.length()).map { i ->
                 val x = d.getJSONObject(i)
                 Day(x.getString("date"), x.int("code"), x.num("max"), x.num("min"), x.num("rain"), x.num("pp"),
-                    x.num("wind"), x.str("sunrise"), x.str("sunset"), x.num("uv"))
+                    x.num("wind"), x.str("sunrise"), x.str("sunset"), x.num("uv"), x.num("gust"))
             }
             Forecast(place, o.optString("timezone", "auto"), o.optInt("utcOffsetSeconds", 0), current, hours, days,
                 o.optString("source", "Open-Meteo"), o.optLong("fetchedAt", 0L), fromCache = true)

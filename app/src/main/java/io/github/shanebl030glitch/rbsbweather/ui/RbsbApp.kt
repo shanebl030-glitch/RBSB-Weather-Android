@@ -44,9 +44,11 @@ fun RbsbApp(model: AppModel) {
     // keep the weather fresh while the app is open (checks each minute; refreshes when it's due)
     LaunchedEffect(Unit) {
         model.refreshAll()
+        model.checkWatch()
         while (true) {
             delay(60_000)
             model.refresh()
+            model.checkWatch()                   // warnings and quakes, when their check is due
         }
     }
 
@@ -61,6 +63,10 @@ fun RbsbApp(model: AppModel) {
                             Screen.PLACES -> "My places"
                             Screen.SETTINGS -> "Settings"
                             Screen.PROVIDERS -> "Weather Providers"
+                            Screen.ALERT_SETTINGS -> "Weather Alerts"
+                            Screen.QUAKE_SETTINGS -> "Earthquakes"
+                            Screen.WARNINGS -> "⚠ Warnings"
+                            Screen.QUAKES -> "Earthquakes"
                             Screen.HELP -> "User guide"
                             Screen.ABOUT -> "About"
                         })
@@ -86,7 +92,7 @@ fun RbsbApp(model: AppModel) {
                                 Icon(Icons.Filled.MoreVert, contentDescription = "Menu")
                             }
                             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                                listOf(Screen.PLACES to "My places", Screen.SETTINGS to "Settings",
+                                listOf(Screen.PLACES to "My places", Screen.WARNINGS to "Warnings", Screen.QUAKES to "Earthquakes", Screen.SETTINGS to "Settings",
                                     Screen.HELP to "User guide", Screen.ABOUT to "About").forEach { (sc, label) ->
                                     DropdownMenuItem(text = { Text(label) }, onClick = { menu = false; model.go(sc) },
                                         modifier = Modifier.testTag("menu-$label"))
@@ -105,6 +111,10 @@ fun RbsbApp(model: AppModel) {
                 Screen.PLACES -> PlacesScreen(state, model, m)
                 Screen.SETTINGS -> SettingsScreen(state, model, m)
                 Screen.PROVIDERS -> ProvidersScreen(state, model, m)
+                Screen.ALERT_SETTINGS -> AlertSettingsScreen(state, model, m)
+                Screen.QUAKE_SETTINGS -> QuakeSettingsScreen(state, model, m)
+                Screen.WARNINGS -> WarningsScreen(state, model, m)
+                Screen.QUAKES -> QuakesScreen(state, model, m)
                 Screen.HELP -> HelpScreen(m)
                 Screen.ABOUT -> AboutScreen(m)
             }

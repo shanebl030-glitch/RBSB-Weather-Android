@@ -71,6 +71,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-core")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    implementation("androidx.work:work-runtime-ktx:2.10.1")         // background checks for warnings and quakes
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20240303")          // the real org.json for JVM tests

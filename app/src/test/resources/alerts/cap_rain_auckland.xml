@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
+  <identifier>2.49.0.1.554.0.20261122.rain.1</identifier>
+  <sender>MetService</sender>
+  <sent>2026-11-22T09:30:00+13:00</sent>
+  <status>Actual</status>
+  <msgType>Update</msgType>
+  <scope>Public</scope>
+  <info>
+    <language>en-NZ</language>
+    <category>Met</category>
+    <event>rain</event>
+    <urgency>Expected</urgency>
+    <severity>Moderate</severity>
+    <certainty>Likely</certainty>
+    <onset>{ONSET}</onset>
+    <expires>{EXPIRES}</expires>
+    <senderName>MetService</senderName>
+    <headline>Heavy Rain Warning - Orange</headline>
+    <description>Periods of heavy rain. Expect 100 to 140 mm of rain, especially about the ranges.</description>
+    <instruction>Streams and rivers may rise rapidly. Surface flooding and slips are possible and driving may be hazardous.</instruction>
+    <web>https://www.metservice.com/warnings/home</web>
+    <parameter><valueName>ColourCode</valueName><value>Orange</value></parameter>
+    <area>
+      <areaDesc>Auckland, including the Hauraki Gulf islands</areaDesc>
+      <polygon>-36.30,174.40 -36.30,175.60 -37.30,175.60 -37.30,174.40 -36.30,174.40</polygon>
+    </area>
+  </info>
+</alert>

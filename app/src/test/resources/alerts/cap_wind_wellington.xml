@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
+  <identifier>2.49.0.1.554.0.20261122.wind.7</identifier>
+  <sender>MetService</sender>
+  <sent>2026-11-22T08:10:00+13:00</sent>
+  <status>Actual</status>
+  <msgType>Alert</msgType>
+  <scope>Public</scope>
+  <info>
+    <language>en-NZ</language>
+    <event>wind</event>
+    <urgency>Future</urgency>
+    <severity>Minor</severity>
+    <certainty>Possible</certainty>
+    <onset>{ONSET}</onset>
+    <expires>{EXPIRES}</expires>
+    <headline>Strong Wind Watch - Yellow</headline>
+    <description>Northwest winds may approach severe gale in exposed places.</description>
+    <parameter><valueName>ColourCode</valueName><value>Yellow</value></parameter>
+    <area>
+      <areaDesc>Wellington</areaDesc>
+      <polygon>-41.0,174.6 -41.0,175.2 -41.5,175.2 -41.5,174.6 -41.0,174.6</polygon>
+    </area>
+  </info>
+</alert>

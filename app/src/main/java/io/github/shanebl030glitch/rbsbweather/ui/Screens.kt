@@ -125,7 +125,12 @@ fun PlacesScreen(state: UiState, model: AppModel, modifier: Modifier = Modifier)
                 Text(fc?.current?.let { WeatherCodes.symbol(it.weatherCode, it.isDay) } ?: "📍", fontSize = 22.sp,
                     modifier = Modifier.padding(end = 10.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(p.name, fontWeight = if (p.key == state.settings.selected) FontWeight.Bold else FontWeight.Normal)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(p.name, fontWeight = if (p.key == state.settings.selected) FontWeight.Bold else FontWeight.Normal)
+                        if (state.settings.alerts.banner) state.alerts[p.key]?.firstOrNull()?.let {
+                            Badge(it.level, it.badge, Modifier.padding(start = 6.dp).clickable { model.openWarnings(p.key) }.testTag("badge-${p.name}"))
+                        }
+                    }
                     Text(listOf(p.admin1, p.country).filter { it.isNotBlank() && it != p.name }.joinToString(", "),
                         fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                 }
@@ -176,6 +181,8 @@ fun SettingsScreen(state: UiState, model: AppModel, modifier: Modifier = Modifie
     val s = state.settings
     val u = s.units
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).testTag("settings")) {
+        SettingsLink("Weather Alerts", "Official warnings, your own limits, notifications", "openAlertSettings") { model.go(Screen.ALERT_SETTINGS) }
+        SettingsLink("Earthquakes", "What to show, and when to notify", "openQuakeSettings") { model.go(Screen.QUAKE_SETTINGS) }
         Card(Modifier.fillMaxWidth().clickable { model.go(Screen.PROVIDERS) }.testTag("openProviders")) {
             Column(Modifier.padding(14.dp)) {
                 Text("Weather Providers", fontWeight = FontWeight.Bold)
@@ -260,5 +267,15 @@ fun AboutScreen(modifier: Modifier = Modifier) {
         TextButton(onClick = { open(COFFEE_URL) }) { Text("☕ If you enjoy this app, consider buying me a coffee for NZ$0.99") }
         TextButton(onClick = { open(REPO_URL) }) { Text("RBSB-Weather for Android on GitHub") }
         Text("A separate app from RBSB-Weather for the desktop.", fontSize = 12.sp)
+    }
+}
+
+@Composable
+private fun SettingsLink(title: String, sub: String, tag: String, onClick: () -> Unit) {
+    Card(Modifier.fillMaxWidth().padding(bottom = 8.dp).clickable(onClick = onClick).testTag(tag)) {
+        Column(Modifier.padding(14.dp)) {
+            Text(title, fontWeight = FontWeight.Bold)
+            Text(sub, fontSize = 13.sp)
+        }
     }
 }

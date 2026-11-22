@@ -78,6 +78,9 @@ fun SkyCard(
     status: String,
     statusIsWarning: Boolean,
     modifier: Modifier = Modifier,
+    alert: io.github.shanebl030glitch.rbsbweather.data.Alert? = null,
+    moreAlerts: Int = 0,
+    onAlert: () -> Unit = {},
 ) {
     val ctx = LocalContext.current
     remember { try { MoonRender.init(ctx.applicationContext.assets) } catch (e: Exception) { } }
@@ -151,6 +154,10 @@ fun SkyCard(
                 }
             }
             Column(Modifier.fillMaxSize().padding(start = 16.dp, end = 14.dp, top = 12.dp, bottom = 12.dp)) {
+                if (alert != null) {
+                    WarningBanner(alert, moreAlerts, io.github.shanebl030glitch.rbsbweather.data.Sun.zoneFor(place, fc?.utcOffsetSeconds), units.clock, onAlert,
+                        Modifier.padding(bottom = 6.dp).avoid("banner"))
+                }
                 Text(place.displayName, style = white.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold), maxLines = 2,
                     modifier = Modifier.widthIn(max = 260.dp).avoid("place"))
                 val c = fc?.current

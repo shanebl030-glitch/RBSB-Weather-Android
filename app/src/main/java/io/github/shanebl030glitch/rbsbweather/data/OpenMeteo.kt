@@ -21,7 +21,7 @@ class OpenMeteo(
             "wind_direction_10m", "wind_gusts_10m")
         val HOURLY = listOf("temperature_2m", "precipitation_probability", "precipitation", "weather_code")
         val DAILY = listOf("weather_code", "temperature_2m_max", "temperature_2m_min", "precipitation_sum",
-            "precipitation_probability_max", "wind_speed_10m_max", "sunrise", "sunset", "uv_index_max")
+            "precipitation_probability_max", "wind_speed_10m_max", "sunrise", "sunset", "uv_index_max", "wind_gusts_10m_max")
     }
 
     fun forecast(place: Place, days: Int = 7): Forecast {
@@ -80,11 +80,11 @@ fun parseForecast(body: String, place: Place): Forecast {
             val code = col("weather_code"); val mx = col("temperature_2m_max"); val mn = col("temperature_2m_min")
             val rain = col("precipitation_sum"); val pp = col("precipitation_probability_max")
             val wind = col("wind_speed_10m_max"); val rise = col("sunrise"); val set = col("sunset")
-            val uv = col("uv_index_max")
+            val uv = col("uv_index_max"); val gust = col("wind_gusts_10m_max")
             for (i in 0 until t.length()) {
                 val date = t.str(i) ?: continue
                 days += Day(date, code?.num(i)?.toInt(), mx?.num(i), mn?.num(i), rain?.num(i), pp?.num(i),
-                    wind?.num(i), rise?.str(i), set?.str(i), uv?.num(i))
+                    wind?.num(i), rise?.str(i), set?.str(i), uv?.num(i), gust?.num(i))
             }
         }
     }

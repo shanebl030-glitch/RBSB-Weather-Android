@@ -4,7 +4,10 @@
 package io.github.shanebl030glitch.rbsbweather
 
 import android.content.Context
+import io.github.shanebl030glitch.rbsbweather.data.AlertClient
 import io.github.shanebl030glitch.rbsbweather.data.ForecastCache
+import io.github.shanebl030glitch.rbsbweather.data.QuakeClient
+import io.github.shanebl030glitch.rbsbweather.data.Watch
 import io.github.shanebl030glitch.rbsbweather.data.Http
 import io.github.shanebl030glitch.rbsbweather.data.KeyStore
 import io.github.shanebl030glitch.rbsbweather.data.ProviderManager
@@ -39,6 +42,8 @@ class AppGraph private constructor(context: Context) {
     val providers = ProviderManager(Http.default, PrefsKeys(context), ::settings)
     val repo = WeatherRepository({ providers.chain() }, ForecastCache(File(context.filesDir, "forecasts")),
         { settings().recovery })
+    /** Warnings and earthquakes, shared by the app and the background check. */
+    val watch = Watch(File(context.filesDir, "watch"), AlertClient(Http.bytes), QuakeClient(Http.bytes))
 
     companion object {
         @Volatile private var instance: AppGraph? = null

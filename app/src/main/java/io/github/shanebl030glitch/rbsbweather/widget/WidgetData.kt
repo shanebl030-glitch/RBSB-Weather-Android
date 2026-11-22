@@ -5,6 +5,7 @@
 // Created By Shane BlackbuRn
 package io.github.shanebl030glitch.rbsbweather.widget
 
+import io.github.shanebl030glitch.rbsbweather.data.Alert
 import io.github.shanebl030glitch.rbsbweather.data.Forecast
 import io.github.shanebl030glitch.rbsbweather.data.Settings
 import io.github.shanebl030glitch.rbsbweather.data.Units
@@ -21,6 +22,8 @@ data class WidgetData(
     val hiLo: String,
     val updated: String,           // "↻ 19:30" or "↻ 19:30 (3 h ago)"
     val updatedWarn: Boolean,      // amber
+    val alert: String = "",        // "⚠ Orange Heavy Rain Warning" under the place (desktop 2.4)
+    val alertLevel: String = "",
 )
 
 const val OLD_DATA_WARN_S = 3 * 60 * 60
@@ -35,7 +38,7 @@ fun ageText(seconds: Long): String {
     }
 }
 
-fun widgetData(settings: Settings, fc: Forecast?, nowMs: Long = System.currentTimeMillis()): WidgetData {
+fun widgetData(settings: Settings, fc: Forecast?, nowMs: Long = System.currentTimeMillis(), alerts: List<Alert> = emptyList()): WidgetData {
     val place = settings.selectedPlace()
         ?: return WidgetData("RBSB-Weather", "", "–", "Open the app to add a place", "", "", false)
     if (fc == null) return WidgetData(place.name, "", "–", "Waiting for the weather", "", "Updating…", false)
@@ -57,5 +60,7 @@ fun widgetData(settings: Settings, fc: Forecast?, nowMs: Long = System.currentTi
         warn = if (mins > 0) age > maxOf(2L * mins * 60, 90L * 60) else age > OLD_DATA_WARN_S
         updated = "↻ $stamp" + if (warn) " (${ageText(age)})" else ""
     }
-    return WidgetData(place.name, source, Units.fmtTemp(c.temperature, u.temp), WeatherCodes.describe(c.weatherCode), hiLo, updated, warn)
+    val top = if (settings.alerts.banner) alerts.firstOrNull() else null
+    return WidgetData(place.name, source, Units.fmtTemp(c.temperature, u.temp), WeatherCodes.describe(c.weatherCode), hiLo, updated, warn,
+        top?.let { "⚠ " + it.title() } ?: "", top?.level ?: "")
 }

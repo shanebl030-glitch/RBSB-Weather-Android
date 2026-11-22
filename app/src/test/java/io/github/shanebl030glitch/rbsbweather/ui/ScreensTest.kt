@@ -141,4 +141,32 @@ class ScreensTest {
         compose.onNodeWithTag("page-${AUCKLAND.key}").performScrollToNode(hasTestTag("daily"))
         compose.onAllNodesWithTag("dayIcon")[0].assertExists()          // animated icons in the 7-day list
     }
+
+    @Test fun warningsBannerScreenAndMute() {
+        val w = io.github.shanebl030glitch.rbsbweather.data.Watch(tmp.newFolder(), io.github.shanebl030glitch.rbsbweather.data.FakeAlertServer().client(),
+            io.github.shanebl030glitch.rbsbweather.data.FakeQuakeServer().client())
+        val m = AppModel(MemoryStore(Settings(animations = false).toJson().toString()), WeatherRepository(listOf(FakeProvider()), ForecastCache(tmp.root)),
+            SEARCH, CoroutineScope(Dispatchers.Unconfined), Dispatchers.Unconfined, watch = w)
+        m.add(AUCKLAND)
+        compose.setContent { RbsbApp(m) }
+        compose.waitUntil(5_000) { m.state.value.alerts[AUCKLAND.key]?.isNotEmpty() == true }
+        compose.onNodeWithTag("warningBanner").assertIsDisplayed()
+        compose.onNodeWithTag("warningBanner").performClick()
+        compose.onNodeWithTag("warnings").assertIsDisplayed()
+        compose.onAllNodesWithText("Orange Heavy Rain Warning")[0].assertIsDisplayed()
+        compose.onAllNodesWithTag("mute")[0].performClick()
+        assertTrue(m.state.value.alerts[AUCKLAND.key]!!.none { it.official })        // off the banner
+        assertTrue(m.state.value.allAlerts[AUCKLAND.key]!!.any { it.official })      // still listed
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("menu").performClick()
+        compose.onNodeWithTag("menu-Earthquakes").performClick()
+        compose.onNodeWithTag("quakes").assertIsDisplayed()
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("menu").performClick()
+        compose.onNodeWithTag("menu-Settings").performClick()
+        compose.onNodeWithTag("openAlertSettings").performClick()
+        compose.onNodeWithTag("alertSettings").assertIsDisplayed()
+        compose.onNodeWithTag("alertsRedAlarm").performClick()
+        assertTrue(m.state.value.settings.alerts.redAlarm)
+    }
 }
