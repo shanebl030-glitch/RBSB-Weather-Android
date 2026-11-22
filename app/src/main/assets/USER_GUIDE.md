@@ -124,6 +124,10 @@ Menu (⋮) → **Settings**: temperature (°C or °F), wind speed (km/h, m/s, mp
 * The screen shows what went wrong, for example "No internet connection".
 * The saved copy stays on screen, and the app tries again when you pull down or when the next refresh is due.
 
+## If the app closes unexpectedly
+
+RBSB-Weather saves the reason on your phone. The next time you open it, it shows the details with **Copy** and **Share**, so you can send them to Shane. Nothing is sent unless you choose to send it.
+
 ## About
 
 RBSB-Weather for Android is a separate app from RBSB-Weather for the desktop. Menu (⋮) → **About** shows the version and credits. The RBSB-Weather icon was designed by Shane BlackbuRn.

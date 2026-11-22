@@ -4,7 +4,41 @@ Created By Shane BlackbuRn
 
 A separate app from RBSB-Weather for the desktop, with its own versions.
 
-## 0.5.0 – 2026-11-22 (test build; on branch claude/android-0.2.0; not released)
+## 0.5.1 – 2026-11-22 (test build; on branch claude/android-0.2.0; not released)
+
+Shane: "when I click on earth globe it crashes".
+
+### Fixed
+- **Tapping Earth Globe closed the app.** Reproduced on a real Android emulator with the 0.5.0 build:
+  `IllegalArgumentException: ending radius must be > 0` from the glow around the globe. On the first
+  frame the globe hasn't been measured, so the glow had a radius of 0, which real Android refuses.
+  The test environment (Robolectric) doesn't check this, so every test had passed.
+  - The globe now waits until it's measured before drawing.
+  - Every radial gradient in the app goes through one safe helper. A test stops any new code from
+    drawing one directly.
+
+### Added
+- **Crash reports:** if the app ever closes unexpectedly, the reason is saved on the phone. The next
+  time it opens, it shows the details with **Copy** and **Share**, so they can be sent to Shane.
+  Nothing is sent by itself.
+- **An emulator check on GitHub:** every push installs the app on a real Android emulator and goes
+  through it like a person. It adds Auckland, then visits the Moon, Earth Flat and Earth Globe
+  (zoom, spin, drag), every tab, menu and Settings screen, saves a Moon picture, turns the phone
+  sideways and back, and leaves and reopens the app. If the app closes, the check prints Android's
+  crash log.
+
+### Changed (from the audit)
+- **The globe uses less memory:**
+  - it's drawn at no more than 1024 pixels (bigger zooms are scaled on screen);
+  - it keeps at most two sets of working data;
+  - it draws at lower detail while it turns.
+- **A failed drawing no longer closes the app.** If the globe can't be drawn, it says so. If the
+  Moon picture can't be saved, you get a message instead.
+- **The Moon behind the globe** is one small picture, made off the main thread, so the screen doesn't stall.
+- **The 2048-pixel Moon export** is no longer kept in memory afterwards (it used 16 MB, plus 33 MB of textures).
+- **The app asks Android for a larger memory allowance**, as image-heavy apps do.
+
+## 0.5.0 – 2026-11-22 (test build; crashed on Earth Globe – use 0.5.1)
 
 Shane: "now the next update". Following the roadmap: the Moon and the Earth.
 

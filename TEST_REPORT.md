@@ -4,13 +4,32 @@ Created By Shane BlackbuRn
 
 | Item | Result |
 |---|---|
-| Version | 0.5.0 (test build) |
+| Version | 0.5.1 (test build) |
 | Date | 2026-11-22 |
 | Where | GitHub Actions: Ubuntu 26.04 runner, JDK 17 (Temurin), Gradle 8.14.3, Android Gradle Plugin 8.10.1, Kotlin 2.1.21, Compose BOM 2025.05.01, compile/target SDK 35, min SDK 29 |
 | Command | `./gradlew testDebugUnitTest`, then `./gradlew assembleRelease` |
-| Tests | 150 run, 150 passed, 0 failed, 0 skipped (GitHub Actions run 44990253891; the docs-only commit after it is re-run on CI) |
+| Tests | 154 run, 154 passed, 0 failed, 0 skipped (GitHub Actions run 44995204740), plus the emulator check (run 44995821619): no crash |
 
 ## What's tested
+
+**New in 0.5.1:**
+- **Emulator check: real Android 14 on a Pixel 6 emulator** (`.github/workflows/emulator.yml`, `scripts/emulator/drive.sh`).
+  - Installs the release APK and adds Auckland by searching for it.
+  - Moon tab; Earth Flat; **Earth Globe**; zoom to 300%; Rotate slowly; drag; Flat and back.
+  - Leaving and returning to Earth.
+  - The Warnings tab; My places, Earthquakes, Settings (Weather Alerts, Earthquakes, Weather Providers), User guide and About.
+  - Saving a Moon picture.
+  - Landscape and back.
+  - Home and reopen; pull to refresh.
+  - It checks the app is still running after every step, and prints Android's crash log if not.
+  - **The 0.5.0 build crashed on tapping Earth Globe** (`ending radius must be > 0`). **0.5.1 passed every step.**
+- **SafeDrawingTest:** no radius below 0.5 reaches Android, and no code calls `Brush.radialGradient` directly.
+- **GlobeStressTest:** a phone-like setup under Robolectric.
+  - A 3× screen, animation on, earthquakes, four places, live clouds, the Moon tab first.
+  - Then a real tap on Earth Globe; zoom to both limits; spin; drag; pinch; double-tap; Flat and back; leave and return; open from a quake notification.
+- **Crash report:** saved with the app version and stack trace, shown once, and removed when closed.
+- **Note:** the emulator uses software graphics, so its slow frames don't say how fast the app is on a phone.
+
 
 **New in 0.5 (14 tests):**
 - **The Earth** (mirroring the desktop's `test_earth.py`, same PyEphem reference file):

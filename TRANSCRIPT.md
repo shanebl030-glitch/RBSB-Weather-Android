@@ -2,6 +2,37 @@
 
 Created By Shane BlackbuRn
 
+## 0.5.1 (2026-11-22)
+
+**Shane:** "Do a complete audit on the android because when I click on earth globe it crashes"
+
+**How it was found:**
+1. **Code review:** checked the globe's drawing, memory use, background work, and every `!!`,
+   range and launched job across the app.
+2. **Phone-like stress test** under Robolectric:
+   - a 3× screen, animation on, earthquakes, four places, live clouds;
+   - the Moon tab first, then the globe hard (zoom to the limit, spin, drag, pinch, double-tap).
+
+   It passed, and it also passed on the exact 0.5.0 code. So the crash needed a real Android runtime.
+3. **A real Android emulator on GitHub** (Android 14, Pixel 6 profile), driven by a script the way
+   Shane uses the app. On the 0.5.0 build, tapping Earth Globe closed the app within 3 seconds.
+   Android's log gave the reason: `IllegalArgumentException: ending radius must be > 0` at
+   `EarthScreens.kt:434`, the glow round the globe, drawn before the globe had a size.
+
+**Fixed and verified:**
+- **The cause:** every radial gradient is now made safe, and the globe doesn't draw until it's measured.
+- **On the emulator, the fixed build:**
+  - opens the globe, zooms to 300%, spins and drags;
+  - shows live clouds and 38 earthquakes;
+  - then goes through every other screen, saves a Moon picture, rotates the phone, and leaves
+    and reopens the app, all with no crash.
+- **The emulator check now runs on every push.**
+- **Crash reports:** added so a future crash on Shane's phone can be shared with its exact reason.
+- **Memory hardening:** see CHANGELOG.
+
+**Lesson:** Robolectric doesn't check everything real Android does. Drawing code is now also
+tested on a real Android emulator.
+
 ## 0.5.0 (2026-11-22)
 
 **Shane:** "now the next update"
