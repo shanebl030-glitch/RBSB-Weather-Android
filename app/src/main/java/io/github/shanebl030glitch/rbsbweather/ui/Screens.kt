@@ -261,9 +261,11 @@ fun AboutScreen(modifier: Modifier = Modifier) {
                 Text(io.github.shanebl030glitch.rbsbweather.ui.scene.MoonRender.CREDIT_DEFAULT + ".", fontSize = 13.sp)
                 Text(io.github.shanebl030glitch.rbsbweather.data.Alerts.CREDIT + ".", fontSize = 13.sp)
                 Text(io.github.shanebl030glitch.rbsbweather.data.Quakes.CREDIT + ".", fontSize = 13.sp)
+                Text(io.github.shanebl030glitch.rbsbweather.data.Earth.CREDIT + ".", fontSize = 13.sp)
+                Text(io.github.shanebl030glitch.rbsbweather.data.Clouds.CREDIT + ".", fontSize = 13.sp)
                 Text("With your own keys: OpenWeather, WeatherAPI.com, Visual Crossing, Tomorrow.io and Weather Underground " +
                     "(each credited under the forecast when it supplied it).", fontSize = 13.sp)
-                Text("Sun, sunrise and sunset worked out on your phone.")
+                Text("The Sun, Moon, sunrise and sunset, and day and night on the Earth are worked out on your phone.")
             }
         }
         TextButton(onClick = { open(COFFEE_URL) }) { Text("☕ If you enjoy this app, consider buying me a coffee for NZ$0.99") }

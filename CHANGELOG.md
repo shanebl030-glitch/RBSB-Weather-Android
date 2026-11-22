@@ -4,6 +4,28 @@ Created By Shane BlackbuRn
 
 A separate app from RBSB-Weather for the desktop, with its own versions.
 
+## 0.5.0 – 2026-11-22 (test build; on branch claude/android-0.2.0; not released)
+
+Shane: "now the next update". Following the roadmap: the Moon and the Earth.
+
+### Added
+- **Tabs along the bottom:** Forecast, Moon, Earth and Warnings (the phone version of the desktop's tabs).
+- **The Moon tab**, as on the desktop:
+  - the Moon turned exactly as it looks in that place's sky;
+  - phase, % lit, age, waxing or waning, rise and set, how long it's up and how far away it is;
+  - the next new, first quarter, full and last quarter Moons, and the next 7 days with pictures;
+  - **Save high-resolution image** saves a 2048-pixel picture to Pictures/RBSB-Weather.
+- **The Earth tab**, ported from the desktop's `earth.py`, `globe.py`, `sky.py` and `clouds.py`:
+  - **Earth Flat:** the world's day and night now, with city lights, twilight shading, where the Sun and Moon are overhead, your places (with a card for the selected one: time, temperature, day/twilight/night) and earthquakes. Pinch to zoom and drag; double-tap to reset.
+  - **Earth Globe:** drag to turn, pinch or +/− to zoom, double-tap to centre, **Rotate slowly**, and it turns smoothly to the place you pick. Behind it are the real Sun, Moon (in its phase, lit side towards the Sun) and stars, with the sunrise glow on the edge.
+  - **Live satellite clouds** (EUMETSAT data via Live Cloud Maps): checked every hour and downloaded only when newer; a failed download keeps the last map and waits 15 minutes. A line says how old the clouds are. Can be turned off.
+  - Earthquakes as dots coloured by age, sized by magnitude, pulsing in the last hour; tap for details.
+- **Show on Earth map** on each warning, and **Show on the globe** on the Earthquakes screen. Tapping an earthquake notification opens the globe turned to that quake.
+- Earth-map and cloud credits in About.
+
+### Tests
+- New tests mirror the desktop's `test_earth.py`, `test_globe.py`, `test_sky.py` and `test_clouds.py`, using the same PyEphem reference file (see TEST_REPORT.md).
+
 ## 0.4.0 – 2026-11-22 (test build; on branch claude/android-0.2.0; not released)
 
 Shane: "okay, that looking really godd." Next on his list: warnings and earthquakes.

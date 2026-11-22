@@ -2,6 +2,22 @@
 
 Created By Shane BlackbuRn
 
+## 0.5.0 (2026-11-22)
+
+**Shane:** "now the next update"
+→ The next stage on the roadmap: the Moon screen and the Earth map and globe,
+with live clouds and earthquakes.
+
+**What was done:**
+- Ported the desktop's `earth.py` (where the Sun is overhead, day and night,
+  twilight), `globe.py` (the globe projection), `sky.py` (the Sun, Moon and
+  stars behind the globe) and `clouds.py` (live clouds, downloaded only when
+  newer) to Kotlin.
+- Built the Moon, Earth Flat and Earth Globe screens and bottom tabs.
+- Ported the desktop's tests for these, using its PyEphem reference file.
+
+PROBLEMS_05
+
 ## 0.4.0 (2026-11-22)
 
 **Shane:** "okay, that looking really godd." (the widget now works)

@@ -6,6 +6,10 @@ Created By Shane BlackbuRn
 
 Tap **+** at the top to add a city or town. Type at least two letters, then tap the place you want. You can save up to 50 places.
 
+## Moving around
+
+The tabs along the bottom: **Forecast**, **Moon**, **Earth** and **Warnings**. Everything else is in the menu (⋮).
+
 ## Your places
 
 * Swipe left and right to move between your places. The dots at the top show which one you're on.
@@ -69,7 +73,7 @@ RBSB-Weather shows official severe weather warnings for your saved places, and c
 
 ## Earthquakes
 
-Menu (⋮) → **Earthquakes** lists recent quakes:
+Menu (⋮) → **Earthquakes** lists recent quakes (they're also dots on the **Earth** map and globe; **Show on the globe** turns the globe to them):
 
 * **Colour** shows how recent: red in the last hour, orange in the last 6 hours, yellow in the last day, grey if older. **Size** shows the magnitude.
 * Each shows its magnitude, place, depth, when, and how far it was from your nearest saved place. Tap it to open its page on GeoNet or USGS.
@@ -77,7 +81,30 @@ Menu (⋮) → **Earthquakes** lists recent quakes:
 * **Settings → Earthquakes:** the past day or week; magnitude 2.5 and up or 4.5 and up; the notification magnitude and distance; check every 5, 10 or 30 minutes while the app is open.
 * **Where quakes come from:** USGS for the whole world, and GeoNet for New Zealand quakes likely to have been felt (GeoNet's version is shown when both report the same quake). Nothing about you is sent: distances are worked out on your phone.
 * For a large quake under the sea, the list and notification remind you to check your official tsunami advice. **RBSB-Weather is not an earthquake or tsunami warning service.** In New Zealand, follow Civil Defence and emergency mobile alerts. A long or strong quake near the coast is itself the warning: move to high ground straight away.
-* The quakes will also appear on the world map and globe when the Earth screens arrive.
+* On the **Earth** map and globe, tap a quake's dot for its details. Dots from the last hour pulse. Untick **Earthquakes** under the map to hide them. Tapping an earthquake notification opens the globe turned to that quake.
+
+## Moon
+
+The **Moon** tab shows the Moon as it looks tonight from the place on screen, turned the way you'd see it in that sky:
+
+* the phase, how much is lit, its age in days, and whether it's growing (waxing) or shrinking (waning);
+* when it rises and sets, how long it's in the sky, and how far away it is;
+* the dates of the next new Moon, first quarter, full Moon and last quarter;
+* the next 7 days, each with a small picture.
+
+Tap **Save high-resolution image** to save a large (2048-pixel) picture of the Moon to your Pictures, in an RBSB-Weather folder. Times are shown in that place's time zone. The pictures are made from NASA's Moon images.
+
+## Earth
+
+The **Earth** tab shows day and night across the world as it is right now, with city lights on the night side. The switch at the top changes between **Earth Flat** (a map of the whole world) and **Earth Globe**.
+
+* **Your places** are marked; the place on screen is highlighted with a card showing its time, temperature and whether it's day, twilight or night there. Tap another place to switch to it.
+* ☀ marks where the Sun is overhead, and ● where the Moon is.
+* **Flat:** pinch to zoom in (up to 4×) and drag to move around; double-tap to go back to the whole world.
+* **Globe:** drag to turn it, pinch or use **+**/**−** to zoom, and double-tap to centre on the place on screen. **Rotate slowly** turns it by itself. Behind the globe are the real Sun, Moon and stars in their real positions, so you can see the Sun set behind the edge of the Earth as the day ends there.
+* **Live clouds:** the Earth shows the latest satellite cloud picture. It's checked every hour and only downloaded when there's a newer one, and if it can't be downloaded the last one is kept. The line above the map says how old the clouds are. Untick **Live clouds** to turn them off (and stop the download).
+* The picture is redrawn every 5 minutes, so the line between day and night moves on.
+* A warning's **Show on Earth map** opens the map at that place.
 
 ## Home-screen widgets
 

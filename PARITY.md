@@ -94,23 +94,24 @@ and where it stands on Android. It's updated with every version.
 | Weather warnings: MetService, US National Weather Service, MET Norway, MeteoAlarm, matched by each warning's own area | ✅ | 0.4: the desktop's alerts.py, ported and tested with the same fixtures. |
 | Banner across the sky (coloured, until when, who issued it; tap for the full warning) | ✅ | 0.4 |
 | Badges in My places, tags on the 7-day forecast, shading on the 24-hour chart | ✅ | 0.4 |
-| Warnings screen: area, valid times, what's expected, what to do, issuer, forecast rain for the same hours, Open on…, Mute | ✅ | 0.4. "Show on Earth map" comes with the Earth tabs (0.5). |
+| Warnings screen: area, valid times, what's expected, what to do, issuer, forecast rain for the same hours, Open on…, Mute | ✅ | 0.4; **Show on Earth map** added in 0.5. |
 | Notifications when a warning is issued, upgraded or reissued (once each, across restarts), Red alarm sound, selected place only | ✅ | 0.4: phone notifications, also while the app is closed (Android checks about every 15 minutes at most). |
 | Tray dot | 📱 | The widget's warning line instead. |
 | My own limits (gusts, rain, heat, frost, snow, thunder), in your units, marked MY LIMIT | ✅ | 0.4 |
 | Settings → Weather Alerts, with each place's coverage and last check | ✅ | 0.4 |
-| Earthquakes: USGS worldwide, GeoNet for New Zealand (GeoNet preferred), colour by age, size by magnitude, details, distance to your nearest place, link to GeoNet/USGS, tsunami reminder | ✅ | 0.4: an Earthquakes list for now; on the maps when the Earth tabs arrive (0.5). |
+| Earthquakes: USGS worldwide, GeoNet for New Zealand (GeoNet preferred), colour by age, size by magnitude, details, distance to your nearest place, link to GeoNet/USGS, tsunami reminder | ✅ | 0.4 list; on the Earth map and globe in 0.5 (pulsing in the last hour, tap for details). |
 | Earthquake notifications (M4.5+ within 300 km, M7+ anywhere, once each, only the last 2 hours), Settings → Earthquakes | ✅ | 0.4. Checks every 5, 10 or 30 minutes while the app is open; about every 15 minutes at most while it's closed (an Android limit). |
-| Moon tab: picture turned as in that sky, phase, illumination, age, rise/set, next phases, next 7 days, save image | 🟡 | The astronomy and picture are in (0.3); the screen comes in 0.5. |
-| Earth Flat: day/night map, city lights, Sun and Moon points, places with cards | ⏳ | 0.5 |
-| Earth Globe: drag, zoom, rotate slowly, real Sun, Moon and stars behind | ⏳ | 0.5 |
-| Live satellite clouds | ⏳ | 0.5 |
+| Moon tab: picture turned as in that sky, phase, illumination, age, rise/set, next phases, next 7 days, save image | ✅ | 0.5. Saves a 2048-pixel picture to Pictures/RBSB-Weather. |
+| Earth Flat: day/night map, city lights, Sun and Moon points, places with cards | ✅ | 0.5. Pinch to zoom (up to 4×) and drag; double-tap to reset. Needs checking on your phone. |
+| Earth Globe: drag, zoom, rotate slowly, real Sun, Moon and stars behind | ✅ | 0.5. Drag, pinch or +/−, double-tap to centre; the desktop's sky geometry, tested with its reference values. Speed on a real phone needs checking. |
+| Live satellite clouds | ✅ | 0.5: checked hourly, only downloaded when newer; the last map is kept if a download fails. |
 | Wind globe (NOAA GFS): wind, temperature, rain and snow, moving streaks, key | ⏳ | 0.6 |
 
 ## Desktop-only features and their phone versions
 
 | Desktop feature | Android |
 |---|---|
+| Tabs across the top (Forecast, Moon, Earth Flat, Earth Globe, Wind) | 📱 0.5: tabs along the bottom (Forecast, Moon, Earth, Warnings), the usual place on a phone; Flat and Globe are a switch at the top of Earth. |
 | System tray temperature, Close to tray | 📱 Planned for 0.6: an optional notification with the temperature (Android's version of a tray icon). |
 | Start at login | 📱 Not needed: the widgets and background checks run without opening the app. |
 | Updates: daily check of GitHub, download, checksum, install | ⏳ 0.6: check GitHub for a newer APK and verify it against `SHA256SUMS`; Android then asks you to install. |
@@ -119,4 +120,4 @@ and where it stands on Android. It's updated with every version.
 | Files and settings locations | 📱 App-private storage; described in the user guide. |
 | Coming from WeatherDesk | 📱 Not applicable (new app). |
 | Buy me a coffee (PayPal) | ✅ 0.1 About. |
-| Credits (weather, Earth maps, Moon imagery, wind, warnings, quakes) | 🟡 Weather and Moon credits are in; the rest arrive with their features. |
+| Credits (weather, Earth maps, Moon imagery, wind, warnings, quakes) | 🟡 All in except wind, which arrives with the wind globe (0.6). |
