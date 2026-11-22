@@ -39,6 +39,9 @@ object EarthRender {
         return px
     }
 
+    /** The day map's pixels (W×H), for the Wind tab. */
+    fun dayPixels(): IntArray = textures().first
+
     @Synchronized private fun textures(): Pair<IntArray, IntArray> {
         if (day == null) day = load("earth_day.jpg")
         if (night == null) night = load("earth_night.jpg")

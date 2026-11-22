@@ -34,7 +34,7 @@ import androidx.compose.ui.platform.testTag
 import kotlinx.coroutines.delay
 
 /** The screens with the bottom tabs (the desktop's main tabs). */
-val TOP_LEVEL = setOf(Screen.HOME, Screen.MOON, Screen.EARTH, Screen.WARNINGS)
+val TOP_LEVEL = setOf(Screen.HOME, Screen.MOON, Screen.EARTH, Screen.WIND, Screen.WARNINGS)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,6 +67,7 @@ fun RbsbApp(model: AppModel) {
                             Screen.HOME -> "RBSB-Weather"
                             Screen.MOON -> "Moon"
                             Screen.EARTH -> "Earth"
+                            Screen.WIND -> "Wind"
                             Screen.SEARCH -> "Add a place"
                             Screen.PLACES -> "My places"
                             Screen.SETTINGS -> "Settings"
@@ -115,10 +116,10 @@ fun RbsbApp(model: AppModel) {
             },
             snackbarHost = { SnackbarHost(snack) },
             bottomBar = {
-                // the desktop's tabs: Forecast, Moon, Earth (flat and globe) and Warnings
+                // the desktop's tabs: Forecast, Moon, Earth (flat and globe), Wind and Warnings
                 if (state.screen in TOP_LEVEL) NavigationBar {
                     listOf(Triple(Screen.HOME, "🌤", "Forecast"), Triple(Screen.MOON, "🌙", "Moon"), Triple(Screen.EARTH, "🌍", "Earth"),
-                        Triple(Screen.WARNINGS, "⚠", "Warnings")).forEach { (sc, icon, label) ->
+                        Triple(Screen.WIND, "🌬", "Wind"), Triple(Screen.WARNINGS, "⚠", "Warnings")).forEach { (sc, icon, label) ->
                         NavigationBarItem(selected = state.screen == sc, onClick = { model.go(sc) }, icon = { Text(icon, fontSize = 20.sp) },
                             label = { Text(label) }, modifier = Modifier.testTag("tab-$label"))
                     }
@@ -130,6 +131,7 @@ fun RbsbApp(model: AppModel) {
                 Screen.HOME -> HomeScreen(state, model, m)
                 Screen.MOON -> MoonScreen(state, model, m)
                 Screen.EARTH -> io.github.shanebl030glitch.rbsbweather.ui.earth.EarthScreen(state, model, m)
+                Screen.WIND -> io.github.shanebl030glitch.rbsbweather.ui.earth.WindScreen(state, model, m)
                 Screen.SEARCH -> SearchScreen(state, model, m)
                 Screen.PLACES -> PlacesScreen(state, model, m)
                 Screen.SETTINGS -> SettingsScreen(state, model, m)
