@@ -12,7 +12,11 @@ Created By Shane BlackbuRn
 - The checks that guard the updater (checksum, this app and newer, GitHub-only addresses) are back.
 
 **Shane:** "okay time to update GitHub"
-→ PR #3 merged into `main` (a merge commit, history kept, unsigned). Release `v0.6.2` published with the release notes, `rbsb-weather-android_0.6.2.apk` (the exact file Shane installed) and `SHA256SUMS`. The release was then read back the way the app's updater reads it.
+→ PR #3 was merged into `main` as a merge commit, keeping all the history. GitHub signs the merge commits it makes itself, as it did for PR #2. Claude's own commits stay unsigned.
+- Creating the release isn't allowed from Claude's session, so Shane publishes `v0.6.2` himself, as he did for v0.5.2:
+  - the notes from `docs/RELEASE_NOTES_0.6.2.md`;
+  - `rbsb-weather-android_0.6.2.apk`, the exact file Shane installed (SHA-256 7293b0fa…0b16);
+  - `SHA256SUMS`.
 
 ## 0.6.1 (2026-11-23)
 
