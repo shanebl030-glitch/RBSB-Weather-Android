@@ -4,10 +4,7 @@
 package io.github.shanebl030glitch.rbsbweather.ui
 
 import android.graphics.Bitmap
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.test.captureToImage
-import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import io.github.shanebl030glitch.rbsbweather.data.AUCKLAND
@@ -32,12 +29,15 @@ import java.io.File
 @Config(sdk = [34], qualifiers = "w411dp-h891dp-xhdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class ScreenPicturesTest {
-    @get:Rule val compose = createComposeRule()
+    @get:Rule val compose = createAndroidComposeRule<androidx.activity.ComponentActivity>()
     @get:Rule val tmp = TemporaryFolder()
 
     private fun save(name: String) {
         val out = File("build/screens").apply { mkdirs() }
-        val b = compose.onRoot().captureToImage().asAndroidBitmap()
+        // draw the window's views straight into a bitmap (captureToImage needs a real screen)
+        val v = compose.activity.window.decorView.rootView
+        val b = Bitmap.createBitmap(maxOf(1, v.width), maxOf(1, v.height), Bitmap.Config.ARGB_8888)
+        compose.runOnUiThread { v.draw(android.graphics.Canvas(b)) }
         File(out, "$name.png").outputStream().use { b.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
