@@ -55,7 +55,7 @@ Created By Shane BlackbuRn
   - the temperature notification was posted;
   - every other step passed, with no crash.
 - **Not tested here:**
-  - installing a real update: there's no newer release on GitHub yet, so the full download-and-install will first be tried when 0.6.0 is released and 0.5.2 checks for it;
+  - installing a real update: there's no newer release on GitHub yet, and 0.5.2 has no update checker. The first real download-and-install will be the release after 0.6.0, installed from 0.6.0;
   - the speed of the wind streaks on a phone (the emulator draws in software).
 
 
