@@ -78,10 +78,11 @@ shot wind-layers
 adb shell input tap 540 1100; sleep 2; check "tapping the wind globe"
 
 step "every other screen"
-back_to_forecast() { tap "Forecast" >/dev/null || adb shell input keyevent KEYCODE_BACK; sleep 2; }
+back_to_forecast() { adb shell am start -n $PKG/.MainActivity >/dev/null 2>&1; sleep 2; tap "Forecast" >/dev/null || adb shell input keyevent KEYCODE_BACK; sleep 2; }
 tap "Warnings"; sleep 5; check "Warnings tab"; shot warnings
 back_to_forecast
 for item in "My places" "Earthquakes" "Settings" "User guide" "Test connection" "Check for updates" "About"; do
+  back_to_forecast
   tap "Menu" && sleep 1 && tap "$item"; sleep 5; check "menu: $item"; shot "menu-${item// /-}"
   if [ "$item" = "Test connection" ]; then
     tap "Run the test"; for i in $(seq 1 20); do sleep 3; dump; grep -q "Summary:" "$OUT/ui.xml" && break; done
@@ -97,11 +98,11 @@ for item in "My places" "Earthquakes" "Settings" "User guide" "Test connection" 
     tap "Temperature in the status bar"; sleep 3
     adb shell dumpsys notification --noredact 2>/dev/null | grep -A3 "pkg=$PKG" | grep -m3 "temperature\|android.title" && echo "TEMP NOTIFICATION: shown" || echo "TEMP NOTIFICATION: not found"
     shot settings-temp
+    for i in 1 2 3 4 5; do adb shell input swipe 540 700 540 1800 300; sleep 1; done       # back to the top for the links
     for sub in "Weather Alerts" "Earthquakes" "Weather Providers"; do
-      tap "$sub"; sleep 4; check "Settings: $sub"; shot "settings-${sub// /-}"; adb shell input keyevent KEYCODE_BACK; sleep 2
+      tap "$sub" && { sleep 4; check "Settings: $sub"; shot "settings-${sub// /-}"; adb shell input keyevent KEYCODE_BACK; sleep 2; }
     done
   fi
-  adb shell input keyevent KEYCODE_BACK; sleep 2
 done
 back_to_forecast
 
