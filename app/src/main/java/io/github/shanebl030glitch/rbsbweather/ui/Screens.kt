@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -245,7 +246,8 @@ fun AboutScreen(modifier: Modifier = Modifier) {
     fun open(u: String) { try { uri.openUri(u) } catch (e: Exception) { } }
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp).testTag("about"),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text("🌤️", fontSize = 56.sp)
+        androidx.compose.foundation.Image(androidx.compose.ui.res.painterResource(io.github.shanebl030glitch.rbsbweather.R.drawable.app_logo),
+            contentDescription = "RBSB-Weather icon", modifier = Modifier.size(120.dp).testTag("aboutLogo"))
         Text("RBSB-Weather", style = MaterialTheme.typography.headlineSmall)
         Text("for Android · version ${Version.NAME}")
         Spacer(Modifier.height(8.dp))
