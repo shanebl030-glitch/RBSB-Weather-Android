@@ -163,4 +163,84 @@ class AppModelTest {
         assertTrue(m.back())
         assertFalse(m.back())
     }
+
+    // ------------------------------------------------------- weather providers
+    private fun providerModel(keys: io.github.shanebl030glitch.rbsbweather.data.MemoryKeys = io.github.shanebl030glitch.rbsbweather.data.MemoryKeys(),
+                              store: MemoryStore = MemoryStore()): AppModel {
+        lateinit var m: AppModel
+        val pm = io.github.shanebl030glitch.rbsbweather.data.ProviderManager(
+            HttpClient { url, _ -> if ("weatherapi" in url) resource("wapi_forecast.json") else resource("openmeteo_forecast.json") },
+            keys, { m.settingsNow })
+        m = AppModel(store, WeatherRepository({ pm.chain() }, null), SEARCH, CoroutineScope(Dispatchers.Unconfined),
+            Dispatchers.Unconfined, providers = pm)
+        return m
+    }
+
+    @Test fun choosingPrimaryAndBackups() {
+        val store = MemoryStore()
+        val m = providerModel(store = store)
+        assertEquals(listOf("open-meteo", "met.no"), m.state.value.settings.providers)
+        m.makePrimary("met.no")
+        assertEquals(listOf("met.no", "open-meteo"), m.state.value.settings.providers)
+        m.setBackup("weatherapi", true)
+        m.setBackup("tomorrow", true)
+        m.moveProvider("tomorrow", -1)
+        assertEquals(listOf("met.no", "open-meteo", "tomorrow", "weatherapi"), m.state.value.settings.providers)
+        m.moveProvider("open-meteo", -5)                                   // can't pass the primary
+        assertEquals("met.no", m.state.value.settings.providers[0])
+        m.setBackup("met.no", false)                                       // the primary can't be taken out
+        assertEquals("met.no", m.state.value.settings.providers[0])
+        m.setBackup("tomorrow", false)
+        assertEquals(listOf("met.no", "open-meteo", "weatherapi"), m.state.value.settings.providers)
+        m.setRecovery(60); m.setRecovery(7)
+        assertEquals(60, m.state.value.settings.recovery)
+        assertEquals(listOf("met.no", "open-meteo", "weatherapi"), Settings.fromJson(store.text).providers)  // saved
+    }
+
+    @Test fun keysAreSavedApartAndUsed() {
+        val keys = io.github.shanebl030glitch.rbsbweather.data.MemoryKeys()
+        val store = MemoryStore()
+        val m = providerModel(keys, store)
+        m.makePrimary("weatherapi")
+        m.add(AUCKLAND)
+        assertTrue(m.state.value.errors[AUCKLAND.key]!!.contains("needs an API key") ||
+            m.state.value.forecasts[AUCKLAND.key]?.source == "Open-Meteo")       // primary without a key → backup
+        assertEquals("Open-Meteo", m.state.value.forecasts[AUCKLAND.key]?.source)
+        m.setKey("weatherapi", "bad key!")
+        assertTrue(m.state.value.message!!.contains("doesn't look like an API key"))
+        assertNull(keys.get("weatherapi"))
+        m.setKey("weatherapi", " abcdef123456 ")
+        assertEquals("abcdef123456", keys.get("weatherapi"))
+        assertTrue("weatherapi" in m.state.value.keysSaved)
+        assertFalse("the key never goes into the settings", store.text!!.contains("abcdef123456"))
+        m.refresh(force = true)
+        assertEquals("WeatherAPI.com", m.state.value.forecasts[AUCKLAND.key]?.source)
+        m.testProvider("weatherapi")
+        assertTrue(m.state.value.providerTests["weatherapi"]!!.startsWith("Working"))
+        m.setKey("weatherapi", "")
+        assertNull(keys.get("weatherapi"))
+        assertFalse("weatherapi" in m.state.value.keysSaved)
+        m.testProvider("weatherapi")
+        assertTrue(m.state.value.providerTests["weatherapi"]!!.startsWith("Not working"))
+    }
+
+    @Test fun stationOptionIsChecked() {
+        val m = providerModel()
+        m.setProviderOption("wunderground", "station", "IAUCKL123")
+        assertEquals("IAUCKL123", m.state.value.settings.option("wunderground", "station"))
+        m.setProviderOption("wunderground", "station", "no spaces!")
+        assertEquals("IAUCKL123", m.state.value.settings.option("wunderground", "station"))
+        assertTrue(m.state.value.message!!.contains("isn't a valid"))
+        m.setProviderOption("wunderground", "station", "")
+        assertNull(m.state.value.settings.option("wunderground", "station"))
+    }
+
+    @Test fun backFromProvidersGoesToSettings() {
+        val m = providerModel()
+        m.go(Screen.PROVIDERS)
+        assertTrue(m.back())
+        assertEquals(Screen.SETTINGS, m.state.value.screen)
+        assertTrue(m.back())
+        assertEquals(Screen.HOME, m.state.value.screen)
+    }
 }

@@ -60,6 +60,7 @@ fun RbsbApp(model: AppModel) {
                             Screen.SEARCH -> "Add a place"
                             Screen.PLACES -> "My places"
                             Screen.SETTINGS -> "Settings"
+                            Screen.PROVIDERS -> "Weather Providers"
                             Screen.HELP -> "User guide"
                             Screen.ABOUT -> "About"
                         })
@@ -103,6 +104,7 @@ fun RbsbApp(model: AppModel) {
                 Screen.SEARCH -> SearchScreen(state, model, m)
                 Screen.PLACES -> PlacesScreen(state, model, m)
                 Screen.SETTINGS -> SettingsScreen(state, model, m)
+                Screen.PROVIDERS -> ProvidersScreen(state, model, m)
                 Screen.HELP -> HelpScreen(m)
                 Screen.ABOUT -> AboutScreen(m)
             }

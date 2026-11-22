@@ -40,7 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.shanebl030glitch.rbsbweather.data.Day
 import io.github.shanebl030glitch.rbsbweather.data.Forecast
-import io.github.shanebl030glitch.rbsbweather.data.MetNorway
+import io.github.shanebl030glitch.rbsbweather.data.ALL_PROVIDERS
+import io.github.shanebl030glitch.rbsbweather.data.providerInfo
 import io.github.shanebl030glitch.rbsbweather.data.OpenMeteo
 import io.github.shanebl030glitch.rbsbweather.data.Place
 import io.github.shanebl030glitch.rbsbweather.data.UnitPrefs
@@ -128,7 +129,7 @@ fun PlacePage(place: Place, state: UiState, model: AppModel) {
                 }
                 item { DailyCard(fc, units) }
             }
-            item { Footer(fc) }
+            item { Footer(fc, state.settings.providers.firstOrNull()?.let { providerInfo(it)?.name }) }
         }
     }
 }
@@ -233,15 +234,13 @@ private fun DayRow(d: Day, label: String, u: UnitPrefs) {
 }
 
 @Composable
-private fun Footer(fc: Forecast?) {
+private fun Footer(fc: Forecast?, primary: String?) {
     Column(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        val credit = when (fc?.source) {
-            MetNorway.NAME -> MetNorway.CREDIT
-            else -> OpenMeteo.CREDIT
-        }
+        val credit = ALL_PROVIDERS.firstOrNull { it.name == fc?.source }?.credit ?: OpenMeteo.CREDIT
         Text(credit, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
-        if (fc?.source == MetNorway.NAME) {
-            Text("(backup: the main provider couldn't be reached)", style = MaterialTheme.typography.bodySmall)
+        if (fc != null && primary != null && fc.source != primary) {
+            Text("(from a backup: $primary couldn't be reached)", style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.testTag("backupNote"))
         }
         Text(Version.AUTHOR_CREDIT, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("credit"))
     }

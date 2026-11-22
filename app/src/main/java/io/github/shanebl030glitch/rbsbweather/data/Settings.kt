@@ -7,6 +7,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 const val MAX_PLACES = 50
+val DEFAULT_PROVIDERS = listOf("open-meteo", "met.no")
 val REFRESH_CHOICES = listOf(0, 15, 30, 60, 120)          // minutes; 0 = only when asked
 
 data class Settings(
@@ -15,7 +16,16 @@ data class Settings(
     val units: UnitPrefs = UnitPrefs(),
     val refreshMinutes: Int = 30,
     val animations: Boolean = true,
+    val providers: List<String> = DEFAULT_PROVIDERS,      // first = primary, then backups in order
+    val recovery: Int = 0,                                // RECOVERY_CHOICES
+    val providerOptions: Map<String, String> = emptyMap(),  // e.g. "wunderground.station" → "IAUCKL123"
 ) {
+    fun option(provider: String, name: String): String? = providerOptions["$provider.$name"]?.takeIf { it.isNotBlank() }
+
+    fun withOption(provider: String, name: String, value: String?): Settings =
+        copy(providerOptions = if (value.isNullOrBlank()) providerOptions - "$provider.$name"
+            else providerOptions + ("$provider.$name" to value.trim().take(64)))
+
     fun selectedPlace(): Place? = places.firstOrNull { it.key == selected } ?: places.firstOrNull()
 
     fun withPlace(p: Place): Settings {
@@ -47,6 +57,9 @@ data class Settings(
         .put("precip", units.precip.name).put("clock", units.clock.name)
         .put("refreshMinutes", refreshMinutes)
         .put("animations", animations)
+        .put("providers", JSONArray(providers))
+        .put("recovery", recovery)
+        .put("providerOptions", JSONObject(providerOptions as Map<*, *>))
 
     companion object {
         fun fromJson(text: String?): Settings {
@@ -67,7 +80,16 @@ data class Settings(
                 enumOr(PrecipUnit.values(), "precip", PrecipUnit.MM), enumOr(ClockFormat.values(), "clock", ClockFormat.H24))
             val refresh = o.optInt("refreshMinutes", 30).takeIf { it in REFRESH_CHOICES } ?: 30
             val anim = if (o.opt("animations") is Boolean) o.getBoolean("animations") else true
-            return Settings(places, sel, units, refresh, anim)
+            val chain = mutableListOf<String>()
+            o.optJSONArray("providers")?.let { a ->
+                for (i in 0 until a.length()) a.str(i)?.let { id -> if (providerInfo(id) != null && id !in chain) chain += id }
+            }
+            val rec = o.optInt("recovery", 0).takeIf { it in RECOVERY_CHOICES } ?: 0
+            val opts = mutableMapOf<String, String>()
+            o.optJSONObject("providerOptions")?.let { po ->
+                po.keys().forEach { k -> po.str(k)?.takeIf { k.length <= 64 && it.isNotBlank() }?.let { opts[k] = it.take(64) } }
+            }
+            return Settings(places, sel, units, refresh, anim, chain.ifEmpty { DEFAULT_PROVIDERS }, rec, opts)
         }
     }
 }

@@ -10,7 +10,8 @@ import java.net.URLEncoder
 import java.net.UnknownHostException
 
 /** Something went wrong getting the weather. The message is written for the user. */
-open class WeatherException(message: String, val retryable: Boolean = false) : Exception(message)
+open class WeatherException(message: String, val retryable: Boolean = false, val status: Int? = null) :
+    Exception(message)
 
 fun interface HttpClient {
     /** GET a URL; returns the body. Throws WeatherException with a user-friendly message. */
@@ -41,13 +42,14 @@ object Http {
             conn.setRequestProperty("Accept-Encoding", "identity")
             headers.forEach { (k, v) -> conn.setRequestProperty(k, v) }
             val code = conn.responseCode
+            if (code == 204) throw WeatherException("The service had no data for this request.", status = 204)
             if (code !in 200..299) {
                 throw WeatherException(
                     when (code) {
                         429 -> "The weather service is busy (too many requests). It will try again soon."
                         in 500..599 -> "The weather service had a problem (HTTP $code)."
                         else -> "The weather service returned an error (HTTP $code)."
-                    }, retryable = code == 429 || code >= 500)
+                    }, retryable = code == 429 || code >= 500, status = code)
             }
             val bytes = conn.inputStream.use { input ->
                 val out = java.io.ByteArrayOutputStream()

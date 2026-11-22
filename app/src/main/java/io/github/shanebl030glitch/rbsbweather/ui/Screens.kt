@@ -58,6 +58,7 @@ import io.github.shanebl030glitch.rbsbweather.data.OpenMeteo
 import io.github.shanebl030glitch.rbsbweather.data.Place
 import io.github.shanebl030glitch.rbsbweather.data.PrecipUnit
 import io.github.shanebl030glitch.rbsbweather.data.REFRESH_CHOICES
+import io.github.shanebl030glitch.rbsbweather.data.providerInfo
 import io.github.shanebl030glitch.rbsbweather.data.TempUnit
 import io.github.shanebl030glitch.rbsbweather.data.Units
 import io.github.shanebl030glitch.rbsbweather.data.Version
@@ -159,8 +160,8 @@ fun PlacesScreen(state: UiState, model: AppModel, modifier: Modifier = Modifier)
 
 // --------------------------------------------------------------- settings
 @Composable
-private fun <T> Choice(title: String, options: List<Pair<T, String>>, current: T, onPick: (T) -> Unit) {
-    Text(title, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 14.dp, bottom = 4.dp))
+internal fun <T> Choice(title: String, options: List<Pair<T, String>>, current: T, onPick: (T) -> Unit) {
+    if (title.isNotBlank()) Text(title, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 14.dp, bottom = 4.dp))
     options.forEach { (value, label) ->
         Row(Modifier.fillMaxWidth().selectable(selected = value == current, role = Role.RadioButton,
             onClick = { onPick(value) }).padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -175,6 +176,14 @@ fun SettingsScreen(state: UiState, model: AppModel, modifier: Modifier = Modifie
     val s = state.settings
     val u = s.units
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).testTag("settings")) {
+        Card(Modifier.fillMaxWidth().clickable { model.go(Screen.PROVIDERS) }.testTag("openProviders")) {
+            Column(Modifier.padding(14.dp)) {
+                Text("Weather Providers", fontWeight = FontWeight.Bold)
+                val names = s.providers.mapNotNull { providerInfo(it)?.name }
+                Text("Primary: ${names.firstOrNull() ?: "none"}" +
+                    (if (names.size > 1) "  ·  Backups: ${names.drop(1).joinToString(", ")}" else ""), fontSize = 13.sp)
+            }
+        }
         Choice("Temperature", listOf(TempUnit.C to "Celsius (°C)", TempUnit.F to "Fahrenheit (°F)"), u.temp) {
             model.setUnits(u.copy(temp = it)) }
         Choice("Wind speed", listOf(WindUnit.KMH to "km/h", WindUnit.MS to "m/s", WindUnit.MPH to "mph",
@@ -241,7 +250,9 @@ fun AboutScreen(modifier: Modifier = Modifier) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text("Credits", fontWeight = FontWeight.Bold)
                 Text(OpenMeteo.CREDIT, Modifier.clickable { open("https://open-meteo.com/") })
-                Text(MetNorway.CREDIT + " (backup)", Modifier.clickable { open("https://api.met.no/") })
+                Text(MetNorway.CREDIT, Modifier.clickable { open("https://api.met.no/") })
+                Text("With your own keys: OpenWeather, WeatherAPI.com, Visual Crossing, Tomorrow.io and Weather Underground " +
+                    "(each credited under the forecast when it supplied it).", fontSize = 13.sp)
                 Text("Sun, sunrise and sunset worked out on your phone.")
             }
         }

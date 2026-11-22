@@ -1,0 +1,962 @@
+{
+ "location": {
+  "name": "Auckland",
+  "tz_id": "Pacific/Auckland",
+  "localtime_epoch": 1795308960
+ },
+ "current": {
+  "last_updated_epoch": 1795308360,
+  "temp_c": 16.0,
+  "is_day": 1,
+  "condition": {
+   "text": "Overcast",
+   "code": 1009
+  },
+  "wind_kph": 15.1,
+  "wind_degree": 230,
+  "pressure_mb": 1015.0,
+  "precip_mm": 0.0,
+  "humidity": 77,
+  "cloud": 100,
+  "feelslike_c": 15.2,
+  "uv": 3.0,
+  "gust_kph": 22.0
+ },
+ "forecast": {
+  "forecastday": [
+   {
+    "date": "2026-11-22",
+    "date_epoch": 1795305600,
+    "day": {
+     "maxtemp_c": 20.1,
+     "mintemp_c": 10.4,
+     "totalprecip_mm": 2.4,
+     "maxwind_kph": 24.5,
+     "daily_chance_of_rain": 70,
+     "daily_chance_of_snow": 0,
+     "uv": 8.0,
+     "condition": {
+      "text": "x",
+      "code": 1189
+     }
+    },
+    "astro": {
+     "sunrise": "06:01 AM",
+     "sunset": "No sunset"
+    },
+    "hour": [
+     {
+      "time_epoch": 1795258800,
+      "time": "2026-11-22 00:00",
+      "temp_c": 11.5,
+      "condition": {
+       "text": "x",
+       "code": 1000
+      },
+      "chance_of_rain": 0,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795262400,
+      "time": "2026-11-22 01:00",
+      "temp_c": 10.7,
+      "condition": {
+       "text": "x",
+       "code": 1003
+      },
+      "chance_of_rain": 5,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795266000,
+      "time": "2026-11-22 02:00",
+      "temp_c": 10.2,
+      "condition": {
+       "text": "x",
+       "code": 1183
+      },
+      "chance_of_rain": 10,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795269600,
+      "time": "2026-11-22 03:00",
+      "temp_c": 10.0,
+      "condition": {
+       "text": "x",
+       "code": 1189
+      },
+      "chance_of_rain": 15,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795273200,
+      "time": "2026-11-22 04:00",
+      "temp_c": 10.2,
+      "condition": {
+       "text": "x",
+       "code": 1000
+      },
+      "chance_of_rain": 20,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795276800,
+      "time": "2026-11-22 05:00",
+      "temp_c": 10.7,
+      "condition": {
+       "text": "x",
+       "code": 1003
+      },
+      "chance_of_rain": 25,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795280400,
+      "time": "2026-11-22 06:00",
+      "temp_c": 11.5,
+      "condition": {
+       "text": "x",
+       "code": 1183
+      },
+      "chance_of_rain": 30,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795284000,
+      "time": "2026-11-22 07:00",
+      "temp_c": 12.5,
+      "condition": {
+       "text": "x",
+       "code": 1189
+      },
+      "chance_of_rain": 35,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795287600,
+      "time": "2026-11-22 08:00",
+      "temp_c": 13.7,
+      "condition": {
+       "text": "x",
+       "code": 1000
+      },
+      "chance_of_rain": 40,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795291200,
+      "time": "2026-11-22 09:00",
+      "temp_c": 15.0,
+      "condition": {
+       "text": "x",
+       "code": 1003
+      },
+      "chance_of_rain": 45,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795294800,
+      "time": "2026-11-22 10:00",
+      "temp_c": 16.3,
+      "condition": {
+       "text": "x",
+       "code": 1183
+      },
+      "chance_of_rain": 50,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795298400,
+      "time": "2026-11-22 11:00",
+      "temp_c": 17.5,
+      "condition": {
+       "text": "x",
+       "code": 1189
+      },
+      "chance_of_rain": 55,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795302000,
+      "time": "2026-11-22 12:00",
+      "temp_c": 18.5,
+      "condition": {
+       "text": "x",
+       "code": 1000
+      },
+      "chance_of_rain": 60,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795305600,
+      "time": "2026-11-22 13:00",
+      "temp_c": 19.3,
+      "condition": {
+       "text": "x",
+       "code": 1003
+      },
+      "chance_of_rain": 65,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795309200,
+      "time": "2026-11-22 14:00",
+      "temp_c": 19.8,
+      "condition": {
+       "text": "x",
+       "code": 1183
+      },
+      "chance_of_rain": 70,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795312800,
+      "time": "2026-11-22 15:00",
+      "temp_c": 20.0,
+      "condition": {
+       "text": "x",
+       "code": 1189
+      },
+      "chance_of_rain": 75,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795316400,
+      "time": "2026-11-22 16:00",
+      "temp_c": 19.8,
+      "condition": {
+       "text": "x",
+       "code": 1000
+      },
+      "chance_of_rain": 80,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795320000,
+      "time": "2026-11-22 17:00",
+      "temp_c": 19.3,
+      "condition": {
+       "text": "x",
+       "code": 1003
+      },
+      "chance_of_rain": 85,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795323600,
+      "time": "2026-11-22 18:00",
+      "temp_c": 18.5,
+      "condition": {
+       "text": "x",
+       "code": 1183
+      },
+      "chance_of_rain": 0,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795327200,
+      "time": "2026-11-22 19:00",
+      "temp_c": 17.5,
+      "condition": {
+       "text": "x",
+       "code": 1189
+      },
+      "chance_of_rain": 5,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795330800,
+      "time": "2026-11-22 20:00",
+      "temp_c": 16.3,
+      "condition": {
+       "text": "x",
+       "code": 1000
+      },
+      "chance_of_rain": 10,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795334400,
+      "time": "2026-11-22 21:00",
+      "temp_c": 15.0,
+      "condition": {
+       "text": "x",
+       "code": 1003
+      },
+      "chance_of_rain": 15,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795338000,
+      "time": "2026-11-22 22:00",
+      "temp_c": 13.7,
+      "condition": {
+       "text": "x",
+       "code": 1183
+      },
+      "chance_of_rain": 20,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795341600,
+      "time": "2026-11-22 23:00",
+      "temp_c": 12.5,
+      "condition": {
+       "text": "x",
+       "code": 1189
+      },
+      "chance_of_rain": 25,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     }
+    ]
+   },
+   {
+    "date": "2026-11-23",
+    "date_epoch": 1795392000,
+    "day": {
+     "maxtemp_c": 19.1,
+     "mintemp_c": 11.4,
+     "totalprecip_mm": 2.4,
+     "maxwind_kph": 24.5,
+     "daily_chance_of_rain": 70,
+     "daily_chance_of_snow": 0,
+     "uv": 8.0,
+     "condition": {
+      "text": "x",
+      "code": 1000
+     }
+    },
+    "astro": {
+     "sunrise": "06:01 AM",
+     "sunset": "08:09 PM"
+    },
+    "hour": [
+     {
+      "time_epoch": 1795345200,
+      "time": "2026-11-23 00:00",
+      "temp_c": 11.5,
+      "condition": {
+       "text": "x",
+       "code": 1000
+      },
+      "chance_of_rain": 0,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795348800,
+      "time": "2026-11-23 01:00",
+      "temp_c": 10.7,
+      "condition": {
+       "text": "x",
+       "code": 1003
+      },
+      "chance_of_rain": 5,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795352400,
+      "time": "2026-11-23 02:00",
+      "temp_c": 10.2,
+      "condition": {
+       "text": "x",
+       "code": 1183
+      },
+      "chance_of_rain": 10,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795356000,
+      "time": "2026-11-23 03:00",
+      "temp_c": 10.0,
+      "condition": {
+       "text": "x",
+       "code": 1189
+      },
+      "chance_of_rain": 15,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795359600,
+      "time": "2026-11-23 04:00",
+      "temp_c": 10.2,
+      "condition": {
+       "text": "x",
+       "code": 1000
+      },
+      "chance_of_rain": 20,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795363200,
+      "time": "2026-11-23 05:00",
+      "temp_c": 10.7,
+      "condition": {
+       "text": "x",
+       "code": 1003
+      },
+      "chance_of_rain": 25,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795366800,
+      "time": "2026-11-23 06:00",
+      "temp_c": 11.5,
+      "condition": {
+       "text": "x",
+       "code": 1183
+      },
+      "chance_of_rain": 30,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795370400,
+      "time": "2026-11-23 07:00",
+      "temp_c": 12.5,
+      "condition": {
+       "text": "x",
+       "code": 1189
+      },
+      "chance_of_rain": 35,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795374000,
+      "time": "2026-11-23 08:00",
+      "temp_c": 13.7,
+      "condition": {
+       "text": "x",
+       "code": 1000
+      },
+      "chance_of_rain": 40,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795377600,
+      "time": "2026-11-23 09:00",
+      "temp_c": 15.0,
+      "condition": {
+       "text": "x",
+       "code": 1003
+      },
+      "chance_of_rain": 45,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795381200,
+      "time": "2026-11-23 10:00",
+      "temp_c": 16.3,
+      "condition": {
+       "text": "x",
+       "code": 1183
+      },
+      "chance_of_rain": 50,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795384800,
+      "time": "2026-11-23 11:00",
+      "temp_c": 17.5,
+      "condition": {
+       "text": "x",
+       "code": 1189
+      },
+      "chance_of_rain": 55,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795388400,
+      "time": "2026-11-23 12:00",
+      "temp_c": 18.5,
+      "condition": {
+       "text": "x",
+       "code": 1000
+      },
+      "chance_of_rain": 60,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795392000,
+      "time": "2026-11-23 13:00",
+      "temp_c": 19.3,
+      "condition": {
+       "text": "x",
+       "code": 1003
+      },
+      "chance_of_rain": 65,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795395600,
+      "time": "2026-11-23 14:00",
+      "temp_c": 19.8,
+      "condition": {
+       "text": "x",
+       "code": 1183
+      },
+      "chance_of_rain": 70,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795399200,
+      "time": "2026-11-23 15:00",
+      "temp_c": 20.0,
+      "condition": {
+       "text": "x",
+       "code": 1189
+      },
+      "chance_of_rain": 75,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795402800,
+      "time": "2026-11-23 16:00",
+      "temp_c": 19.8,
+      "condition": {
+       "text": "x",
+       "code": 1000
+      },
+      "chance_of_rain": 80,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795406400,
+      "time": "2026-11-23 17:00",
+      "temp_c": 19.3,
+      "condition": {
+       "text": "x",
+       "code": 1003
+      },
+      "chance_of_rain": 85,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795410000,
+      "time": "2026-11-23 18:00",
+      "temp_c": 18.5,
+      "condition": {
+       "text": "x",
+       "code": 1183
+      },
+      "chance_of_rain": 0,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795413600,
+      "time": "2026-11-23 19:00",
+      "temp_c": 17.5,
+      "condition": {
+       "text": "x",
+       "code": 1189
+      },
+      "chance_of_rain": 5,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795417200,
+      "time": "2026-11-23 20:00",
+      "temp_c": 16.3,
+      "condition": {
+       "text": "x",
+       "code": 1000
+      },
+      "chance_of_rain": 10,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795420800,
+      "time": "2026-11-23 21:00",
+      "temp_c": 15.0,
+      "condition": {
+       "text": "x",
+       "code": 1003
+      },
+      "chance_of_rain": 15,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795424400,
+      "time": "2026-11-23 22:00",
+      "temp_c": 13.7,
+      "condition": {
+       "text": "x",
+       "code": 1183
+      },
+      "chance_of_rain": 20,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795428000,
+      "time": "2026-11-23 23:00",
+      "temp_c": 12.5,
+      "condition": {
+       "text": "x",
+       "code": 1189
+      },
+      "chance_of_rain": 25,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     }
+    ]
+   },
+   {
+    "date": "2026-11-24",
+    "date_epoch": 1795478400,
+    "day": {
+     "maxtemp_c": 18.1,
+     "mintemp_c": 12.4,
+     "totalprecip_mm": 2.4,
+     "maxwind_kph": 24.5,
+     "daily_chance_of_rain": 70,
+     "daily_chance_of_snow": 0,
+     "uv": 8.0,
+     "condition": {
+      "text": "x",
+      "code": 1276
+     }
+    },
+    "astro": {
+     "sunrise": "06:01 AM",
+     "sunset": "08:09 PM"
+    },
+    "hour": [
+     {
+      "time_epoch": 1795431600,
+      "time": "2026-11-24 00:00",
+      "temp_c": 11.5,
+      "condition": {
+       "text": "x",
+       "code": 1000
+      },
+      "chance_of_rain": 0,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795435200,
+      "time": "2026-11-24 01:00",
+      "temp_c": 10.7,
+      "condition": {
+       "text": "x",
+       "code": 1003
+      },
+      "chance_of_rain": 5,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795438800,
+      "time": "2026-11-24 02:00",
+      "temp_c": 10.2,
+      "condition": {
+       "text": "x",
+       "code": 1183
+      },
+      "chance_of_rain": 10,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795442400,
+      "time": "2026-11-24 03:00",
+      "temp_c": 10.0,
+      "condition": {
+       "text": "x",
+       "code": 1189
+      },
+      "chance_of_rain": 15,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795446000,
+      "time": "2026-11-24 04:00",
+      "temp_c": 10.2,
+      "condition": {
+       "text": "x",
+       "code": 1000
+      },
+      "chance_of_rain": 20,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795449600,
+      "time": "2026-11-24 05:00",
+      "temp_c": 10.7,
+      "condition": {
+       "text": "x",
+       "code": 1003
+      },
+      "chance_of_rain": 25,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795453200,
+      "time": "2026-11-24 06:00",
+      "temp_c": 11.5,
+      "condition": {
+       "text": "x",
+       "code": 1183
+      },
+      "chance_of_rain": 30,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795456800,
+      "time": "2026-11-24 07:00",
+      "temp_c": 12.5,
+      "condition": {
+       "text": "x",
+       "code": 1189
+      },
+      "chance_of_rain": 35,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795460400,
+      "time": "2026-11-24 08:00",
+      "temp_c": 13.7,
+      "condition": {
+       "text": "x",
+       "code": 1000
+      },
+      "chance_of_rain": 40,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795464000,
+      "time": "2026-11-24 09:00",
+      "temp_c": 15.0,
+      "condition": {
+       "text": "x",
+       "code": 1003
+      },
+      "chance_of_rain": 45,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795467600,
+      "time": "2026-11-24 10:00",
+      "temp_c": 16.3,
+      "condition": {
+       "text": "x",
+       "code": 1183
+      },
+      "chance_of_rain": 50,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795471200,
+      "time": "2026-11-24 11:00",
+      "temp_c": 17.5,
+      "condition": {
+       "text": "x",
+       "code": 1189
+      },
+      "chance_of_rain": 55,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795474800,
+      "time": "2026-11-24 12:00",
+      "temp_c": 18.5,
+      "condition": {
+       "text": "x",
+       "code": 1000
+      },
+      "chance_of_rain": 60,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795478400,
+      "time": "2026-11-24 13:00",
+      "temp_c": 19.3,
+      "condition": {
+       "text": "x",
+       "code": 1003
+      },
+      "chance_of_rain": 65,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795482000,
+      "time": "2026-11-24 14:00",
+      "temp_c": 19.8,
+      "condition": {
+       "text": "x",
+       "code": 1183
+      },
+      "chance_of_rain": 70,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795485600,
+      "time": "2026-11-24 15:00",
+      "temp_c": 20.0,
+      "condition": {
+       "text": "x",
+       "code": 1189
+      },
+      "chance_of_rain": 75,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795489200,
+      "time": "2026-11-24 16:00",
+      "temp_c": 19.8,
+      "condition": {
+       "text": "x",
+       "code": 1000
+      },
+      "chance_of_rain": 80,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795492800,
+      "time": "2026-11-24 17:00",
+      "temp_c": 19.3,
+      "condition": {
+       "text": "x",
+       "code": 1003
+      },
+      "chance_of_rain": 85,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795496400,
+      "time": "2026-11-24 18:00",
+      "temp_c": 18.5,
+      "condition": {
+       "text": "x",
+       "code": 1183
+      },
+      "chance_of_rain": 0,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795500000,
+      "time": "2026-11-24 19:00",
+      "temp_c": 17.5,
+      "condition": {
+       "text": "x",
+       "code": 1189
+      },
+      "chance_of_rain": 5,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795503600,
+      "time": "2026-11-24 20:00",
+      "temp_c": 16.3,
+      "condition": {
+       "text": "x",
+       "code": 1000
+      },
+      "chance_of_rain": 10,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795507200,
+      "time": "2026-11-24 21:00",
+      "temp_c": 15.0,
+      "condition": {
+       "text": "x",
+       "code": 1003
+      },
+      "chance_of_rain": 15,
+      "chance_of_snow": 0,
+      "precip_mm": 0
+     },
+     {
+      "time_epoch": 1795510800,
+      "time": "2026-11-24 22:00",
+      "temp_c": 13.7,
+      "condition": {
+       "text": "x",
+       "code": 1183
+      },
+      "chance_of_rain": 20,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     },
+     {
+      "time_epoch": 1795514400,
+      "time": "2026-11-24 23:00",
+      "temp_c": 12.5,
+      "condition": {
+       "text": "x",
+       "code": 1189
+      },
+      "chance_of_rain": 25,
+      "chance_of_snow": 0,
+      "precip_mm": 0.2
+     }
+    ]
+   }
+  ]
+ }
+}

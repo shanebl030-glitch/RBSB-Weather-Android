@@ -4,6 +4,19 @@
 package io.github.shanebl030glitch.rbsbweather.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Slider
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -39,6 +52,7 @@ import io.github.shanebl030glitch.rbsbweather.data.Sun
 import io.github.shanebl030glitch.rbsbweather.data.UnitPrefs
 import io.github.shanebl030glitch.rbsbweather.data.Units
 import io.github.shanebl030glitch.rbsbweather.data.WeatherCodes
+import io.github.shanebl030glitch.rbsbweather.data.zoneOf
 import java.time.Instant
 import java.time.LocalDateTime
 import kotlin.math.PI
@@ -58,12 +72,13 @@ data class SkyState(
     val windEast: Float,               // -1..1: which way clouds drift
 )
 
-fun skyState(fc: Forecast?, place: Place, now: Instant = Instant.now()): SkyState {
+fun skyState(fc: Forecast?, place: Place, now: Instant = Instant.now(), moment: Moment? = null): SkyState {
     val elev = Sun.elevation(now, place.latitude, place.longitude)
-    val code = fc?.current?.weatherCode
+    val code = moment?.weatherCode ?: fc?.current?.weatherCode
     var arc: Float? = null
-    val zone = Sun.zoneFor(place, fc?.utcOffsetSeconds)
-    val today = fc?.daily?.firstOrNull()
+    val zone = if (fc != null) zoneOf(place, fc.timezone, fc.utcOffsetSeconds.toDouble()) else Sun.zoneFor(place)
+    val localDate = now.atZone(zone).toLocalDate().toString()
+    val today = fc?.daily?.firstOrNull { it.date == localDate } ?: fc?.daily?.firstOrNull()
     try {
         val rise = today?.sunrise?.let { LocalDateTime.parse(it).atZone(zone).toInstant() }
         val set = today?.sunset?.let { LocalDateTime.parse(it).atZone(zone).toInstant() }
@@ -79,6 +94,11 @@ fun skyState(fc: Forecast?, place: Place, now: Instant = Instant.now()): SkyStat
         }
     } catch (e: Exception) {
         arc = null
+    }
+    if (moment != null) {
+        val east0 = fc?.current?.windDirection?.let { (-sin(it * PI / 180.0)).toFloat() } ?: 0.4f
+        return SkyState(elev, arc, WeatherCodes.cloudiness(code), WeatherCodes.isRain(code), WeatherCodes.isSnow(code),
+            WeatherCodes.isThunder(code), WeatherCodes.isFog(code), east0)
     }
     val dir = fc?.current?.windDirection
     // wind FROM the west (270°) blows clouds east
@@ -130,30 +150,86 @@ fun SkyCard(
             minute += 1f
         }
     }
-    val sky = remember(fc, place, minute) { skyState(fc, place) }
+    // forecast playback: 0 = now, then 15-minute steps up to 24 hours ahead
+    var step by remember(place.key) { mutableIntStateOf(0) }
+    var playing by remember(place.key) { mutableStateOf(false) }
+    LaunchedEffect(playing) {
+        while (playing) {
+            kotlinx.coroutines.delay(350)
+            if (step >= PLAYBACK_STEPS) { playing = false } else step += 1
+        }
+    }
+    val base = remember(minute, fc) { Instant.now() }
+    val moment = remember(fc, step, base) { if (fc == null || step == 0) null else momentAt(fc, place, base.plusSeconds(step * 900L)) }
+    val sky = remember(fc, place, minute, moment) { skyState(fc, place, moment?.at ?: Instant.now(), moment) }
     val shadow = Shadow(Color(0x99000000), Offset(0f, 2f), 6f)
     val white = TextStyle(color = Color.White, shadow = shadow)
 
-    Box(modifier.fillMaxWidth().height(260.dp).clip(RoundedCornerShape(18.dp)).testTag("sky")) {
-        Canvas(Modifier.fillMaxSize()) { drawSky(sky, t) }
-        Column(Modifier.fillMaxSize().padding(18.dp)) {
-            Text(place.displayName, style = white.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold), maxLines = 2)
-            val c = fc?.current
-            Text(if (c != null) Units.fmtTemp(c.temperature, units.temp) else "–",
-                style = white.copy(fontSize = 64.sp, fontWeight = FontWeight.Bold), modifier = Modifier.testTag("temp"))
-            Text(if (c != null) WeatherCodes.describe(c.weatherCode) else "No weather yet",
-                style = white.copy(fontSize = 18.sp))
-            val today = fc?.daily?.firstOrNull()
-            if (c != null) {
-                Text("Feels like ${Units.fmtTemp(c.apparentTemperature, units.temp)}" +
-                    (if (today != null) "  ·  H ${Units.fmtTemp(today.tempMax, units.temp, false)}  L ${Units.fmtTemp(today.tempMin, units.temp, false)}" else ""),
-                    style = white.copy(fontSize = 14.sp))
+    Column(modifier.fillMaxWidth()) {
+        Box(Modifier.fillMaxWidth().height(300.dp).clip(RoundedCornerShape(18.dp)).testTag("sky")) {
+            Canvas(Modifier.fillMaxSize()) { drawSky(sky, t) }
+            Column(Modifier.fillMaxSize().padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 10.dp)) {
+                Text(place.displayName, style = white.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold), maxLines = 2)
+                val c = fc?.current
+                val temp = if (moment != null) moment.temperature else c?.temperature
+                Text(if (c != null) Units.fmtTemp(temp, units.temp) else "–",
+                    style = white.copy(fontSize = 60.sp, fontWeight = FontWeight.Bold), modifier = Modifier.testTag("temp"))
+                Text(when {
+                    moment != null -> WeatherCodes.describe(moment.weatherCode) +
+                        (moment.precipitationProbability?.let { "  ·  ${it.toInt()}% rain" } ?: "")
+                    c != null -> WeatherCodes.describe(c.weatherCode)
+                    else -> "No weather yet"
+                }, style = white.copy(fontSize = 17.sp), modifier = Modifier.testTag("skyCondition"))
+                val today = fc?.daily?.firstOrNull()
+                if (moment != null) {
+                    Text("Forecast for ${moment.label}", style = white.copy(fontSize = 14.sp, color = Color(0xFFFFE9A8),
+                        fontWeight = FontWeight.Bold), modifier = Modifier.testTag("playbackTime"))
+                } else if (c != null) {
+                    Text("Feels like ${Units.fmtTemp(c.apparentTemperature, units.temp)}" +
+                        (if (today != null) "  ·  H ${Units.fmtTemp(today.tempMax, units.temp, false)}  L ${Units.fmtTemp(today.tempMin, units.temp, false)}" else ""),
+                        style = white.copy(fontSize = 14.sp))
+                }
+                Spacer(Modifier.weight(1f))
+                if (status.isNotBlank()) {
+                    Text(status, style = white.copy(fontSize = 12.sp, color = if (statusIsWarning) Color(0xFFFFD2A8) else Color.White,
+                        fontWeight = if (statusIsWarning) FontWeight.Bold else FontWeight.Normal),
+                        modifier = Modifier.testTag("skyStatus"))
+                }
+                if (fc != null && fc.daily.isNotEmpty()) MiniForecast(fc, units, white)
             }
-            Spacer(Modifier.weight(1f))
-            if (status.isNotBlank()) {
-                Text(status, style = white.copy(fontSize = 13.sp, color = if (statusIsWarning) Color(0xFFFFD2A8) else Color.White,
-                    fontWeight = if (statusIsWarning) FontWeight.Bold else FontWeight.Normal),
-                    modifier = Modifier.testTag("skyStatus"))
+        }
+        if (fc != null && fc.hourly.isNotEmpty()) {
+            Row(Modifier.fillMaxWidth().padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = {
+                    if (playing) playing = false else { if (step >= PLAYBACK_STEPS) step = 0; playing = true }
+                }, modifier = Modifier.testTag("play")) {
+                    Icon(if (playing) Icons.Filled.Close else Icons.Filled.PlayArrow,
+                        contentDescription = if (playing) "Stop the forecast playback" else "Play the next 24 hours")
+                }
+                Slider(value = step.toFloat(), onValueChange = { playing = false; step = it.toInt() },
+                    valueRange = 0f..PLAYBACK_STEPS.toFloat(), steps = PLAYBACK_STEPS - 1,
+                    modifier = Modifier.weight(1f).testTag("playback"))
+                TextButton(onClick = { playing = false; step = 0 }, enabled = step != 0, modifier = Modifier.testTag("playbackNow")) {
+                    Text(if (step == 0) "Now" else "+" + playbackLabel(step))
+                }
+            }
+        }
+    }
+}
+
+/** The next few days along the bottom of the sky: as many as fit the screen's width. */
+@Composable
+private fun MiniForecast(fc: Forecast, units: UnitPrefs, white: TextStyle) {
+    BoxWithConstraints(Modifier.fillMaxWidth().testTag("miniForecast")) {
+        val count = miniDayCount(maxWidth.value, fc.daily.size)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            fc.daily.take(count).forEachIndexed { i, d ->
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
+                    Text(if (i == 0) "Today" else miniDayName(d.date), style = white.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold))
+                    Text(WeatherCodes.symbol(d.weatherCode), style = TextStyle(fontSize = 18.sp))
+                    Text("${Units.fmtTemp(d.tempMax, units.temp, false)} / ${Units.fmtTemp(d.tempMin, units.temp, false)}",
+                        style = white.copy(fontSize = 12.sp))
+                }
             }
         }
     }

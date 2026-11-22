@@ -1,0 +1,2395 @@
+{
+ "timelines": {
+  "minutely": [],
+  "hourly": [
+   {
+    "time": "2026-11-22T00:00:00Z",
+    "values": {
+     "temperature": 19.3,
+     "temperatureApparent": 18.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-22T01:00:00Z",
+    "values": {
+     "temperature": 19.8,
+     "temperatureApparent": 19.0,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-22T02:00:00Z",
+    "values": {
+     "temperature": 20.0,
+     "temperatureApparent": 19.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-22T03:00:00Z",
+    "values": {
+     "temperature": 19.8,
+     "temperatureApparent": 19.0,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-22T04:00:00Z",
+    "values": {
+     "temperature": 19.3,
+     "temperatureApparent": 18.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-22T05:00:00Z",
+    "values": {
+     "temperature": 18.5,
+     "temperatureApparent": 17.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-22T06:00:00Z",
+    "values": {
+     "temperature": 17.5,
+     "temperatureApparent": 16.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-22T07:00:00Z",
+    "values": {
+     "temperature": 16.3,
+     "temperatureApparent": 15.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-22T08:00:00Z",
+    "values": {
+     "temperature": 15.0,
+     "temperatureApparent": 14.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-22T09:00:00Z",
+    "values": {
+     "temperature": 13.7,
+     "temperatureApparent": 12.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-22T10:00:00Z",
+    "values": {
+     "temperature": 12.5,
+     "temperatureApparent": 11.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-22T11:00:00Z",
+    "values": {
+     "temperature": 11.5,
+     "temperatureApparent": 10.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-22T12:00:00Z",
+    "values": {
+     "temperature": 10.7,
+     "temperatureApparent": 9.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-22T13:00:00Z",
+    "values": {
+     "temperature": 10.2,
+     "temperatureApparent": 9.399999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-22T14:00:00Z",
+    "values": {
+     "temperature": 10.0,
+     "temperatureApparent": 9.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-22T15:00:00Z",
+    "values": {
+     "temperature": 10.2,
+     "temperatureApparent": 9.399999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-22T16:00:00Z",
+    "values": {
+     "temperature": 10.7,
+     "temperatureApparent": 9.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-22T17:00:00Z",
+    "values": {
+     "temperature": 11.5,
+     "temperatureApparent": 10.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-22T18:00:00Z",
+    "values": {
+     "temperature": 12.5,
+     "temperatureApparent": 11.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-22T19:00:00Z",
+    "values": {
+     "temperature": 13.7,
+     "temperatureApparent": 12.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-22T20:00:00Z",
+    "values": {
+     "temperature": 15.0,
+     "temperatureApparent": 14.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-22T21:00:00Z",
+    "values": {
+     "temperature": 16.3,
+     "temperatureApparent": 15.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-22T22:00:00Z",
+    "values": {
+     "temperature": 17.5,
+     "temperatureApparent": 16.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-22T23:00:00Z",
+    "values": {
+     "temperature": 18.5,
+     "temperatureApparent": 17.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-23T00:00:00Z",
+    "values": {
+     "temperature": 19.3,
+     "temperatureApparent": 18.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-23T01:00:00Z",
+    "values": {
+     "temperature": 19.8,
+     "temperatureApparent": 19.0,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-23T02:00:00Z",
+    "values": {
+     "temperature": 20.0,
+     "temperatureApparent": 19.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-23T03:00:00Z",
+    "values": {
+     "temperature": 19.8,
+     "temperatureApparent": 19.0,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-23T04:00:00Z",
+    "values": {
+     "temperature": 19.3,
+     "temperatureApparent": 18.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-23T05:00:00Z",
+    "values": {
+     "temperature": 18.5,
+     "temperatureApparent": 17.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-23T06:00:00Z",
+    "values": {
+     "temperature": 17.5,
+     "temperatureApparent": 16.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-23T07:00:00Z",
+    "values": {
+     "temperature": 16.3,
+     "temperatureApparent": 15.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-23T08:00:00Z",
+    "values": {
+     "temperature": 15.0,
+     "temperatureApparent": 14.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-23T09:00:00Z",
+    "values": {
+     "temperature": 13.7,
+     "temperatureApparent": 12.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-23T10:00:00Z",
+    "values": {
+     "temperature": 12.5,
+     "temperatureApparent": 11.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-23T11:00:00Z",
+    "values": {
+     "temperature": 11.5,
+     "temperatureApparent": 10.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-23T12:00:00Z",
+    "values": {
+     "temperature": 10.7,
+     "temperatureApparent": 9.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-23T13:00:00Z",
+    "values": {
+     "temperature": 10.2,
+     "temperatureApparent": 9.399999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-23T14:00:00Z",
+    "values": {
+     "temperature": 10.0,
+     "temperatureApparent": 9.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-23T15:00:00Z",
+    "values": {
+     "temperature": 10.2,
+     "temperatureApparent": 9.399999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-23T16:00:00Z",
+    "values": {
+     "temperature": 10.7,
+     "temperatureApparent": 9.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-23T17:00:00Z",
+    "values": {
+     "temperature": 11.5,
+     "temperatureApparent": 10.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-23T18:00:00Z",
+    "values": {
+     "temperature": 12.5,
+     "temperatureApparent": 11.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-23T19:00:00Z",
+    "values": {
+     "temperature": 13.7,
+     "temperatureApparent": 12.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-23T20:00:00Z",
+    "values": {
+     "temperature": 15.0,
+     "temperatureApparent": 14.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-23T21:00:00Z",
+    "values": {
+     "temperature": 16.3,
+     "temperatureApparent": 15.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-23T22:00:00Z",
+    "values": {
+     "temperature": 17.5,
+     "temperatureApparent": 16.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-23T23:00:00Z",
+    "values": {
+     "temperature": 18.5,
+     "temperatureApparent": 17.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-24T00:00:00Z",
+    "values": {
+     "temperature": 19.3,
+     "temperatureApparent": 18.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-24T01:00:00Z",
+    "values": {
+     "temperature": 19.8,
+     "temperatureApparent": 19.0,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-24T02:00:00Z",
+    "values": {
+     "temperature": 20.0,
+     "temperatureApparent": 19.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-24T03:00:00Z",
+    "values": {
+     "temperature": 19.8,
+     "temperatureApparent": 19.0,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-24T04:00:00Z",
+    "values": {
+     "temperature": 19.3,
+     "temperatureApparent": 18.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-24T05:00:00Z",
+    "values": {
+     "temperature": 18.5,
+     "temperatureApparent": 17.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-24T06:00:00Z",
+    "values": {
+     "temperature": 17.5,
+     "temperatureApparent": 16.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-24T07:00:00Z",
+    "values": {
+     "temperature": 16.3,
+     "temperatureApparent": 15.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-24T08:00:00Z",
+    "values": {
+     "temperature": 15.0,
+     "temperatureApparent": 14.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-24T09:00:00Z",
+    "values": {
+     "temperature": 13.7,
+     "temperatureApparent": 12.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-24T10:00:00Z",
+    "values": {
+     "temperature": 12.5,
+     "temperatureApparent": 11.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-24T11:00:00Z",
+    "values": {
+     "temperature": 11.5,
+     "temperatureApparent": 10.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-24T12:00:00Z",
+    "values": {
+     "temperature": 10.7,
+     "temperatureApparent": 9.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-24T13:00:00Z",
+    "values": {
+     "temperature": 10.2,
+     "temperatureApparent": 9.399999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-24T14:00:00Z",
+    "values": {
+     "temperature": 10.0,
+     "temperatureApparent": 9.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-24T15:00:00Z",
+    "values": {
+     "temperature": 10.2,
+     "temperatureApparent": 9.399999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-24T16:00:00Z",
+    "values": {
+     "temperature": 10.7,
+     "temperatureApparent": 9.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-24T17:00:00Z",
+    "values": {
+     "temperature": 11.5,
+     "temperatureApparent": 10.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-24T18:00:00Z",
+    "values": {
+     "temperature": 12.5,
+     "temperatureApparent": 11.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-24T19:00:00Z",
+    "values": {
+     "temperature": 13.7,
+     "temperatureApparent": 12.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-24T20:00:00Z",
+    "values": {
+     "temperature": 15.0,
+     "temperatureApparent": 14.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-24T21:00:00Z",
+    "values": {
+     "temperature": 16.3,
+     "temperatureApparent": 15.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-24T22:00:00Z",
+    "values": {
+     "temperature": 17.5,
+     "temperatureApparent": 16.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-24T23:00:00Z",
+    "values": {
+     "temperature": 18.5,
+     "temperatureApparent": 17.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-25T00:00:00Z",
+    "values": {
+     "temperature": 19.3,
+     "temperatureApparent": 18.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-25T01:00:00Z",
+    "values": {
+     "temperature": 19.8,
+     "temperatureApparent": 19.0,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-25T02:00:00Z",
+    "values": {
+     "temperature": 20.0,
+     "temperatureApparent": 19.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-25T03:00:00Z",
+    "values": {
+     "temperature": 19.8,
+     "temperatureApparent": 19.0,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-25T04:00:00Z",
+    "values": {
+     "temperature": 19.3,
+     "temperatureApparent": 18.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-25T05:00:00Z",
+    "values": {
+     "temperature": 18.5,
+     "temperatureApparent": 17.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-25T06:00:00Z",
+    "values": {
+     "temperature": 17.5,
+     "temperatureApparent": 16.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-25T07:00:00Z",
+    "values": {
+     "temperature": 16.3,
+     "temperatureApparent": 15.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-25T08:00:00Z",
+    "values": {
+     "temperature": 15.0,
+     "temperatureApparent": 14.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-25T09:00:00Z",
+    "values": {
+     "temperature": 13.7,
+     "temperatureApparent": 12.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-25T10:00:00Z",
+    "values": {
+     "temperature": 12.5,
+     "temperatureApparent": 11.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-25T11:00:00Z",
+    "values": {
+     "temperature": 11.5,
+     "temperatureApparent": 10.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-25T12:00:00Z",
+    "values": {
+     "temperature": 10.7,
+     "temperatureApparent": 9.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-25T13:00:00Z",
+    "values": {
+     "temperature": 10.2,
+     "temperatureApparent": 9.399999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-25T14:00:00Z",
+    "values": {
+     "temperature": 10.0,
+     "temperatureApparent": 9.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-25T15:00:00Z",
+    "values": {
+     "temperature": 10.2,
+     "temperatureApparent": 9.399999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-25T16:00:00Z",
+    "values": {
+     "temperature": 10.7,
+     "temperatureApparent": 9.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-25T17:00:00Z",
+    "values": {
+     "temperature": 11.5,
+     "temperatureApparent": 10.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-25T18:00:00Z",
+    "values": {
+     "temperature": 12.5,
+     "temperatureApparent": 11.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-25T19:00:00Z",
+    "values": {
+     "temperature": 13.7,
+     "temperatureApparent": 12.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-25T20:00:00Z",
+    "values": {
+     "temperature": 15.0,
+     "temperatureApparent": 14.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-25T21:00:00Z",
+    "values": {
+     "temperature": 16.3,
+     "temperatureApparent": 15.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-25T22:00:00Z",
+    "values": {
+     "temperature": 17.5,
+     "temperatureApparent": 16.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-25T23:00:00Z",
+    "values": {
+     "temperature": 18.5,
+     "temperatureApparent": 17.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-26T00:00:00Z",
+    "values": {
+     "temperature": 19.3,
+     "temperatureApparent": 18.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-26T01:00:00Z",
+    "values": {
+     "temperature": 19.8,
+     "temperatureApparent": 19.0,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-26T02:00:00Z",
+    "values": {
+     "temperature": 20.0,
+     "temperatureApparent": 19.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-26T03:00:00Z",
+    "values": {
+     "temperature": 19.8,
+     "temperatureApparent": 19.0,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-26T04:00:00Z",
+    "values": {
+     "temperature": 19.3,
+     "temperatureApparent": 18.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-26T05:00:00Z",
+    "values": {
+     "temperature": 18.5,
+     "temperatureApparent": 17.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-26T06:00:00Z",
+    "values": {
+     "temperature": 17.5,
+     "temperatureApparent": 16.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-26T07:00:00Z",
+    "values": {
+     "temperature": 16.3,
+     "temperatureApparent": 15.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-26T08:00:00Z",
+    "values": {
+     "temperature": 15.0,
+     "temperatureApparent": 14.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-26T09:00:00Z",
+    "values": {
+     "temperature": 13.7,
+     "temperatureApparent": 12.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-26T10:00:00Z",
+    "values": {
+     "temperature": 12.5,
+     "temperatureApparent": 11.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-26T11:00:00Z",
+    "values": {
+     "temperature": 11.5,
+     "temperatureApparent": 10.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-26T12:00:00Z",
+    "values": {
+     "temperature": 10.7,
+     "temperatureApparent": 9.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-26T13:00:00Z",
+    "values": {
+     "temperature": 10.2,
+     "temperatureApparent": 9.399999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-26T14:00:00Z",
+    "values": {
+     "temperature": 10.0,
+     "temperatureApparent": 9.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-26T15:00:00Z",
+    "values": {
+     "temperature": 10.2,
+     "temperatureApparent": 9.399999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-26T16:00:00Z",
+    "values": {
+     "temperature": 10.7,
+     "temperatureApparent": 9.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-26T17:00:00Z",
+    "values": {
+     "temperature": 11.5,
+     "temperatureApparent": 10.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-26T18:00:00Z",
+    "values": {
+     "temperature": 12.5,
+     "temperatureApparent": 11.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-26T19:00:00Z",
+    "values": {
+     "temperature": 13.7,
+     "temperatureApparent": 12.899999999999999,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   },
+   {
+    "time": "2026-11-26T20:00:00Z",
+    "values": {
+     "temperature": 15.0,
+     "temperatureApparent": 14.2,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 0,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1000
+    }
+   },
+   {
+    "time": "2026-11-26T21:00:00Z",
+    "values": {
+     "temperature": 16.3,
+     "temperatureApparent": 15.5,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 5,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 1101
+    }
+   },
+   {
+    "time": "2026-11-26T22:00:00Z",
+    "values": {
+     "temperature": 17.5,
+     "temperatureApparent": 16.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 45,
+     "rainIntensity": 0,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4200
+    }
+   },
+   {
+    "time": "2026-11-26T23:00:00Z",
+    "values": {
+     "temperature": 18.5,
+     "temperatureApparent": 17.7,
+     "humidity": 69,
+     "windSpeed": 4.5,
+     "windDirection": 215,
+     "windGust": 8.8,
+     "pressureSeaLevel": 1016.2,
+     "pressureSurfaceLevel": 1013.0,
+     "precipitationProbability": 80,
+     "rainIntensity": 0.8,
+     "snowIntensity": 0,
+     "cloudCover": 64,
+     "uvIndex": 3,
+     "weatherCode": 4001
+    }
+   }
+  ],
+  "daily": [
+   {
+    "time": "2026-11-21T17:00:00Z",
+    "values": {
+     "temperatureMax": 21.5,
+     "temperatureMin": 10.5,
+     "precipitationProbabilityMax": 75,
+     "rainAccumulationSum": 3.9,
+     "snowAccumulationSum": 0,
+     "windSpeedMax": 9.0,
+     "windDirectionAvg": 220,
+     "uvIndexMax": 9,
+     "humidityAvg": 70,
+     "sunriseTime": "2026-11-21T17:01:00Z",
+     "sunsetTime": "2026-11-22T07:09:00Z",
+     "weatherCodeMax": 4001
+    }
+   },
+   {
+    "time": "2026-11-22T17:00:00Z",
+    "values": {
+     "temperatureMax": 21.2,
+     "temperatureMin": 10.5,
+     "precipitationProbabilityMax": 75,
+     "rainAccumulationSum": 3.9,
+     "snowAccumulationSum": 0,
+     "windSpeedMax": 9.0,
+     "windDirectionAvg": 220,
+     "uvIndexMax": 9,
+     "humidityAvg": 70,
+     "sunriseTime": "2026-11-22T17:01:00Z",
+     "sunsetTime": "2026-11-23T07:09:00Z",
+     "weatherCodeMax": 1000
+    }
+   },
+   {
+    "time": "2026-11-23T17:00:00Z",
+    "values": {
+     "temperatureMax": 20.9,
+     "temperatureMin": 10.5,
+     "precipitationProbabilityMax": 75,
+     "rainAccumulationSum": 3.9,
+     "snowAccumulationSum": 0,
+     "windSpeedMax": 9.0,
+     "windDirectionAvg": 220,
+     "uvIndexMax": 9,
+     "humidityAvg": 70,
+     "sunriseTime": "2026-11-23T17:01:00Z",
+     "sunsetTime": "2026-11-24T07:09:00Z",
+     "weatherCodeMax": 8000
+    }
+   },
+   {
+    "time": "2026-11-24T17:00:00Z",
+    "values": {
+     "temperatureMax": 20.6,
+     "temperatureMin": 10.5,
+     "precipitationProbabilityMax": 75,
+     "rainAccumulationSum": 3.9,
+     "snowAccumulationSum": 0,
+     "windSpeedMax": 9.0,
+     "windDirectionAvg": 220,
+     "uvIndexMax": 9,
+     "humidityAvg": 70,
+     "sunriseTime": "2026-11-24T17:01:00Z",
+     "sunsetTime": "2026-11-25T07:09:00Z",
+     "weatherCodeMax": 5100
+    }
+   },
+   {
+    "time": "2026-11-25T17:00:00Z",
+    "values": {
+     "temperatureMax": 20.3,
+     "temperatureMin": 10.5,
+     "precipitationProbabilityMax": 75,
+     "rainAccumulationSum": 3.9,
+     "snowAccumulationSum": 0,
+     "windSpeedMax": 9.0,
+     "windDirectionAvg": 220,
+     "uvIndexMax": 9,
+     "humidityAvg": 70,
+     "sunriseTime": "2026-11-25T17:01:00Z",
+     "sunsetTime": "2026-11-26T07:09:00Z",
+     "weatherCodeMax": 1101
+    }
+   },
+   {
+    "time": "2026-11-26T17:00:00Z",
+    "values": {
+     "temperatureMax": 20.0,
+     "temperatureMin": 10.5,
+     "precipitationProbabilityMax": 75,
+     "rainAccumulationSum": 3.9,
+     "snowAccumulationSum": 0,
+     "windSpeedMax": 9.0,
+     "windDirectionAvg": 220,
+     "uvIndexMax": 9,
+     "humidityAvg": 70,
+     "sunriseTime": "2026-11-26T17:01:00Z",
+     "sunsetTime": "2026-11-27T07:09:00Z",
+     "weatherCodeMax": 10000
+    }
+   }
+  ]
+ },
+ "location": {
+  "lat": -36.85,
+  "lon": 174.76
+ }
+}

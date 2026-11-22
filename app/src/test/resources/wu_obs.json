@@ -1,0 +1,31 @@
+{
+ "observations": [
+  {
+   "stationID": "IAUCKLAND1",
+   "obsTimeUtc": "2026-11-22T00:54:00Z",
+   "obsTimeLocal": "2026-11-22 13:54:00",
+   "neighborhood": "Waiuku",
+   "country": "NZ",
+   "solarRadiation": 410.2,
+   "lon": 174.73,
+   "lat": -37.25,
+   "epoch": 1795308840,
+   "uv": 4.0,
+   "winddir": 235,
+   "humidity": 68.0,
+   "qcStatus": 1,
+   "metric": {
+    "temp": 17.4,
+    "heatIndex": 17.4,
+    "dewpt": 11.3,
+    "windChill": 17.4,
+    "windSpeed": 13.0,
+    "windGust": 22.3,
+    "pressure": 1015.92,
+    "precipRate": 0.0,
+    "precipTotal": 1.2,
+    "elev": 30.0
+   }
+  }
+ ]
+}

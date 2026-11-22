@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- API keys are never backed up or moved to another phone. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="rbsb-weather-keys.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="rbsb-weather-keys.xml" />
+    </device-transfer>
+</data-extraction-rules>

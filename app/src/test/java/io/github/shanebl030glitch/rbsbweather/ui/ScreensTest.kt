@@ -107,4 +107,32 @@ class ScreensTest {
         compose.onNodeWithText("Designed and Created By Shane BlackbuRn").assertExists()
         compose.onNodeWithText("Coded By Claude AI").assertExists()
     }
+
+    @Test fun weatherProvidersScreen() {
+        val m = model()
+        compose.setContent { RbsbApp(m) }
+        compose.onNodeWithTag("menu").performClick()
+        compose.onNodeWithTag("menu-Settings").performClick()
+        compose.onNodeWithTag("openProviders").performClick()
+        compose.onNodeWithText("Weather Providers").assertIsDisplayed()
+        compose.onNodeWithTag("providerRole-open-meteo").assertIsDisplayed()
+        compose.onNodeWithTag("providers").performScrollToNode(hasTestTag("primary-met.no"))
+        compose.onNodeWithTag("primary-met.no").performClick()
+        assertEquals("met.no", m.state.value.settings.providers[0])
+        compose.onNodeWithTag("providers").performScrollToNode(hasTestTag("details-tomorrow"))
+        compose.onNodeWithTag("details-tomorrow").performClick()
+        compose.onNodeWithTag("providers").performScrollToNode(hasTestTag("key-tomorrow"))
+        compose.onNodeWithTag("key-tomorrow").assertIsDisplayed()
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("settings").assertIsDisplayed()
+    }
+
+    @Test fun playbackShowsALaterTime() {
+        val m = model()
+        m.add(AUCKLAND)
+        compose.setContent { RbsbApp(m) }
+        compose.onNodeWithTag("miniForecast").assertIsDisplayed()
+        compose.onNodeWithTag("playback").assertIsDisplayed()
+        compose.onNodeWithTag("playbackNow").assertIsDisplayed()
+    }
 }

@@ -3,7 +3,15 @@
 // Created By Shane BlackbuRn
 package io.github.shanebl030glitch.rbsbweather.ui
 
+import io.github.shanebl030glitch.rbsbweather.data.ALL_PROVIDERS
 import io.github.shanebl030glitch.rbsbweather.data.Forecast
+import io.github.shanebl030glitch.rbsbweather.data.ProviderManager
+import io.github.shanebl030glitch.rbsbweather.data.ProviderStatus
+import io.github.shanebl030glitch.rbsbweather.data.RECOVERY_CHOICES
+import io.github.shanebl030glitch.rbsbweather.data.Units
+import io.github.shanebl030glitch.rbsbweather.data.WeatherCodes
+import io.github.shanebl030glitch.rbsbweather.data.cleanKey
+import io.github.shanebl030glitch.rbsbweather.data.providerInfo
 import io.github.shanebl030glitch.rbsbweather.data.OpenMeteo
 import io.github.shanebl030glitch.rbsbweather.data.Place
 import io.github.shanebl030glitch.rbsbweather.data.Settings
@@ -26,12 +34,14 @@ interface SettingsStore {
     fun save(json: String)
 }
 
+val TEST_PLACE = Place("Auckland", -36.8485, 174.7633, "New Zealand", "Auckland", "Pacific/Auckland")
+
 class MemoryStore(var text: String? = null) : SettingsStore {
     override fun load() = text
     override fun save(json: String) { text = json }
 }
 
-enum class Screen { HOME, SEARCH, PLACES, SETTINGS, HELP, ABOUT }
+enum class Screen { HOME, SEARCH, PLACES, SETTINGS, PROVIDERS, HELP, ABOUT }
 
 sealed interface SearchState {
     data object Idle : SearchState
@@ -48,6 +58,9 @@ data class UiState(
     val screen: Screen = Screen.HOME,
     val search: SearchState = SearchState.Idle,
     val message: String? = null,                              // one-off note ("Removed Auckland")
+    val keysSaved: Set<String> = emptySet(),                  // provider ids with an API key (never the key itself)
+    val providerTests: Map<String, String> = emptyMap(),      // provider id → result of "Test connection"
+    val testing: Set<String> = emptySet(),
 )
 
 class AppModel(
@@ -57,8 +70,13 @@ class AppModel(
     private val scope: CoroutineScope,
     private val io: CoroutineDispatcher,
     private val now: () -> Long = System::currentTimeMillis,
+    private val providers: ProviderManager? = null,
+    private val onForecast: (Forecast) -> Unit = {},          // e.g. update the home-screen widgets
 ) {
-    private val _state = MutableStateFlow(UiState(settings = Settings.fromJson(store.load())))
+    private val _state = MutableStateFlow(UiState(settings = Settings.fromJson(store.load()),
+        keysSaved = ALL_PROVIDERS.filter { it.needsKey && providers?.hasKey(it.id) == true }.map { it.id }.toSet()))
+    /** The latest settings (the provider chain reads them on the network thread). */
+    val settingsNow: Settings get() = _state.value.settings
     val state: StateFlow<UiState> = _state
 
     private var searchJob: Job? = null
@@ -102,6 +120,7 @@ class AppModel(
                 val stillSaved = st.settings.places.any { it.key == place.key }
                 result.fold(
                     onSuccess = { f ->
+                        if (stillSaved) try { onForecast(f) } catch (e: Exception) { }
                         if (!stillSaved) st.copy(loading = st.loading - place.key)
                         else st.copy(loading = st.loading - place.key, forecasts = st.forecasts + (place.key to f),
                             errors = st.errors - place.key)
@@ -157,6 +176,96 @@ class AppModel(
     fun setRefreshMinutes(m: Int) = saveSettings(_state.value.settings.copy(refreshMinutes = m))
     fun setAnimations(on: Boolean) = saveSettings(_state.value.settings.copy(animations = on))
 
+    // ----------------------------------------------------- weather providers
+    fun providerStatus(id: String): ProviderStatus = repo.status(id)
+
+    private fun setChain(ids: List<String>) {
+        val clean = ids.filter { providerInfo(it) != null }.distinct()
+        if (clean.isEmpty()) return
+        saveSettings(_state.value.settings.copy(providers = clean))
+        repo.resetRecovery()
+    }
+
+    fun makePrimary(id: String) {
+        val l = _state.value.settings.providers
+        setChain(listOf(id) + l.filterNot { it == id })
+    }
+
+    /** Add a provider as the last backup, or take it out (the primary can't be taken out). */
+    fun setBackup(id: String, on: Boolean) {
+        val l = _state.value.settings.providers
+        if (on) { if (id !in l) setChain(l + id) }
+        else if (l.firstOrNull() != id) setChain(l - id)
+    }
+
+    fun moveProvider(id: String, delta: Int) {
+        val l = _state.value.settings.providers.toMutableList()
+        val i = l.indexOf(id)
+        if (i <= 0) return                                        // the primary stays first (use makePrimary)
+        val j = (i + delta).coerceIn(1, l.size - 1)
+        if (i == j) return
+        l.add(j, l.removeAt(i))
+        setChain(l)
+    }
+
+    fun setRecovery(minutes: Int) {
+        if (minutes !in RECOVERY_CHOICES) return
+        saveSettings(_state.value.settings.copy(recovery = minutes))
+        repo.resetRecovery()
+    }
+
+    fun setProviderOption(provider: String, name: String, value: String) {
+        val info = providerInfo(provider)?.option
+        val v = value.trim()
+        if (v.isNotEmpty() && (info == null || info.first != name || !info.third.matches(v))) {
+            _state.update { it.copy(message = "That isn't a valid ${info?.second?.substringBefore(" (") ?: name}.") }
+            return
+        }
+        saveSettings(_state.value.settings.withOption(provider, name, v))
+    }
+
+    /** Save (or clear, when blank) a provider's API key. The key goes to its own private store. */
+    fun setKey(id: String, raw: String) {
+        val pm = providers ?: return
+        val key = try { cleanKey(raw) } catch (e: IllegalArgumentException) {
+            _state.update { it.copy(message = e.message) }
+            return
+        }
+        try { pm.keys.set(id, key) } catch (e: Exception) {
+            _state.update { it.copy(message = "Couldn't save the key: ${e.javaClass.simpleName}") }
+            return
+        }
+        val name = providerInfo(id)?.name ?: id
+        _state.update { it.copy(keysSaved = if (key == null) it.keysSaved - id else it.keysSaved + id,
+            providerTests = it.providerTests - id,
+            message = if (key == null) "Removed the $name key" else "Saved the $name key") }
+        repo.resetRecovery()
+    }
+
+    /** Ask one provider for the selected place (or Auckland) and report what happened. */
+    fun testProvider(id: String) {
+        val pm = providers ?: return
+        val p = pm.provider(id) ?: return
+        if (id in _state.value.testing) return
+        val place = _state.value.settings.selectedPlace() ?: TEST_PLACE
+        _state.update { it.copy(testing = it.testing + id, providerTests = it.providerTests - id) }
+        scope.launch {
+            val msg = withContext(io) {
+                try {
+                    val f = p.forecast(place)
+                    "Working: ${Units.fmtTemp(f.current.temperature, _state.value.settings.units.temp)} " +
+                        "${WeatherCodes.describe(f.current.weatherCode).lowercase()} at ${place.name}, " +
+                        "${f.daily.size} days, ${f.hourly.size} hours."
+                } catch (e: WeatherException) {
+                    "Not working: ${e.message}"
+                } catch (e: Exception) {
+                    "Not working: unexpected problem (${e.javaClass.simpleName})."
+                }
+            }
+            _state.update { it.copy(testing = it.testing - id, providerTests = it.providerTests + (id to msg)) }
+        }
+    }
+
     private fun saveSettings(s: Settings) {
         _state.update { it.copy(settings = s) }
         try {
@@ -169,8 +278,9 @@ class AppModel(
     // ------------------------------------------------------------ navigation
     fun go(screen: Screen) = _state.update { it.copy(screen = screen, search = if (screen == Screen.SEARCH) SearchState.Idle else it.search) }
     fun back(): Boolean {
-        if (_state.value.screen == Screen.HOME) return false
-        _state.update { it.copy(screen = Screen.HOME) }
+        val sc = _state.value.screen
+        if (sc == Screen.HOME) return false
+        _state.update { it.copy(screen = if (sc == Screen.PROVIDERS) Screen.SETTINGS else Screen.HOME) }
         return true
     }
     fun messageShown() = _state.update { it.copy(message = null) }
