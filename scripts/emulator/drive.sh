@@ -81,8 +81,8 @@ check "Wind tab"; shot wind
 grep -q "GFS forecast run" "$OUT/ui.xml" && echo "WIND DATA: downloaded and shown" || { echo "WIND DATA: not shown"; grep -o 'text="[^"]*NOAA[^"]*"' "$OUT/ui.xml" | head -3; GLOBE_FAILED=1; }
 sleep 8; adb exec-out screencap -p > "$OUT/wind-a.png"; sleep 2; adb exec-out screencap -p > "$OUT/wind-b.png"
 moved "wind streaks" "$OUT/wind-a.png" "$OUT/wind-b.png" 0.003
-for L in "🌡 Temperature" "🌧 Rain & snow" "🌬 Wind"; do tap "$L"; sleep 6; check "Wind layer $L"; done
-shot wind-layers
+k=0
+for L in "🌡 Temperature" "🌧 Rain & snow" "🌬 Wind"; do k=$((k+1)); tap "$L"; sleep 8; check "Wind layer $L"; shot "wind-layer-$k"; done
 adb shell input tap 540 1100; sleep 2; check "tapping the wind globe"
 
 step "every other screen"
