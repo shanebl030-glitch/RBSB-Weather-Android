@@ -120,4 +120,5 @@ and where it stands on Android. It's updated with every version.
 | Files and settings locations | 📱 App-private storage; described in the user guide. |
 | Coming from WeatherDesk | 📱 Not applicable (new app). |
 | Buy me a coffee (PayPal) | ✅ 0.1 About. |
+| App icon (Shane's artwork) | ✅ 0.5: the round version on Android (desktop 2.5.1 uses the rounded square). |
 | Credits (weather, Earth maps, Moon imagery, wind, warnings, quakes) | 🟡 All in except wind, which arrives with the wind globe (0.6). |

@@ -22,8 +22,13 @@ Shane: "now the next update". Following the roadmap: the Moon and the Earth.
   - Earthquakes as dots coloured by age, sized by magnitude, pulsing in the last hour; tap for details.
 - **Show on Earth map** on each warning, and **Show on the globe** on the Earthquakes screen. Tapping an earthquake notification opens the globe turned to that quake.
 - Earth-map and cloud credits in About.
+- **New app icon:** Shane's RBSB-Weather artwork (the round version), sized to fit inside every launcher's icon shape (round, squircle or square) on a deep-blue background. It's also at the top of About. On Android 13 and newer, themed (single-colour) icons still use a simple sun-and-cloud outline.
+
+### Changed
+- The Earth tab's Flat/Globe switch is a pair of tabs: in the screen tests a real tap didn't reach the first design (a segmented button).
 
 ### Tests
+- 150 tests, all passing (see TEST_REPORT.md).
 - New tests mirror the desktop's `test_earth.py`, `test_globe.py`, `test_sky.py` and `test_clouds.py`, using the same PyEphem reference file (see TEST_REPORT.md).
 
 ## 0.4.0 – 2026-11-22 (test build; on branch claude/android-0.2.0; not released)

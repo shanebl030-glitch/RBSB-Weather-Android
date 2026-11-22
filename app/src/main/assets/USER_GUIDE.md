@@ -126,6 +126,6 @@ Menu (⋮) → **Settings**: temperature (°C or °F), wind speed (km/h, m/s, mp
 
 ## About
 
-RBSB-Weather for Android is a separate app from RBSB-Weather for the desktop. Menu (⋮) → **About** shows the version and credits.
+RBSB-Weather for Android is a separate app from RBSB-Weather for the desktop. Menu (⋮) → **About** shows the version and credits. The RBSB-Weather icon was designed by Shane BlackbuRn.
 
 Created By Shane BlackbuRn

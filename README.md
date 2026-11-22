@@ -1,5 +1,7 @@
 # RBSB-Weather for Android
 
+<img src="docs/icon.png" alt="RBSB-Weather icon" width="128">
+
 The Android version of RBSB-Weather. It's a **separate app** from
 [RBSB-Weather for the desktop](https://github.com/shanebl030-glitch/RBSB-Weather),
 with its own versions, releases and tests.

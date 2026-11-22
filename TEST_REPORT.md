@@ -4,13 +4,29 @@ Created By Shane BlackbuRn
 
 | Item | Result |
 |---|---|
-| Version | 0.4.0 (test build) |
+| Version | 0.5.0 (test build) |
 | Date | 2026-11-22 |
 | Where | GitHub Actions: Ubuntu 26.04 runner, JDK 17 (Temurin), Gradle 8.14.3, Android Gradle Plugin 8.10.1, Kotlin 2.1.21, Compose BOM 2025.05.01, compile/target SDK 35, min SDK 29 |
 | Command | `./gradlew testDebugUnitTest`, then `./gradlew assembleRelease` |
-| Tests | 136 run, 136 passed, 0 failed, 0 skipped (GitHub Actions run 44985012092) |
+| Tests | 150 run, 150 passed, 0 failed, 0 skipped (GitHub Actions run 44990253891; the docs-only commit after it is re-run on CI) |
 
 ## What's tested
+
+**New in 0.5 (14 tests):**
+- **The Earth** (mirroring the desktop's `test_earth.py`, same PyEphem reference file):
+  - where the Sun is overhead, within 0.05°; the Sun's height anywhere, within 0.1°;
+  - equinox and solstices; day, twilight and night (Auckland and London at set times);
+  - the map projection both ways; the day/night masks (day where the Sun is overhead, night opposite).
+- **The globe** (`test_globe.py`): the centre, the far side hidden, east and north, and 3,000 random points there and back.
+- **The sky behind the globe** (`test_sky.py`): the distances behind the Earth, east on the right and north up, the Sun touching the Earth's edge exactly at sunset there, the Moon's lit side facing the Sun on screen (within 1°), and the stars turning with time.
+- **Live clouds** (`test_clouds.py`): first download, "not modified" (the app sends If-Modified-Since and the ETag), a newer map, the hourly check, and three kinds of bad download (garbage, HTTP 404, wrong shape) that keep the last map and wait 15 minutes; a corrupt record is ignored.
+- **Drawing:** the globe is filled (within 3% of a perfect disc), faces the right way and is darker at the edge; the Earth map from the real textures is bright at noon and dark at midnight over the same desert.
+- **Screens:** the Moon, Earth Flat and Earth Globe tabs open; a real tap switches to the globe; the Live clouds box takes a tap below it; and back to the forecast.
+- **Pictures** of the Moon, Earth Flat and Earth Globe (the globe picture waits until it's drawn).
+- **APK:** checksum, version 0.5.0 (code 6), v2 signature, the new icon at every density (108–432 px foregrounds) and the About logo, and the Earth maps.
+
+**Not tested here:** a real phone (pinch, drag and double-tap gestures, the globe's speed, the live-cloud download over a real network, saving the Moon picture to the gallery, and how the new icon looks on your launcher).
+
 
 **New in 0.4 (35 tests), mirroring the desktop's test_alerts.py and test_quakes.py with the same fixture files:**
 - **Warning geometry:**

@@ -16,7 +16,35 @@ with live clouds and earthquakes.
 - Built the Moon, Earth Flat and Earth Globe screens and bottom tabs.
 - Ported the desktop's tests for these, using its PyEphem reference file.
 
-PROBLEMS_05
+**Shane, part-way through:** "use the images attached for icon on RBSB-Weather
+Destop and Android" and "continue with the upgrade for Android".
+→ The round version is the Android icon (it suits round launcher shapes); the
+rounded square is the desktop icon (desktop 2.5.1, its own branch). I cut each
+out of the black background with clean edges and made every size needed.
+
+**Problems found while testing:**
+1. **Bottom tabs took space,** so three older screen tests no longer found items on
+   Robolectric's small default screen. Those tests now use a small modern phone's
+   size (360 × 760 dp).
+2. **The Flat/Globe switch didn't take a real tap** in the screen test (a semantic
+   click worked, but a simulated finger tap, slow tap and tapping its text all
+   didn't). I couldn't prove whether a phone would have the same problem, so I
+   replaced it with standard tabs, which take a real tap in the test.
+3. **The first globe picture was blank** (just the glow). The picture was taken
+   before the globe had finished drawing in the background. A new test now draws
+   the globe directly and checks it's filled and faces the right way, the
+   picture waits for it, and the screen says "Drawing the Earth…" until it's ready.
+4. **A new map test compared the wrong places** (sunlit ocean against a desert at
+   night, which can be equally dark). It now compares the same desert at noon
+   and at midnight.
+
+**Tested:**
+- 150 tests run, 150 passed (GitHub Actions run 44990253891).
+- APK: checksum, version 0.5.0 (code 6), v2 signature, icon resources at every
+  density, Earth maps included.
+- Screen pictures of the Moon, Earth Flat and Earth Globe checked by eye.
+- Not tested on a phone: gestures (pinch, drag, double-tap), speed of the globe
+  and the live-cloud download on a real network.
 
 ## 0.4.0 (2026-11-22)
 
