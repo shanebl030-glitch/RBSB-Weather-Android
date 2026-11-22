@@ -45,6 +45,22 @@ with its own versions, releases and tests.
 
 Needs **Android 10 or newer**.
 
+## Screenshots
+
+From RBSB-Weather for Android 0.6.2 on Android 14 (the warning screens use an example warning).
+
+<table>
+<tr><td align="center" width="33%"><img src="docs/screenshots/forecast.png" width="250" alt="Forecast: the animated sky, mini forecast and details"><br><sub>Forecast: the animated sky, mini forecast and details</sub></td><td align="center" width="33%"><img src="docs/screenshots/moon.png" width="250" alt="Moon: tonight's Moon as it looks in your sky"><br><sub>Moon: tonight's Moon as it looks in your sky</sub></td><td align="center" width="33%"><img src="docs/screenshots/earth-flat.png" width="250" alt="Earth Flat: day and night with city lights"><br><sub>Earth Flat: day and night with city lights</sub></td></tr>
+<tr><td align="center" width="33%"><img src="docs/screenshots/earth-globe.png" width="250" alt="Earth Globe: drag, pinch, rotate slowly"><br><sub>Earth Globe: drag, pinch, rotate slowly</sub></td><td align="center" width="33%"><img src="docs/screenshots/globe-clouds.png" width="250" alt="Live satellite clouds, zoomed in"><br><sub>Live satellite clouds, zoomed in</sub></td><td align="center" width="33%"><img src="docs/screenshots/wind.png" width="250" alt="Wind: NOAA's forecast with moving streaks"><br><sub>Wind: NOAA's forecast with moving streaks</sub></td></tr>
+<tr><td align="center" width="33%"><img src="docs/screenshots/wind-temperature.png" width="250" alt="Wind tab: air temperature"><br><sub>Wind tab: air temperature</sub></td><td align="center" width="33%"><img src="docs/screenshots/wind-rain.png" width="250" alt="Wind tab: rain and snow"><br><sub>Wind tab: rain and snow</sub></td><td align="center" width="33%"><img src="docs/screenshots/earthquakes.png" width="250" alt="Earthquakes near your places"><br><sub>Earthquakes near your places</sub></td></tr>
+<tr><td align="center" width="33%"><img src="docs/screenshots/warning-banner.png" width="250" alt="A warning across the sky (example)"><br><sub>A warning across the sky (example)</sub></td><td align="center" width="33%"><img src="docs/screenshots/warnings.png" width="250" alt="The warning in full (example)"><br><sub>The warning in full (example)</sub></td><td align="center" width="33%"><img src="docs/screenshots/settings.png" width="250" alt="Settings"><br><sub>Settings</sub></td></tr>
+<tr><td align="center" width="33%"><img src="docs/screenshots/providers.png" width="250" alt="Weather Providers"><br><sub>Weather Providers</sub></td><td align="center" width="33%"><img src="docs/screenshots/test-connection.png" width="250" alt="Test connection"><br><sub>Test connection</sub></td><td align="center" width="33%"><img src="docs/screenshots/updates.png" width="250" alt="Check for updates"><br><sub>Check for updates</sub></td></tr>
+</table>
+
+<p align="center"><img src="docs/screenshots/skies.png" width="760" alt="The animated sky: sun and cloud, thunderstorm, snow, and night with the Moon"><br><sub>The animated sky: sun and cloud, a thunderstorm, snow, and night with the Moon in its real phase</sub></p>
+
+<p align="center"><img src="docs/screenshots/widget.png" width="410" alt="Home-screen widget"><br><sub>Home-screen widget (animated)</sub>&nbsp;&nbsp;&nbsp;<img src="docs/screenshots/landscape.png" width="430" alt="Sideways"><br><sub>Turned sideways</sub></p>
+
 ## Install
 
 1. On your phone, download `rbsb-weather-android_0.6.2.apk` from the

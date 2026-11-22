@@ -18,6 +18,11 @@ Created By Shane BlackbuRn
   - `rbsb-weather-android_0.6.2.apk`, the exact file Shane installed (SHA-256 7293b0fa…0b16);
   - `SHA256SUMS`.
 
+**Shane:** "can we add quite a few snapshots of the RBSB-Weather- Android"
+→ Added 19 pictures to `docs/screenshots/`. They're shown on the GitHub page (README → Screenshots) and in the release notes.
+- **From the emulator check** (Android 14, 0.6.2 code), which now also photographs each Wind layer: Forecast, Moon, Earth Flat and Globe, live clouds, the three Wind layers, Earthquakes, Settings, Weather Providers, Test connection, Check for updates, About, and sideways.
+- **From the screen tests:** the warning banner and screen (with an example warning, labelled as such), the widget, and four animated skies.
+
 ## 0.6.1 (2026-11-23)
 
 **Shane:** "First time I have had this when installing on the phone. 'Google Play Protect. Harmful app blocked. RBSB-Weather. This app may be harmful. Installing this app may put your device at risk. Learn more about Play Protect. Install anyway'"
