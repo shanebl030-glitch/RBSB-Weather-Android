@@ -203,9 +203,8 @@ class AppModelTest {
         val m = providerModel(keys, store)
         m.makePrimary("weatherapi")
         m.add(AUCKLAND)
-        assertTrue(m.state.value.errors[AUCKLAND.key]!!.contains("needs an API key") ||
-            m.state.value.forecasts[AUCKLAND.key]?.source == "Open-Meteo")       // primary without a key → backup
-        assertEquals("Open-Meteo", m.state.value.forecasts[AUCKLAND.key]?.source)
+        assertEquals("Open-Meteo", m.state.value.forecasts[AUCKLAND.key]?.source)   // primary without a key → backup
+        assertTrue(m.providerStatus("weatherapi").lastError!!.contains("needs an API key"))
         m.setKey("weatherapi", "bad key!")
         assertTrue(m.state.value.message!!.contains("doesn't look like an API key"))
         assertNull(keys.get("weatherapi"))

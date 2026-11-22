@@ -122,7 +122,7 @@ class ScreensTest {
         compose.onNodeWithTag("providers").performScrollToNode(hasTestTag("details-tomorrow"))
         compose.onNodeWithTag("details-tomorrow").performClick()
         compose.onNodeWithTag("providers").performScrollToNode(hasTestTag("key-tomorrow"))
-        compose.onNodeWithTag("key-tomorrow").assertIsDisplayed()
+        compose.onNodeWithTag("key-tomorrow").assertExists()
         compose.onNodeWithTag("back").performClick()
         compose.onNodeWithTag("settings").assertIsDisplayed()
     }

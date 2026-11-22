@@ -181,7 +181,7 @@ abstract class KeyedProvider(
         val fc = try { fetch(place, now) } catch (e: WeatherException) { throw e } catch (e: Exception) {
             throw WeatherException("${info.name}'s reply wasn't in the expected format.")
         }
-        return normalise(fc.copy(source = info.name), place, 7, now).copy(fetchedAt = System.currentTimeMillis())
+        return normalise(fc.copy(source = info.name), place, minOf(7, info.maxDays), now).copy(fetchedAt = System.currentTimeMillis())
     }
 }
 
