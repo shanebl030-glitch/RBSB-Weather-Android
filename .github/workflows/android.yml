@@ -48,7 +48,7 @@ jobs:
                   for bad in list(tc.findall("failure")) + list(tc.findall("error")):
                       if shown < 6:
                           print("FAILURE DETAIL:", tc.get("classname"), tc.get("name"))
-                          print("\n".join((bad.text or bad.get("message") or "").splitlines()[:25]))
+                          print("\n".join((bad.text or bad.get("message") or "").splitlines()[:150]))
                           shown += 1
           PY
       - name: Build the APK

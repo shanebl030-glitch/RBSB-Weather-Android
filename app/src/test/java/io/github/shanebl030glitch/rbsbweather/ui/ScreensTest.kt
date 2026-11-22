@@ -14,6 +14,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.printToString
 import io.github.shanebl030glitch.rbsbweather.data.AUCKLAND
 import io.github.shanebl030glitch.rbsbweather.data.ForecastCache
 import io.github.shanebl030glitch.rbsbweather.data.Settings
@@ -181,7 +183,10 @@ class ScreensTest {
         compose.onNodeWithTag("tab-Earth").performClick()
         compose.onNodeWithTag("flatMap").assertIsDisplayed()
         compose.onNodeWithTag("earthGlobe").performClick()
-        compose.onNodeWithTag("globe").assertIsDisplayed()
+        compose.waitForIdle()
+        assertTrue(m.state.value.earthGlobe)
+        try { compose.onNodeWithTag("globe").assertIsDisplayed() }
+        catch (e: AssertionError) { throw AssertionError(compose.onRoot().printToString(), e) }
         compose.onNodeWithTag("tab-Forecast").performClick()
         compose.onNodeWithTag("temp").assertIsDisplayed()
     }
