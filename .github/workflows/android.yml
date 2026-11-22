@@ -24,6 +24,18 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Tests
         run: ./gradlew --no-daemon --stacktrace testDebugUnitTest
+      - name: Test totals
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          t = f = e = sk = 0
+          for x in glob.glob("app/build/test-results/testDebugUnitTest/*.xml"):
+              r = ET.parse(x).getroot()
+              t += int(r.get("tests", 0)); f += int(r.get("failures", 0))
+              e += int(r.get("errors", 0)); sk += int(r.get("skipped", 0))
+          print(f"TEST TOTALS: {t} run, {t - f - e - sk} passed, {f} failed, {e} errors, {sk} skipped")
+          PY
       - name: Build the APK
         run: ./gradlew --no-daemon --stacktrace assembleRelease
       - name: Name the APK and its checksum
