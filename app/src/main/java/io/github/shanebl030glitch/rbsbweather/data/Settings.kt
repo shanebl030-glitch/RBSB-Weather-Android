@@ -21,6 +21,7 @@ data class Settings(
     val providerOptions: Map<String, String> = emptyMap(),  // e.g. "wunderground.station" → "IAUCKL123"
     val alerts: AlertSettings = AlertSettings(),
     val quakes: QuakeSettings = QuakeSettings(),
+    val earthClouds: Boolean = true,                      // Live clouds on the Earth map and globe
 ) {
     fun option(provider: String, name: String): String? = providerOptions["$provider.$name"]?.takeIf { it.isNotBlank() }
 
@@ -64,6 +65,7 @@ data class Settings(
         .put("providerOptions", JSONObject(providerOptions as Map<*, *>))
         .put("alerts", alerts.toJson())
         .put("quakes", quakes.toJson())
+        .put("earth_clouds", earthClouds)
 
     companion object {
         fun fromJson(text: String?): Settings {
@@ -94,7 +96,8 @@ data class Settings(
                 po.keys().forEach { k -> po.str(k)?.takeIf { k.length <= 64 && it.isNotBlank() }?.let { opts[k] = it.take(64) } }
             }
             return Settings(places, sel, units, refresh, anim, chain.ifEmpty { DEFAULT_PROVIDERS }, rec, opts,
-                AlertSettings.fromJson(o.optJSONObject("alerts")), QuakeSettings.fromJson(o.optJSONObject("quakes")))
+                AlertSettings.fromJson(o.optJSONObject("alerts")), QuakeSettings.fromJson(o.optJSONObject("quakes")),
+                if (o.opt("earth_clouds") is Boolean) o.getBoolean("earth_clouds") else true)
         }
     }
 }

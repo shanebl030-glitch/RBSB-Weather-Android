@@ -46,6 +46,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         io.github.shanebl030glitch.rbsbweather.ui.scene.MoonRender.init(applicationContext.assets)
+        io.github.shanebl030glitch.rbsbweather.ui.earth.EarthRender.init(applicationContext.assets)
         Notifier.channels(this)
         ChecksWorker.schedule(this)
         askForNotifications()
@@ -62,7 +63,7 @@ class MainActivity : ComponentActivity() {
     private fun handle(intent: Intent?) {
         when (intent?.getStringExtra(Notifier.EXTRA_OPEN)) {
             "warnings" -> vm.model.openWarnings(intent.getStringExtra(Notifier.EXTRA_PLACE))
-            "quakes" -> vm.model.go(Screen.QUAKES)
+            "quakes" -> vm.model.openEarth(globe = true, focusQuake = intent.getStringExtra(Notifier.EXTRA_PLACE))   // turn the globe to the quake
         }
         intent?.removeExtra(Notifier.EXTRA_OPEN)
     }

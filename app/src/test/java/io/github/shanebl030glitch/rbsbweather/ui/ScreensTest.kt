@@ -158,7 +158,7 @@ class ScreensTest {
         compose.onAllNodesWithTag("mute")[0].performScrollTo().performClick()
         assertTrue(m.state.value.alerts[AUCKLAND.key]!!.none { it.official })        // off the banner
         assertTrue(m.state.value.allAlerts[AUCKLAND.key]!!.any { it.official })      // still listed
-        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("tab-Forecast").performClick()
         compose.onNodeWithTag("menu").performClick()
         compose.onNodeWithTag("menu-Earthquakes").performClick()
         compose.onNodeWithTag("quakes").assertIsDisplayed()
@@ -169,5 +169,20 @@ class ScreensTest {
         compose.onNodeWithTag("alertSettings").assertIsDisplayed()
         compose.onNodeWithTag("alertsRedAlarm").performScrollTo().performClick()
         assertTrue(m.state.value.settings.alerts.redAlarm)
+    }
+
+    @Test fun moonAndEarthTabs() {
+        val m = model()
+        m.add(AUCKLAND)
+        compose.setContent { RbsbApp(m) }
+        compose.onNodeWithTag("tab-Moon").performClick()
+        compose.waitUntil(20_000) { compose.onAllNodesWithTag("moonPhase").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("moonPhase").assertIsDisplayed()
+        compose.onNodeWithTag("tab-Earth").performClick()
+        compose.onNodeWithTag("flatMap").assertIsDisplayed()
+        compose.onNodeWithTag("earthGlobe").performClick()
+        compose.onNodeWithTag("globe").assertIsDisplayed()
+        compose.onNodeWithTag("tab-Forecast").performClick()
+        compose.onNodeWithTag("temp").assertIsDisplayed()
     }
 }

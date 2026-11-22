@@ -18,7 +18,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 object MoonRender {
-    const val MAX_SIZE = 1024
+    const val MAX_SIZE = 2048
     const val CREDIT_DEFAULT = "Moon imagery: NASA's Scientific Visualization Studio, CGI Moon Kit (LRO LROC WAC and LOLA data)"
     @Volatile private var assets: AssetManager? = null
     private val texCache = LinkedHashMap<Int, Pair<IntArray, IntArray>>()

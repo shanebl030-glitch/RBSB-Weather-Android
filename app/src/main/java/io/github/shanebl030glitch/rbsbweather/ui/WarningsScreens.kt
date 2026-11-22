@@ -156,6 +156,7 @@ fun WarningsScreen(state: UiState, model: AppModel, modifier: Modifier = Modifie
                         val link = a.url.ifEmpty { sid?.let { SOURCE_SITES[it] } ?: "" }
                         if (a.official && link.isNotEmpty()) OutlinedButton(onClick = { try { uri.openUri(link) } catch (e: Exception) { } }) { Text("Open on ${a.source}") }
                         TextButton(onClick = { model.mute(a.id, !muted) }, modifier = Modifier.testTag("mute")) { Text(if (muted) "Unmute" else "Mute this warning") }
+                        TextButton(onClick = { model.openEarth(globe = false) }) { Text("Show on Earth map") }
                     }
                 }
             }
@@ -262,7 +263,7 @@ fun QuakesScreen(state: UiState, model: AppModel, modifier: Modifier = Modifier)
         item {
             Text("${state.quakes.size} earthquake${if (state.quakes.size == 1) "" else "s"} of magnitude ${s.quakes.minMag} and up in the past ${s.quakes.period}.",
                 fontWeight = FontWeight.Bold)
-            Text("Red: in the last hour · orange: 6 hours · yellow: a day · grey: older. The world map and globe arrive with the Earth tabs.",
+            Text("Red: in the last hour · orange: 6 hours · yellow: a day · grey: older. They're also on the Earth map and globe.",
                 fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f))
             state.quakeErrors.forEach { (src, e) -> Text("$src couldn't be reached ($e); its last quakes are kept.", fontSize = 12.sp, color = MaterialTheme.colorScheme.error) }
             if (state.quakeChecked > 0) Text("Checked ${ageText((now - state.quakeChecked).toLong())}.", fontSize = 12.sp)
@@ -286,6 +287,7 @@ fun QuakesScreen(state: UiState, model: AppModel, modifier: Modifier = Modifier)
                 fontSize = 12.sp)
             Row { TextButton(onClick = { model.checkWatch(force = true) }, enabled = !state.checking) { Text(if (state.checking) "Checking…" else "Check now") }
                 TextButton(onClick = { model.go(Screen.QUAKE_SETTINGS) }) { Text("Settings → Earthquakes") } }
+            TextButton(onClick = { model.openEarth(globe = true) }) { Text("Show on the globe") }
             Text(Quakes.CREDIT, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
         }
     }

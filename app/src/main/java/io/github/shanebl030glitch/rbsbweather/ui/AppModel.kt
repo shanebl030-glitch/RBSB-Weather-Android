@@ -51,7 +51,7 @@ class MemoryStore(var text: String? = null) : SettingsStore {
     override fun save(json: String) { text = json }
 }
 
-enum class Screen { HOME, SEARCH, PLACES, SETTINGS, PROVIDERS, ALERT_SETTINGS, QUAKE_SETTINGS, WARNINGS, QUAKES, HELP, ABOUT }
+enum class Screen { HOME, MOON, EARTH, SEARCH, PLACES, SETTINGS, PROVIDERS, ALERT_SETTINGS, QUAKE_SETTINGS, WARNINGS, QUAKES, HELP, ABOUT }
 
 sealed interface SearchState {
     data object Idle : SearchState
@@ -79,6 +79,8 @@ data class UiState(
     val quakeErrors: Map<String, String> = emptyMap(),
     val quakeChecked: Double = 0.0,
     val checking: Boolean = false,
+    val earthGlobe: Boolean = false,                          // Earth screen: globe (true) or flat map
+    val focusQuake: String? = null,
 )
 
 class AppModel(
@@ -261,6 +263,15 @@ class AppModel(
         if (a.official && !old.official) checkWatch(force = true)
     }
 
+    fun setEarthClouds(on: Boolean) = saveSettings(_state.value.settings.copy(earthClouds = on))
+    fun setEarthQuakes(on: Boolean) = setQuakeSettings(_state.value.settings.quakes.copy(show = on))
+
+    /** Earth screens: show the flat map or the globe; a quake to focus (from a notification). */
+    fun openEarth(globe: Boolean? = null, focusQuake: String? = null) {
+        _state.update { it.copy(screen = Screen.EARTH, earthGlobe = globe ?: it.earthGlobe, focusQuake = focusQuake) }
+    }
+    fun setEarthGlobe(on: Boolean) = _state.update { it.copy(earthGlobe = on) }
+
     fun setQuakeSettings(q: QuakeSettings) {
         val old = _state.value.settings.quakes
         saveSettings(_state.value.settings.copy(quakes = q))
@@ -390,9 +401,10 @@ class AppModel(
     fun back(): Boolean {
         val sc = _state.value.screen
         if (sc == Screen.HOME) return false
-        _state.update { it.copy(screen = if (sc in setOf(Screen.PROVIDERS, Screen.ALERT_SETTINGS, Screen.QUAKE_SETTINGS)) Screen.SETTINGS else Screen.HOME) }
+        _state.update { it.copy(screen = if (sc in setOf(Screen.PROVIDERS, Screen.ALERT_SETTINGS, Screen.QUAKE_SETTINGS)) Screen.SETTINGS else Screen.HOME, focusQuake = null) }
         return true
     }
+    fun say(msg: String) = _state.update { it.copy(message = msg) }
     fun messageShown() = _state.update { it.copy(message = null) }
 
     // ---------------------------------------------------------------- search

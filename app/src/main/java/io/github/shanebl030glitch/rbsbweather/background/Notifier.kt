@@ -78,7 +78,7 @@ object Notifier {
                     val (title, text) = quakeNotice(x.quake, x.near)
                     x.quake.id.hashCode() to NotificationCompat.Builder(ctx, CH_QUAKES).setContentTitle(title).setContentText(text)
                         .setStyle(NotificationCompat.BigTextStyle().bigText(text))
-                        .setContentIntent(open(ctx, "quakes", null, x.quake.id.hashCode()))
+                        .setContentIntent(open(ctx, "quakes", x.quake.id, x.quake.id.hashCode()))
                         .setCategory(NotificationCompat.CATEGORY_EVENT)
                         .setPriority(NotificationCompat.PRIORITY_HIGH)
                 }

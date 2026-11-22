@@ -7,6 +7,8 @@ import android.graphics.Bitmap
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import io.github.shanebl030glitch.rbsbweather.data.AUCKLAND
 import io.github.shanebl030glitch.rbsbweather.data.FakeAlertServer
 import io.github.shanebl030glitch.rbsbweather.data.FakeQuakeServer
@@ -59,5 +61,24 @@ class ScreenPicturesTest {
         m.go(Screen.ALERT_SETTINGS)
         compose.waitForIdle()
         save("screen_alert_settings")
+    }
+
+    @Test fun moonAndEarthScreens() {
+        val m = AppModel(MemoryStore(Settings(animations = false, earthClouds = false).toJson().toString()), WeatherRepository(listOf(FakeProvider()), ForecastCache(tmp.root)),
+            SEARCH, CoroutineScope(Dispatchers.Unconfined), Dispatchers.Unconfined)
+        m.add(AUCKLAND)
+        compose.setContent { RbsbApp(m) }
+        m.go(Screen.MOON)
+        compose.waitUntil(30_000) { compose.onAllNodesWithTag("bigMoon").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitForIdle()
+        save("screen_moon")
+        m.go(Screen.EARTH)
+        compose.waitUntil(60_000) { compose.onAllNodesWithText("Drawing the Earth…").fetchSemanticsNodes().isEmpty() }
+        compose.waitForIdle()
+        save("screen_earth_flat")
+        m.setEarthGlobe(true)
+        Thread.sleep(3000)
+        compose.waitForIdle()
+        save("screen_earth_globe")
     }
 }

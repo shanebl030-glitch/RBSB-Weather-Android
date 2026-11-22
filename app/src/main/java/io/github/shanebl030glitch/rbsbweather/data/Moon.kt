@@ -170,6 +170,17 @@ object Moon {
         return fromJd(jd)
     }
 
+    /** Days since the most recent new moon (moon.age_days). */
+    fun ageDays(t: Instant): Double {
+        var prev = nextPhaseTime(t.minusSeconds(((SYNODIC_MONTH + 1) * 86400).toLong()), 0.0)
+        while (true) {
+            val nxt = nextPhaseTime(prev.plusSeconds(86400), 0.0)
+            if (nxt.isAfter(t)) break
+            prev = nxt
+        }
+        return (t.toEpochMilli() - prev.toEpochMilli()) / 86_400_000.0
+    }
+
     // ------------------------------------------------------------ rise / set
     private fun g(jd: Double, lat: Double, lon: Double): Double { val (a, h0) = moonAltitude(jd, lat, lon); return a - h0 }
 
