@@ -77,7 +77,8 @@ class ScreenPicturesTest {
         compose.waitForIdle()
         save("screen_earth_flat")
         m.setEarthGlobe(true)
-        Thread.sleep(3000)
+        val drawn = androidx.compose.ui.test.SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.StateDescription, "drawn")
+        compose.waitUntil(90_000) { compose.onAllNodes(drawn and androidx.compose.ui.test.hasTestTag("globe")).fetchSemanticsNodes().isNotEmpty() }
         compose.waitForIdle()
         save("screen_earth_globe")
     }

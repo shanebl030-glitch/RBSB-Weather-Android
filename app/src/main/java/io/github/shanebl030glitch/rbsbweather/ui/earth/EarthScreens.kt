@@ -64,6 +64,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
@@ -403,7 +405,7 @@ private fun GlobeView(img: EarthImage?, ms: List<Marker>, selected: String?, qua
         }
     }
     Box(Modifier.fillMaxWidth().height(420.dp).padding(horizontal = 8.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF02030A))
-        .onSizeChanged { box = it }.testTag("globe")) {
+        .onSizeChanged { box = it }.testTag("globe").semantics { stateDescription = if (globe != null) "drawn" else "drawing" }) {
         val rad = min(box.width, box.height) * 0.43f * zoom
         val c = Offset(box.width / 2f, box.height / 2f)
         fun point(lat: Double, lon: Double): Offset? {
@@ -442,7 +444,7 @@ private fun GlobeView(img: EarthImage?, ms: List<Marker>, selected: String?, qua
                 drawLine(Color.White.copy(alpha = 0.6f), p, Offset(p.x.coerceIn(cc.x, cc.x + cardSize.width), p.y.coerceIn(cc.y, cc.y + cardSize.height)), 1f)
             }
         }
-        if (img == null) Text("Drawing the Earth…", color = Color(200, 205, 215), modifier = Modifier.align(Alignment.Center))
+        if (img == null || globe == null) Text("Drawing the Earth…", color = Color(200, 205, 215), modifier = Modifier.align(Alignment.Center))
         if (sel != null && box != IntSize.Zero) point(sel.lat, sel.lon)?.let { p ->
             val cc = placeCard(cardSize.width.toFloat(), cardSize.height.toFloat(), p.x, p.y, ms.filter { it.key != sel.key }.mapNotNull { point(it.lat, it.lon) }, box.width.toFloat(), box.height.toFloat())
             PlaceCard(sel, state, Modifier.offset { IntOffset(cc.x.roundToInt(), cc.y.roundToInt()) }.onSizeChanged { cardSize = it })
