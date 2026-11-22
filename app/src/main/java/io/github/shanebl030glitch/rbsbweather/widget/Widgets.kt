@@ -85,6 +85,32 @@ object Widgets {
         return (if (w > 40) w else 250) to (if (h > 40) h else 120)
     }
 
+    /** The widget's views: the frames in the flipper and the desktop widget's text over them. */
+    fun buildViews(context: Context, data: WidgetData, frames: List<android.graphics.Bitmap>): RemoteViews {
+        val views = RemoteViews(context.packageName, R.layout.widget_scene)
+        views.removeAllViews(R.id.w_frames)
+        for (bmp in frames) {
+            val f = RemoteViews(context.packageName, R.layout.widget_frame)
+            f.setImageViewBitmap(R.id.frame_img, bmp)
+            views.addView(R.id.w_frames, f)
+        }
+        // the flip interval and auto start are set in widget_scene.xml (not every launcher allows changing them)
+        views.setTextViewText(R.id.w_place, data.place)
+        views.setTextViewText(R.id.w_source, data.source)
+        views.setViewVisibility(R.id.w_source, if (data.source.isBlank()) View.GONE else View.VISIBLE)
+        views.setTextViewText(R.id.w_updated, data.updated)
+        views.setViewVisibility(R.id.w_updated, if (data.updated.isBlank()) View.GONE else View.VISIBLE)
+        views.setTextColor(R.id.w_updated, if (data.updatedWarn) 0xFFFFD27A.toInt() else 0xEBFFFFFF.toInt())
+        views.setTextViewText(R.id.w_temp, data.temp)
+        views.setTextViewText(R.id.w_condition, data.condition)
+        views.setTextViewText(R.id.w_hilo, data.hiLo)
+        val open = PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        views.setOnClickPendingIntent(R.id.widget_root, open)
+        return views
+    }
+
     fun renderIds(context: Context, manager: AppWidgetManager, ids: IntArray) {
         if (ids.isEmpty()) return
         val g = AppGraph.get(context)
@@ -97,27 +123,7 @@ object Widgets {
             val frames = try { WidgetFrames.render(context, s, fc, wDp, hDp, density) } catch (e: Throwable) {
                 Log.w("RBSB-Weather", "Widget sky couldn't be drawn: ${e.javaClass.simpleName}"); emptyList()
             }
-            val views = RemoteViews(context.packageName, R.layout.widget_scene)
-            views.removeAllViews(R.id.w_frames)
-            for (bmp in frames) {
-                val f = RemoteViews(context.packageName, R.layout.widget_frame)
-                f.setImageViewBitmap(R.id.frame_img, bmp)
-                views.addView(R.id.w_frames, f)
-            }
-            // the flip interval and auto start are set in widget_scene.xml (not every launcher allows changing them)
-            views.setTextViewText(R.id.w_place, data.place)
-            views.setTextViewText(R.id.w_source, data.source)
-            views.setViewVisibility(R.id.w_source, if (data.source.isBlank()) View.GONE else View.VISIBLE)
-            views.setTextViewText(R.id.w_updated, data.updated)
-            views.setViewVisibility(R.id.w_updated, if (data.updated.isBlank()) View.GONE else View.VISIBLE)
-            views.setTextColor(R.id.w_updated, if (data.updatedWarn) 0xFFFFD27A.toInt() else 0xEBFFFFFF.toInt())
-            views.setTextViewText(R.id.w_temp, data.temp)
-            views.setTextViewText(R.id.w_condition, data.condition)
-            views.setTextViewText(R.id.w_hilo, data.hiLo)
-            val open = PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-            views.setOnClickPendingIntent(R.id.widget_root, open)
+            val views = buildViews(context, data, frames)
             try {
                 manager.updateAppWidget(id, views)
             } catch (e: Exception) {
