@@ -136,9 +136,11 @@ Menu (⋮) → **Settings**: temperature (°C or °F), wind speed (km/h, m/s, mp
 
 Menu (⋮) → **Check for updates** shows your version and asks GitHub for the newest release. If there's a newer one, you see what's new, and:
 
-* **Download and install** downloads it and checks it against the release's published checksums (`SHA256SUMS`), and that it really is RBSB-Weather for Android and newer. Then Android asks you to install it. The first time, Android asks you to allow installs from RBSB-Weather ("Install unknown apps"). Your places and settings are kept.
+* **Download from GitHub** opens the download in your browser. When it's finished, open it (from the download notification, or Files → Downloads) and tap **Install**, as when you first installed the app. Your places and settings are kept.
+* The screen also shows the release's published **SHA-256**, so you can check the download if you like.
 * **Skip this version** stops the reminder for that version.
-* Nothing is ever installed without you, and Android refuses an update that isn't signed like the app you have.
+* With **Check automatically** on (also in Settings), the app checks once a day and notifies you once about each new version.
+* RBSB-Weather never downloads or installs apps itself, so it doesn't need Android's "install other apps" permission. (0.6.0 did, and Google Play Protect warned about it.)
 
 ## Test connection
 

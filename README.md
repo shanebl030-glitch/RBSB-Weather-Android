@@ -38,7 +38,7 @@ with its own versions, releases and tests.
   places and earthquakes.
 - A Wind tab: the world's wind, temperature, and rain and snow from NOAA on a globe,
   with moving wind streaks.
-- Check for updates (from GitHub, checked against SHA256SUMS), Test connection, and an
+- Check for updates (from GitHub, with the published SHA-256; your browser downloads it), Test connection, and an
   optional temperature in the status bar.
 - See [PARITY.md](PARITY.md) for every desktop feature and its Android status.
 - °C/°F, km/h · m/s · mph · knots, mm/inches, 12/24-hour time.
@@ -47,7 +47,7 @@ Needs **Android 10 or newer**.
 
 ## Install a test build
 
-1. On your phone, download `rbsb-weather-android_0.6.0.apk` from the
+1. On your phone, download `rbsb-weather-android_0.6.1.apk` from the
    [test-builds branch](https://github.com/shanebl030-glitch/RBSB-Weather-Android/tree/test-builds)
    (or use the file sent to you).
 2. Open it. Android asks to allow installing apps from this source (for example

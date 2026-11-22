@@ -66,7 +66,7 @@ object Notifier {
             NotificationManagerCompat.from(ctx).notify(4343, NotificationCompat.Builder(ctx, CH_UPDATES)
                 .setSmallIcon(R.drawable.ic_stat_weather)
                 .setContentTitle("RBSB-Weather for Android $version is available")
-                .setContentText("Tap to see what's new and install it.")
+                .setContentText("Tap to see what's new and get it.")
                 .setContentIntent(open(ctx, "updates", null, 4343)).setAutoCancel(true).build())
             true
         } catch (e: SecurityException) { false }

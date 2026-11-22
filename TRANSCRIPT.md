@@ -2,6 +2,21 @@
 
 Created By Shane BlackbuRn
 
+## 0.6.1 (2026-11-23)
+
+**Shane:** "First time I have had this when installing on the phone. 'Google Play Protect. Harmful app blocked. RBSB-Weather. This app may be harmful. Installing this app may put your device at risk. Learn more about Play Protect. Install anyway'"
+
+**Cause:**
+- The one big change from 0.5.2, which installed without a warning, was in-app updating. That meant the `REQUEST_INSTALL_PACKAGES` permission ("install other apps"), downloading APK files, and handing them to Android's installer through a file provider.
+- Play Protect treats a sideloaded app that can install other apps as a possible "dropper", even when the only app it installs is itself.
+
+**Decision:** rather than ask Shane to tap "Install anyway", take the capability out.
+- The update check and notifications stay.
+- The download goes through the phone's browser, the normal way to sideload. The app shows the published SHA-256 so the file can still be checked.
+- 0.6.1 has no install permission and never downloads or installs an APK. A test checks the manifest and the code so it can't come back by accident.
+
+**Not provable here:** whether Play Protect will accept 0.6.1. Its rules aren't published, and there's no Play Protect on the test emulator. Only installing on the phone shows it.
+
 ## 0.6.0 (2026-11-23)
 
 **Shane:** "perfect." (He released 0.5.2 as v0.5.2.)

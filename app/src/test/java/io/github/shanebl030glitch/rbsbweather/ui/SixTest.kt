@@ -44,43 +44,39 @@ class SixTest {
 
     private fun waitFor(tag: String) = compose.waitUntil(20_000) { compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty() }
 
-    @Test fun updateFoundDownloadedCheckedAndInstalled() {
+    @Test fun updateFoundAndOpenedInTheBrowser() {
         val gh = FakeGitHub("9.9.0")
         val store = UpdateStore(tmp.newFolder("st"))
-        val installed = mutableListOf<File>()
+        val opened = mutableListOf<String>()
         val m = model()
-        compose.setContent { UpdatesScreen(m.state.value, m, client = gh.client(), store = store, dir = tmp.newFolder("dl"),
-            checkApk = { null }, install = { installed += it; true }, canInstall = { true }) }
+        compose.setContent { UpdatesScreen(m.state.value, m, client = gh.client(), store = store, openUrl = { opened += it }) }
         compose.onNodeWithTag("checkNow").performClick()
         waitFor("updateAvailable")
         compose.onNodeWithText("RBSB-Weather for Android 9.9.0 is available").assertExists()
+        compose.onNodeWithTag("updateSha").assertExists()
+        compose.onNodeWithText(gh.sha(gh.apk), substring = true).assertExists()        // the published checksum to compare
         compose.onNodeWithTag("download").performScrollTo().performClick()
-        waitFor("updateReady")
-        assertEquals(1, installed.size)                                     // handed to Android's installer straight away
-        assertTrue(gh.apk.contentEquals(installed[0].readBytes()))
+        assertEquals(listOf("https://github.com/${io.github.shanebl030glitch.rbsbweather.data.Updates.REPO}/releases/download/v9.9.0/rbsb-weather-android_9.9.0.apk"), opened)
         assertTrue(store.lastOk > 0)
     }
 
-    @Test fun upToDateBadChecksumAndSkip() {
+    @Test fun upToDateAndFailure() {
         val gh = FakeGitHub(io.github.shanebl030glitch.rbsbweather.data.Version.NAME)
         val store = UpdateStore(tmp.newFolder("st"))
         val m = model()
-        compose.setContent { UpdatesScreen(m.state.value, m, client = gh.client(), store = store, dir = tmp.newFolder("dl"), checkApk = { null }, install = { true }, canInstall = { true }) }
+        compose.setContent { UpdatesScreen(m.state.value, m, client = gh.client(), store = store, openUrl = { }) }
         compose.onNodeWithTag("checkNow").performClick()
         waitFor("upToDate")
-        gh.version = "9.9.1"; gh.sumsOverride = "${"0".repeat(64)}  rbsb-weather-android_9.9.1.apk\n"
+        gh.latestStatus = 503
         compose.onNodeWithText("Check again").performClick()
-        waitFor("updateAvailable")
-        compose.onNodeWithTag("download").performScrollTo().performClick()
         waitFor("updateError")
-        compose.onNodeWithText("The download doesn't match its published checksum, so it wasn't installed. Please try again.").assertExists()
     }
 
     @Test fun skipVersionIsRemembered() {
         val gh = FakeGitHub("9.9.2")
         val store = UpdateStore(tmp.newFolder("st"))
         val m = model()
-        compose.setContent { UpdatesScreen(m.state.value, m, client = gh.client(), store = store, dir = tmp.newFolder("dl"), checkApk = { null }, install = { true }, canInstall = { true }) }
+        compose.setContent { UpdatesScreen(m.state.value, m, client = gh.client(), store = store, openUrl = { }) }
         compose.onNodeWithTag("checkNow").performClick()
         waitFor("updateAvailable")
         compose.onNodeWithTag("skipVersion").performScrollTo().performClick()
