@@ -57,7 +57,7 @@ and where it stands on Android. It's updated with every version.
 | Mini forecast in the widget | ✅ 0.3 | Drawn into the frames. |
 | "↻ 19:30" last update, amber with "(2 h ago)" when old | ✅ 0.3 | |
 | Provider line under the place, "(backup)" | ✅ 0.3 | |
-| Warning line under the place | ⏳ 0.4 | Comes with weather warnings. |
+| Warning line under the place | ✅ 0.4 | Coloured by level. Tap opens the app. |
 | Drag, lock position, keep on top | 📱 | The launcher places widgets. |
 | Size small/medium/large | 📱 | Resize the widget on the home screen. The mini forecast adapts in the same way. |
 | Double-click opens the app; right-click Refresh | 📱 | Tap opens the app; pull down in the app to refresh. |
@@ -80,19 +80,27 @@ and where it stands on Android. It's updated with every version.
 |---|---|---|
 | Open-Meteo, MET Norway, OpenWeather, WeatherAPI.com, Visual Crossing, Tomorrow.io, Weather Underground (station ID) | ✅ 0.2 | |
 | Status for each (working, not working, needs key, not used yet) and details | ✅ 0.2 | |
-| Usage reported by the service (e.g. Tomorrow.io's requests left today) | ⏳ 0.4 | |
-| Primary, ordered backups, recovery choices, "Use the primary now" | 🟡 0.2 | "Use the primary now" is still to add (0.4). |
-| Ask small allowances less often (Tomorrow.io 10 min; OpenWeather and Visual Crossing 5 min) | ⏳ 0.4 | |
+| Usage reported by the service (e.g. Tomorrow.io's requests left today) | ⏳ 0.6 | Needs the services' reply headers. |
+| Primary, ordered backups, recovery choices, "Use the primary now" | ✅ 0.4 | |
+| Ask small allowances less often (Tomorrow.io 10 min; OpenWeather and Visual Crossing 5 min) | ✅ 0.4 | |
 | Keys kept private and never shown | ✅ 0.2 | App-private storage, excluded from backups. |
 | Same display whatever the source; bad data caught | ✅ 0.2 | |
-| AccuWeather and Weatherbit listed as planned | ⏳ 0.4 | |
+| AccuWeather and Weatherbit listed as planned | ✅ 0.4 | With the desktop's reasons. |
 
 ## Moon, Earth, earthquakes, wind, warnings
 
 | Desktop feature | Android | Planned |
 |---|---|---|
-| Weather warnings (MetService, NWS, MET Norway, MeteoAlarm), banner, badges, Warnings screen, chart shading, 7-day tags, notifications, mute, own limits | ⏳ | 0.4 |
-| Earthquakes (USGS, GeoNet) on the maps, cards, notifications, settings | ⏳ | 0.4 |
+| Weather warnings: MetService, US National Weather Service, MET Norway, MeteoAlarm, matched by each warning's own area | ✅ | 0.4: the desktop's alerts.py, ported and tested with the same fixtures. |
+| Banner across the sky (coloured, until when, who issued it; tap for the full warning) | ✅ | 0.4 |
+| Badges in My places, tags on the 7-day forecast, shading on the 24-hour chart | ✅ | 0.4 |
+| Warnings screen: area, valid times, what's expected, what to do, issuer, forecast rain for the same hours, Open on…, Mute | ✅ | 0.4. "Show on Earth map" comes with the Earth tabs (0.5). |
+| Notifications when a warning is issued, upgraded or reissued (once each, across restarts), Red alarm sound, selected place only | ✅ | 0.4: phone notifications, also while the app is closed (Android checks about every 15 minutes at most). |
+| Tray dot | 📱 | The widget's warning line instead. |
+| My own limits (gusts, rain, heat, frost, snow, thunder), in your units, marked MY LIMIT | ✅ | 0.4 |
+| Settings → Weather Alerts, with each place's coverage and last check | ✅ | 0.4 |
+| Earthquakes: USGS worldwide, GeoNet for New Zealand (GeoNet preferred), colour by age, size by magnitude, details, distance to your nearest place, link to GeoNet/USGS, tsunami reminder | ✅ | 0.4: an Earthquakes list for now; on the maps when the Earth tabs arrive (0.5). |
+| Earthquake notifications (M4.5+ within 300 km, M7+ anywhere, once each, only the last 2 hours), Settings → Earthquakes | ✅ | 0.4. Checks every 5, 10 or 30 minutes while the app is open; about every 15 minutes at most while it's closed (an Android limit). |
 | Moon tab: picture turned as in that sky, phase, illumination, age, rise/set, next phases, next 7 days, save image | 🟡 | The astronomy and picture are in (0.3); the screen comes in 0.5. |
 | Earth Flat: day/night map, city lights, Sun and Moon points, places with cards | ⏳ | 0.5 |
 | Earth Globe: drag, zoom, rotate slowly, real Sun, Moon and stars behind | ⏳ | 0.5 |

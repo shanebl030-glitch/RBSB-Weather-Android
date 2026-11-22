@@ -4,13 +4,57 @@ Created By Shane BlackbuRn
 
 | Item | Result |
 |---|---|
-| Version | 0.3.1 (test build) |
+| Version | 0.4.0 (test build) |
 | Date | 2026-11-22 |
 | Where | GitHub Actions: Ubuntu 26.04 runner, JDK 17 (Temurin), Gradle 8.14.3, Android Gradle Plugin 8.10.1, Kotlin 2.1.21, Compose BOM 2025.05.01, compile/target SDK 35, min SDK 29 |
 | Command | `./gradlew testDebugUnitTest`, then `./gradlew assembleRelease` |
-| Tests | 101 run, 101 passed, 0 failed, 0 skipped (GitHub Actions run 44976754434) |
+| Tests | 136 run, 136 passed, 0 failed, 0 skipped (GitHub Actions run 44985012092) |
 
 ## What's tested
+
+**New in 0.4 (35 tests), mirroring the desktop's test_alerts.py and test_quakes.py with the same fixture files:**
+- **Warning geometry:**
+  - point in polygon, including across the date line (Chatham Islands);
+  - bad polygons are ignored;
+  - circles, and GeoJSON with a hole.
+- **Warning levels:**
+  - MetService's colour beats its lower CAP severity;
+  - CAP severity, MeteoAlarm awareness levels and titles.
+- **Parsing:**
+  - the MetService CAP document (level, title, hazard, area, in force);
+  - tests and cancellations are dropped;
+  - NWS and MET Norway;
+  - DOCTYPE and entities are refused;
+  - garbage never crashes;
+  - only web links survive.
+- **Sources:**
+  - every country goes to the right service, including a place saved without a country;
+  - every source matches the right places;
+  - CAP documents are fetched once;
+  - one failing source keeps the others;
+  - a country without a feed, and no warnings at all.
+- **Own limits:** the defaults, your units, later days, validation, today's gust when there's no daily gust, and rain between times.
+- **Showing and notifying:**
+  - each level, and muting;
+  - notified once, then again when upgraded or reissued, but not for an extension of the same issue.
+- **The warnings store:** round trip, clean-up, a damaged file. Alert and quake settings round trip, and bad values fall back.
+- **Earthquakes:**
+  - USGS and GeoNet parsing, and the merge preferring GeoNet;
+  - garbage and round trip;
+  - colours, sizes and text;
+  - the period and magnitude filters;
+  - near-a-place and major-anywhere notification rules, once only and only for recent quakes;
+  - the feeds and GeoNet's Accept header;
+  - a failed source keeping its quakes.
+- **The shared check:**
+  - notified once across a restart;
+  - "notify" and "only for the place on screen";
+  - checks spaced out, and a failed check keeping the old warnings;
+  - quakes notified once;
+  - the period setting.
+- **Screens:** banner → Warnings → Mute (off the banner, still listed) → Earthquakes → Weather Alerts → Red alarm switch.
+- **Quota guard:** Tomorrow.io isn't asked again within 10 minutes; Open-Meteo has no limit.
+
 
 **New in 0.3.1 (3 tests): the widget loads as a launcher loads it.**
 - Only views Android allows in widgets are used.
@@ -146,12 +190,12 @@ These three failed on 0.3.0 with the launcher's error, which is the "Couldn't ad
 
 ## The APK
 
-`rbsb-weather-android_0.3.1.apk` (about 22 MB with the Moon images) was downloaded from the
+`rbsb-weather-android_0.4.0.apk` (about 22 MB with the Moon images) was downloaded from the
 `test-builds` branch and checked here:
 
 - its SHA-256 matches `SHA256SUMS`;
 - the zip is intact;
-- the manifest has the app ID `io.github.shanebl030glitch.rbsbweather`, version 0.3.1 (code 4), min SDK 29, target SDK 35, MainActivity and the INTERNET permission;
+- the manifest has the app ID `io.github.shanebl030glitch.rbsbweather`, version 0.4.0 (code 5), min SDK 29, target SDK 35, MainActivity and the INTERNET permission;
 - both widget receivers are there, and so are the backup rules that keep API keys out of backups;
 - it's signed (APK Signature Scheme v2) with the RBSB-Weather test key.
 
@@ -166,9 +210,10 @@ There's no Android device or emulator here. These need checking on a real phone:
 - rotation, dark mode, and battery use with the sky animated;
 - each keyed provider with your real keys (the tests use saved replies);
 - playback and the slider by touch;
+- the live warning feeds (MetService etc.) and earthquake feeds, notifications with the app closed, the Android 13+ permission request, and the Red alarm sound;
 - the widget's looping animation on your launcher (some launchers may refuse many frames; it then shows a still picture), its battery use, and smoothness of the sky in the app;
 - the widgets on your launcher: adding them, their size and look, the 30-minute self-update (Android decides exactly when), and tapping to open the app.
 
 ## Latest run
 
-GitHub Actions run 44976754434: `TEST TOTALS: 101 run, 101 passed, 0 failed, 0 errors, 0 skipped`. The APK was built and published to `test-builds`. This report was updated afterwards (docs only), so the delivered APK comes from the next run of the same code.
+GitHub Actions run 44985012092: `TEST TOTALS: 136 run, 136 passed, 0 failed, 0 errors, 0 skipped`. The APK was built and published to `test-builds`. This report was updated afterwards (docs only), so the delivered APK comes from the next run of the same code.

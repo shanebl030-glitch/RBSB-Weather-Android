@@ -4,6 +4,52 @@ Created By Shane BlackbuRn
 
 A separate app from RBSB-Weather for the desktop, with its own versions.
 
+## 0.4.0 – 2026-11-22 (test build; on branch claude/android-0.2.0; not released)
+
+Shane: "okay, that looking really godd." Next on his list: warnings and earthquakes.
+
+### Added
+- **Weather warnings**, ported from the desktop's `alerts.py`. Official warnings come straight from the issuer, matched to each place by the warning's own area:
+  - MetService (New Zealand), using its colour;
+  - the US National Weather Service;
+  - MET Norway;
+  - MeteoAlarm (most of Europe).
+- **Where warnings show:**
+  - a coloured **banner across the sky**, with when it ends and who issued it; tap it for the full warning;
+  - **badges** in My places;
+  - **tags** on the 7-day forecast;
+  - **shading** on the 24-hour chart;
+  - a **warning line on the widget**.
+- **The ⚠ Warnings screen** (menu → Warnings) shows each warning in full: area, valid times, what's expected, what to do, who issued it, and the forecast rain for the same hours. **Open on…** opens it on the issuer's website, and **Mute** takes it off the banner, badges and notifications.
+- **My own limits:** gusts, rain in a day, heat, frost, snow and thunderstorms, in your units. They're marked MY LIMIT and "not official". Open-Meteo's daily gust forecast is now downloaded for this.
+- **Earthquakes**, ported from the desktop's `quakes.py`:
+  - USGS worldwide and GeoNet for New Zealand (GeoNet's version is kept when both report a quake);
+  - an Earthquakes list (menu → Earthquakes) with each quake's colour by age, size by magnitude, place, depth, time, distance to your nearest place and a link to GeoNet or USGS;
+  - the tsunami reminder for large quakes under the sea.
+- **Notifications:**
+  - a warning is notified when it's issued, upgraded or reissued;
+  - an earthquake is notified at M4.5+ within 300 km of a place, or M7+ anywhere;
+  - each is notified once, even after a restart;
+  - an optional alarm sound for Red warnings, and an option to notify only for the place on screen.
+  - Android 13 and newer asks for permission once.
+- **Background checks:** while the app is closed, Android checks about every 15 minutes at most, when there's a network, and may delay it to save battery.
+- **Settings → Weather Alerts** and **Settings → Earthquakes**, with the desktop's choices and each place's coverage and last check.
+- **Weather Providers:**
+  - **Use the primary now**;
+  - Tomorrow.io is asked at most every 10 minutes per place, and OpenWeather and Visual Crossing every 5;
+  - AccuWeather and Weatherbit are listed as planned, with the desktop's reasons.
+
+### Build and tests
+- 136 tests (35 new):
+  - the desktop's warning tests, with the same fixture files: geometry, levels, every source, CAP documents fetched once, a failing source, own limits, showing and notifying, the store, settings;
+  - the earthquake tests, with the same fixtures: parsing, merging, colours, notification rules, the store;
+  - the shared check: notified once across a restart, settings, spacing between checks, a failure keeping the old warnings;
+  - the banner, Warnings screen, mute, Earthquakes and Weather Alerts screens;
+  - the quota guard.
+- Every build now also saves pictures of the Home screen with a warning, the Warnings, Earthquakes and Weather Alerts screens. I looked at them.
+- CI keeps Robolectric's Android jars between runs, after one run failed because Maven Central wouldn't send them.
+- GitHub Actions run 44985012092: 136 run, 136 passed.
+
 ## 0.3.1 – 2026-11-22 (test build; on branch claude/android-0.2.0; not released)
 
 Reported by Shane: "The widget doesn't work. Say Couldn't add widget".

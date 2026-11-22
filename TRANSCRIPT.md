@@ -2,6 +2,37 @@
 
 Created By Shane BlackbuRn
 
+## 0.4.0 (2026-11-22)
+
+**Shane:** "okay, that looking really godd." (the widget now works)
+→ Following his roadmap, I went straight on to 0.4: warnings and earthquakes.
+
+**What was done:**
+- I ported `alerts.py` and `quakes.py` to Kotlin.
+- I added one shared checker, so the open app and the background check never
+  notify the same thing twice.
+- I added phone notifications, a background check (Android's WorkManager), the
+  banner, badges, tags, chart shading, the widget's warning line, and the
+  Warnings, Earthquakes and two Settings screens.
+
+**Problems found while testing:**
+1. A compile error: a `continue` inside a lambda isn't allowed in this Kotlin
+   version. Rewritten.
+2. Two screen tests tapped options that are now further down a longer screen.
+   They now scroll to them first.
+3. One build failed because Maven Central wouldn't send Robolectric's Android
+   jars (twice in a row). The next run worked, and CI now caches them.
+4. Taking screen pictures with Compose's built-in capture timed out here. The
+   pictures are now drawn straight from the window.
+
+**Tested:**
+- 136 of 136 pass (run 44985012092).
+- I looked at the screen pictures.
+- Not tested on a phone. Still to check there:
+  - the live warning feeds;
+  - notifications, including with the app closed;
+  - the permission request on Android 13+.
+
 ## 0.3.1 (2026-11-22)
 
 **Shane:** "The widget doesn't work. Say Couldn't add widget".

@@ -8,7 +8,7 @@ with its own versions, releases and tests.
 
 **Designed and Created By Shane BlackbuRn** · **Coded By Claude AI**
 
-## What it does (0.3)
+## What it does (0.4)
 
 - Search for any city or town and save up to 50 places. Swipe between them.
 - The desktop app's animated sky, ported: the Sun and the Moon in its real
@@ -26,6 +26,9 @@ with its own versions, releases and tests.
 - Forecast playback: an hour a second, or drag through the next 24 hours.
 - The mini forecast in the sky, and animated icons in the 7-day list.
 - Animated home-screen widgets (a looping animation; see the user guide).
+- Weather warnings from MetService, the US National Weather Service, MET Norway and
+  MeteoAlarm, plus your own limits: banner, badges, Warnings screen, notifications.
+- Earthquakes from USGS and GeoNet, with notifications for quakes near your places.
 - See [PARITY.md](PARITY.md) for every desktop feature and its Android status.
 - °C/°F, km/h · m/s · mph · knots, mm/inches, 12/24-hour time.
 
@@ -33,7 +36,7 @@ Needs **Android 10 or newer**.
 
 ## Install a test build
 
-1. On your phone, download `rbsb-weather-android_0.3.1.apk` from the
+1. On your phone, download `rbsb-weather-android_0.4.0.apk` from the
    [test-builds branch](https://github.com/shanebl030-glitch/RBSB-Weather-Android/tree/test-builds)
    (or use the file sent to you).
 2. Open it. Android asks to allow installing apps from this source (for example
@@ -88,7 +91,9 @@ from phone backups. There's no tracking and no account.
 
 Weather data by Open-Meteo.com (CC BY 4.0) and MET Norway (CC BY 4.0); with
 your keys, OpenWeather (CC BY-SA 4.0), WeatherAPI.com, Visual Crossing,
-Tomorrow.io and Weather Underground / The Weather Company. Moon imagery: NASA's
+Tomorrow.io and Weather Underground / The Weather Company. Weather warnings from MetService (CC BY 4.0), the US National Weather Service
+(public domain), MET Norway (CC BY 4.0) and MeteoAlarm. Earthquakes: USGS (public
+domain) and GeoNet (CC BY 3.0 NZ). Moon imagery: NASA's
 Scientific Visualization Studio, CGI Moon Kit (LRO LROC WAC and LOLA data).
 
 Created By Shane BlackbuRn

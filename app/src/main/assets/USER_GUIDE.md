@@ -47,9 +47,37 @@ Menu (⋮) → **Settings** → **Weather Providers**.
 * **Test connection** asks that service for the place you're viewing and says whether it worked.
 * **Details** show each service's coverage, forecast length, hourly detail, free-use limits and credit.
 * **Weather Underground** works for people who send data from their own weather station. Enter your station ID to use it; otherwise the nearest reporting station is used. It has no hourly forecast, so the 24-hour chart stays empty.
-* **When the primary fails:** try it again at the next update, after 15, 30 or 60 minutes, or stay on the backup until you change something.
+* **When the primary fails:** try it again at the next update, after 15, 30 or 60 minutes, or stay on the backup until you change something. **Use the primary now** asks the primary first straight away.
+* To protect small free allowances, Tomorrow.io is asked at most every 10 minutes per place, and OpenWeather and Visual Crossing at most every 5 minutes; a refresh in between shows the forecast it already has.
+* **Planned:** AccuWeather and Weatherbit, with the reasons they aren't in yet.
 * **Your keys stay private:** they are kept in their own private storage on your phone, are never shown in messages, and are left out of phone backups.
 * Your phone sends only the coordinates of your saved places (and what you type when searching). Nothing else, and there's no tracking.
+
+## Weather warnings
+
+RBSB-Weather shows official severe weather warnings for your saved places, and can also alert you when the forecast passes limits you choose.
+
+* **Where official warnings come from:** New Zealand: MetService. United States: the US National Weather Service. Norway: MET Norway. Most of Europe (UK, Ireland, France, Germany, Spain, Italy and others): MeteoAlarm. Each warning is matched to your places by its own area. Elsewhere there's no official source yet; your own limits still work.
+* **Where they show:** a banner across the sky, coloured by level, with when it ends and who issued it (tap it for the full warning); a badge next to the place in My places; tags on the 7-day forecast; shading on the 24-hour chart for the hours a warning is in force; and a line on the widget.
+* **The ⚠ Warnings screen** (menu → Warnings) has each warning in full: its area, when it's valid, what's expected, what to do and who issued it. For rain it also shows how much rain RBSB-Weather's forecast has for the same hours. **Open on…** opens it on the issuer's website. **Mute this warning** takes it off the banner, badges and notifications; it stays listed, and comes back if it's upgraded or reissued.
+* **Levels:** Red means take action now; Orange, take action; Yellow, be aware; a Watch means severe weather is possible. Warnings are shown as issued; their wording is never changed.
+* **Notifications** when a warning is issued, upgraded (for example Orange to Red) or reissued. Each change is notified once, even after a restart. On Android 13 and newer the app asks once for permission to notify.
+* **My own limits** (Settings → Weather Alerts): wind gusts, rain in a day, a high or low temperature past your limits, or any snow or thunderstorms. They come from RBSB-Weather's forecast, so they have a grey **MY LIMIT** badge and say "not official". Gust limits need gust forecasts: Open-Meteo gives them for every day, other providers only for today.
+* **Settings → Weather Alerts** also lets you turn official warnings off, choose which levels to show, check every 15, 30 or 60 minutes, turn the banner and badges or notifications off, use an alarm sound for Red warnings, and notify only for the place on screen. The top shows which service covers each of your places and whether the last check worked.
+* **While the app is closed,** Android checks about every 15 minutes at most (when there's a network), and sometimes later to save battery.
+* **Always follow official advice.** RBSB-Weather passes warnings on; it doesn't replace your weather service, Civil Defence or emergency services.
+
+## Earthquakes
+
+Menu (⋮) → **Earthquakes** lists recent quakes:
+
+* **Colour** shows how recent: red in the last hour, orange in the last 6 hours, yellow in the last day, grey if older. **Size** shows the magnitude.
+* Each shows its magnitude, place, depth, when, and how far it was from your nearest saved place. Tap it to open its page on GeoNet or USGS.
+* **Notifications** for a quake of magnitude 4.5 or more within 300 km of one of your places, and for a major quake (7 or more) anywhere. Each is notified once, and only if it happened in the last 2 hours.
+* **Settings → Earthquakes:** the past day or week; magnitude 2.5 and up or 4.5 and up; the notification magnitude and distance; check every 5, 10 or 30 minutes while the app is open.
+* **Where quakes come from:** USGS for the whole world, and GeoNet for New Zealand quakes likely to have been felt (GeoNet's version is shown when both report the same quake). Nothing about you is sent: distances are worked out on your phone.
+* For a large quake under the sea, the list and notification remind you to check your official tsunami advice. **RBSB-Weather is not an earthquake or tsunami warning service.** In New Zealand, follow Civil Defence and emergency mobile alerts. A long or strong quake near the coast is itself the warning: move to high ground straight away.
+* The quakes will also appear on the world map and globe when the Earth screens arrive.
 
 ## Home-screen widgets
 
