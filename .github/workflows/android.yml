@@ -64,6 +64,7 @@ jobs:
         run: |
           VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
           mkdir -p /tmp/tb && cp out/* /tmp/tb/
+          if [ -d app/build/screens ]; then mkdir -p /tmp/tb/screens && cp app/build/screens/*.png /tmp/tb/screens/; fi
           cat > /tmp/tb/BUILD_INFO.txt <<INFO
           RBSB-Weather for Android ${VERSION} (test build)
           Branch: ${GITHUB_REF_NAME}
