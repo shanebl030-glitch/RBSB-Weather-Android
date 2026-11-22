@@ -35,5 +35,20 @@ The `main` branch only has the README. All the work is on
 1. **First CI run:** everything built and 15 of 16 tests passed. The one
    failure was a typo in the test (it set the wrong field name), not in the
    app. Fixed.
+2. **Second CI run:** everything compiled first time and 27 of 28 tests
+   passed. The failing screen test looked for the credit at the bottom of the
+   page without scrolling to it; lists only build what's on screen. The test
+   now scrolls down to it first.
+3. **Getting the APK out:** GitHub's build files ("artifacts") are stored where
+   this workspace can't download them. The workflow now also puts the newest
+   test build on a `test-builds` branch. It's replaced each time with no
+   history, and it isn't a release. I download it from there to check it, and
+   so can you.
+
+**Tested:**
+- 31 tests run, 31 passed (unit, app behaviour, Robolectric screens, the sky).
+- The APK's checksum, zip, manifest (app ID, version, permission) and test-key
+  signature were checked here.
+- Not tested on a phone yet: there's no device or emulator here.
 
 Created By Shane BlackbuRn

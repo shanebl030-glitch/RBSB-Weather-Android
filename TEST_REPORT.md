@@ -8,7 +8,7 @@ Created By Shane BlackbuRn
 | Date | 2026-11-22 |
 | Where | GitHub Actions: Ubuntu 26.04 runner, JDK 17 (Temurin), Gradle 8.14.3, Android Gradle Plugin 8.10.1, Kotlin 2.1.21, Compose BOM 2025.05.01, compile/target SDK 35, min SDK 29 |
 | Command | `./gradlew testDebugUnitTest`, then `./gradlew assembleRelease` |
-| Tests | see the latest run below |
+| Tests | 31 run, 31 passed, 0 failed, 0 skipped (GitHub Actions run 44967664757) |
 
 ## What's tested
 
@@ -67,4 +67,4 @@ There's no Android device or emulator here. These need checking on a real phone:
 
 ## Latest run
 
-Filled in below by each session.
+GitHub Actions run 44967664757 (commit 4119fca): `TEST TOTALS: 31 run, 31 passed, 0 failed, 0 errors, 0 skipped`. The APK was built and published to `test-builds`. This report was updated afterwards (docs only), so the delivered APK comes from the next run of the same code.
