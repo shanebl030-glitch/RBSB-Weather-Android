@@ -4,13 +4,59 @@ Created By Shane BlackbuRn
 
 | Item | Result |
 |---|---|
-| Version | 0.1.0 (test build) |
+| Version | 0.2.0 (test build) |
 | Date | 2026-11-22 |
 | Where | GitHub Actions: Ubuntu 26.04 runner, JDK 17 (Temurin), Gradle 8.14.3, Android Gradle Plugin 8.10.1, Kotlin 2.1.21, Compose BOM 2025.05.01, compile/target SDK 35, min SDK 29 |
 | Command | `./gradlew testDebugUnitTest`, then `./gradlew assembleRelease` |
-| Tests | 31 run, 31 passed, 0 failed, 0 skipped (GitHub Actions run 44967664757) |
+| Tests | 60 run, 60 passed, 0 failed, 0 skipped (GitHub Actions run 44970300356) |
 
 ## What's tested
+
+**New in 0.2 (29 tests):**
+- **Providers.** OpenWeather (One Call; and the free-key fallback, which isn't asked again), WeatherAPI.com, Visual Crossing, Tomorrow.io and Weather Underground (nearest station; your own station offline; a 5-hour-old report). These use the saved replies from the desktop app's provider fixtures, with the same expected values as the desktop tests.
+- **Every provider passes the desktop app's common checks:**
+  - the current time and today's date;
+  - lows no higher than highs;
+  - sunrise and sunset on each day;
+  - percentages from 0 to 100;
+  - hours in order;
+  - the UTC offset.
+- **Keys:**
+  - a missing key, a rejected key (the key isn't in the message) and running out of quota each give a clear message;
+  - a key is never in the forecast or the settings;
+  - pasted keys are checked.
+- **Weather codes:** every code each service can send maps to one the app knows.
+- **The normaliser:**
+  - impossible values are dropped;
+  - a swapped high and low is put right;
+  - missing sunrise and weather symbols are worked out.
+- **The chain:**
+  - the backup takes over;
+  - the primary rests for 30 minutes, "stay on the backup" works, and so does "next update";
+  - every error is reported;
+  - backups without keys are skipped;
+  - settings round-trip and bad values are rejected.
+- **App behaviour:**
+  - make primary, backups on and off, order, and the primary can't be removed or passed;
+  - recovery;
+  - keys saved apart from the settings and then used;
+  - Test connection;
+  - the station-ID check;
+  - Back from Weather Providers goes to Settings.
+- **Playback:**
+  - labels;
+  - temperature eased between hours;
+  - times outside the forecast;
+  - the sky changes for a clear night and a rainy afternoon.
+- **The mini forecast** fits the width (3 to 7 days).
+- **Widgets:**
+  - no place, and no weather yet;
+  - the chosen units and five days;
+  - an old forecast is marked "Saved copy".
+- **Screens (Robolectric):**
+  - Settings → Weather Providers → Make primary → Details shows the key box → Back;
+  - the mini forecast and playback controls show.
+
 
 **Data (plain JVM):**
 - Open-Meteo and MET Norway parsing, using the same sample responses as the desktop app's test server.
@@ -47,12 +93,13 @@ Created By Shane BlackbuRn
 
 ## The APK
 
-`rbsb-weather-android_0.1.0.apk` (about 19.8 MB) was downloaded from the
+`rbsb-weather-android_0.2.0.apk` (about 20 MB) was downloaded from the
 `test-builds` branch and checked here:
 
 - its SHA-256 matches `SHA256SUMS`;
 - the zip is intact;
-- the manifest has the app ID `io.github.shanebl030glitch.rbsbweather`, version 0.1.0, MainActivity and the INTERNET permission;
+- the manifest has the app ID `io.github.shanebl030glitch.rbsbweather`, version 0.2.0 (code 2), min SDK 29, target SDK 35, MainActivity and the INTERNET permission;
+- both widget receivers are there, and so are the backup rules that keep API keys out of backups;
 - it's signed (APK Signature Scheme v2) with the RBSB-Weather test key.
 
 ## Not tested: needs your phone
@@ -63,8 +110,11 @@ There's no Android device or emulator here. These need checking on a real phone:
 - the live Open-Meteo and MET Norway services;
 - the look of the animated sky and its smoothness;
 - swiping between places and pull to refresh;
-- rotation, dark mode, and battery use with the sky animated.
+- rotation, dark mode, and battery use with the sky animated;
+- each keyed provider with your real keys (the tests use saved replies);
+- playback and the slider by touch;
+- the widgets on your launcher: adding them, their size and look, the 30-minute self-update (Android decides exactly when), and tapping to open the app.
 
 ## Latest run
 
-GitHub Actions run 44967664757 (commit 4119fca): `TEST TOTALS: 31 run, 31 passed, 0 failed, 0 errors, 0 skipped`. The APK was built and published to `test-builds`. This report was updated afterwards (docs only), so the delivered APK comes from the next run of the same code.
+GitHub Actions run 44970300356 (commit 666d138): `TEST TOTALS: 60 run, 60 passed, 0 failed, 0 errors, 0 skipped`. The APK was built and published to `test-builds`. This report was updated afterwards (docs only), so the delivered APK comes from the next run of the same code.

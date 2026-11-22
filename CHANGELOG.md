@@ -4,6 +4,32 @@ Created By Shane BlackbuRn
 
 A separate app from RBSB-Weather for the desktop, with its own versions.
 
+## 0.2.0 – 2026-11-22 (test build; on branch claude/android-0.2.0; not released)
+
+Requested by Shane: "It's a good start but there a lot that are missing". From the list he chose Weather Providers and Playback + mini forecast (for 0.2), Warnings + earthquakes (0.3), and Moon, Earth, Globe, Wind (0.4 and 0.5). He then added: "The widget are missing as wel".
+
+### Added
+- **Weather Providers** (Settings → Weather Providers):
+  - Open-Meteo and MET Norway (no key needed), plus OpenWeather, WeatherAPI.com, Visual Crossing, Tomorrow.io and Weather Underground with your own free API keys. These are ported from the desktop app and read the services the same way.
+  - Choose the primary, turn backups on or off and put them in order. A backup without a key is skipped.
+  - When the primary fails: try it again at the next update, after 15, 30 or 60 minutes, or stay on the backup.
+  - Each service shows its coverage, forecast length, hourly detail, free-use limits and credit, when it last worked or what went wrong, a **Get a key** link and **Test connection**.
+  - OpenWeather uses One Call 3.0 when your key has it, otherwise the free current and 5-day endpoints (and remembers that for a day).
+  - Weather Underground uses your own station ID, or the nearest reporting station; offline or stale stations are skipped.
+  - API keys are checked when you paste them, kept in their own private storage (never in the settings), never shown in messages, and left out of phone backups.
+  - Every forecast is checked before it's shown: impossible values are dropped, highs and lows put the right way round, and missing sunrise, sunset, "feels like" and weather symbols are worked out.
+  - The bottom of the screen credits whichever service supplied the forecast, and says when it came from a backup.
+- **Forecast playback:** ▶ under the sky plays the next 24 hours, or drag the slider in 15-minute steps. The sky (Sun or Moon position, cloud, rain, snow, thunder), temperature and conditions change to that time, labelled "Forecast for …". Tap **Now** to go back.
+- **Mini forecast in the sky:** the next few days along the bottom of the sky, as many as fit the screen (3 to 7).
+- **Home-screen widgets:** a small one (place, temperature, sky symbol, conditions, high and low) and one with the next five days. They have a day and a night background, show the place last viewed in the app, update when the app does and by themselves about every 30 minutes when the weather is stale, and open the app when tapped.
+
+### Changed
+- The sky card is taller, to hold the mini forecast.
+
+### Build and tests
+- 60 tests (29 new): every provider read from the desktop app's saved replies; missing, wrong and over-quota keys; the normaliser; the primary/backup chain and each recovery choice; provider settings; keys kept out of the settings; playback; the mini forecast; widget contents; and the Weather Providers screen.
+- GitHub Actions run 44970300356: 60 run, 60 passed.
+
 ## 0.1.0 – 2026-11-22 (test build; on branch claude/android-0.1.0; not released)
 
 Requested by Shane: "okay start the android version". He chose:

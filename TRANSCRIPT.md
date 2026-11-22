@@ -2,6 +2,47 @@
 
 Created By Shane BlackbuRn
 
+## 0.2.0 (2026-11-22)
+
+**Shane:** "It's a good start but there a lot that are missing".
+→ I asked what to add first. **Shane** chose: "Warnings + earthquakes, "Moon,
+Earth, Globe, Wind", Playback + mini forecast, Weather Providers".
+→ Plan: 0.2 Weather Providers, playback and the mini forecast; 0.3 warnings and
+earthquakes; 0.4 Moon and Earth; 0.5 Wind.
+→ **Shane** (while 0.2 was being built): "The widget are missing as wel".
+Widgets were added to 0.2.
+
+**What was done:**
+- The five keyed providers were ported from the desktop app's Python, along
+  with its normaliser, and tested against the same saved replies the desktop
+  tests use.
+- Added the provider chain with recovery, the Weather Providers screen, API keys
+  in their own private store (excluded from backups), forecast playback, the
+  mini forecast in the sky, and the two home-screen widgets.
+- Work is on a new branch, `claude/android-0.2.0` (built on 0.1.0). Nothing
+  merged or released.
+
+**Problems found while testing:**
+1. **First CI run:** didn't compile. Two `kmh` helpers with the same name
+   (MET Norway's and the new one). Now there's one.
+2. **Second run:** 57 of 60 passed.
+   - Tomorrow.io gave 6 days where the desktop app shows 5 (its free plan's
+     length). Each provider is now kept to its plan's days. That was a real
+     difference from the desktop.
+   - Two mistakes in the tests themselves: one read an error that wasn't there,
+     and one checked whether a text box was on screen instead of whether it
+     existed.
+3. **Third run:** 60 of 60 passed.
+
+**Tested:**
+- 60 tests run, 60 passed (GitHub Actions run 44970300356).
+- The APK was checked here:
+  - the checksum matches;
+  - version 0.2.0 (code 2), min SDK 29, target SDK 35;
+  - both widget receivers and the backup rules are present;
+  - it's v2-signed with the test key.
+- Not tested on a phone.
+
 ## 0.1.0 (2026-11-22)
 
 **Shane:** "mind you a .apk break down for the phone maybe a way to go. is that
