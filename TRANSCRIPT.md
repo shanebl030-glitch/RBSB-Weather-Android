@@ -2,6 +2,28 @@
 
 Created By Shane BlackbuRn
 
+## 0.3.1 (2026-11-22)
+
+**Shane:** "The widget doesn't work. Say Couldn't add widget".
+
+**Cause:** in 0.3.0 I used a plain `View` as a spacer in the widget layout.
+Android only allows a fixed set of view types in widgets, so the launcher
+couldn't load it. My earlier tests drew the widget's pictures but never loaded
+the layout the way a launcher does, so they missed this.
+
+**Fix and tests:**
+- First I added tests that load the widget the way a launcher does, and
+  confirmed they failed with the same error (run 44976546841).
+- Then I replaced the spacer with a FrameLayout.
+- 101 of 101 now pass (run 44976754434).
+
+**Still to check on your phone:**
+- that the widget can be added;
+- that its frames loop on your launcher.
+
+If your launcher refuses that many pictures, the widget falls back to a still
+picture.
+
 ## 0.3.0 (2026-11-22)
 
 **Shane:** "the widget doesn't animate like it does on the desktop version. I want

@@ -4,6 +4,21 @@ Created By Shane BlackbuRn
 
 A separate app from RBSB-Weather for the desktop, with its own versions.
 
+## 0.3.1 – 2026-11-22 (test build; on branch claude/android-0.2.0; not released)
+
+Reported by Shane: "The widget doesn't work. Say Couldn't add widget".
+
+### Fixed
+- **"Couldn't add widget":** the widget layout in 0.3.0 had a plain spacer view, which Android doesn't allow in widgets, so the launcher refused it. The spacer is now an allowed type (FrameLayout).
+
+### Build and tests
+- 3 new tests load the widget the way a launcher does:
+  - every view in the widget layouts must be one Android allows in widgets;
+  - the first layout the launcher shows while adding the widget must load;
+  - the full widget, with its 20 animation frames and its text, must load.
+- Before the fix, all three failed with the same error the launcher hit (run 44976546841). After it, they pass.
+- GitHub Actions run 44976754434: 101 run, 101 passed.
+
 ## 0.3.0 – 2026-11-22 (test build; on branch claude/android-0.2.0; not released)
 
 Requested by Shane: "the widget doesn't animate like it does on the desktop version. I want the android to be a replica of RBSB-Weather desktop version. nothing missing."

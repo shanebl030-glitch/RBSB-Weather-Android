@@ -4,13 +4,21 @@ Created By Shane BlackbuRn
 
 | Item | Result |
 |---|---|
-| Version | 0.3.0 (test build) |
+| Version | 0.3.1 (test build) |
 | Date | 2026-11-22 |
 | Where | GitHub Actions: Ubuntu 26.04 runner, JDK 17 (Temurin), Gradle 8.14.3, Android Gradle Plugin 8.10.1, Kotlin 2.1.21, Compose BOM 2025.05.01, compile/target SDK 35, min SDK 29 |
 | Command | `./gradlew testDebugUnitTest`, then `./gradlew assembleRelease` |
-| Tests | 98 run, 98 passed, 0 failed, 0 skipped (GitHub Actions run 44974363240) |
+| Tests | 101 run, 101 passed, 0 failed, 0 skipped (GitHub Actions run 44976754434) |
 
 ## What's tested
+
+**New in 0.3.1 (3 tests): the widget loads as a launcher loads it.**
+- Only views Android allows in widgets are used.
+- The launcher's first and preview layouts load.
+- The full widget loads, with its 20 frames, place and temperature, and also with no place yet.
+
+These three failed on 0.3.0 with the launcher's error, which is the "Couldn't add widget" you saw, and pass after the fix.
+
 
 **New in 0.3 (38 tests):**
 - **Moon:** compared with the desktop's PyEphem reference values:
@@ -138,12 +146,12 @@ Created By Shane BlackbuRn
 
 ## The APK
 
-`rbsb-weather-android_0.3.0.apk` (about 22 MB with the Moon images) was downloaded from the
+`rbsb-weather-android_0.3.1.apk` (about 22 MB with the Moon images) was downloaded from the
 `test-builds` branch and checked here:
 
 - its SHA-256 matches `SHA256SUMS`;
 - the zip is intact;
-- the manifest has the app ID `io.github.shanebl030glitch.rbsbweather`, version 0.3.0 (code 3), min SDK 29, target SDK 35, MainActivity and the INTERNET permission;
+- the manifest has the app ID `io.github.shanebl030glitch.rbsbweather`, version 0.3.1 (code 4), min SDK 29, target SDK 35, MainActivity and the INTERNET permission;
 - both widget receivers are there, and so are the backup rules that keep API keys out of backups;
 - it's signed (APK Signature Scheme v2) with the RBSB-Weather test key.
 
@@ -163,4 +171,4 @@ There's no Android device or emulator here. These need checking on a real phone:
 
 ## Latest run
 
-GitHub Actions run 44974363240: `TEST TOTALS: 98 run, 98 passed, 0 failed, 0 errors, 0 skipped`. The APK was built and published to `test-builds`. This report was updated afterwards (docs only), so the delivered APK comes from the next run of the same code.
+GitHub Actions run 44976754434: `TEST TOTALS: 101 run, 101 passed, 0 failed, 0 errors, 0 skipped`. The APK was built and published to `test-builds`. This report was updated afterwards (docs only), so the delivered APK comes from the next run of the same code.
