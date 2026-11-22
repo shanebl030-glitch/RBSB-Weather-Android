@@ -442,18 +442,20 @@ class AlertClient(
         val entries = feedEntries(root)
         val got = mutableListOf<Pair<Alert, List<Area>>>(); val seen = mutableSetOf<String>()
         for (e in entries.take(Alerts.MAX_CAP_DOCS * 3)) {
-            inlineCap(e.el, source, e.id)?.let { got += it; continue }
+            val inl = inlineCap(e.el, source, e.id)
+            if (inl != null) { got += inl; continue }
             val link = e.link
             if (link.isEmpty() || link in seen) continue
             seen += link
             if (seen.size > Alerts.MAX_CAP_DOCS) break
             val cached = capCache[link]
-            val parsed = if (cached != null && cached.first == e.updated) cached.second else {
-                try {
-                    val doc = parseXml(get(link, "application/cap+xml, application/xml", 1024 * 1024))
-                    val hasId = doc.descendants().any { it.local() == "identifier" }
-                    capAlert(doc, source, link, colourParam, trustSeverity, if (!hasId) e.id else "")
-                } catch (err: AlertException) { continue }.also { capCache[link] = e.updated to it }
+            val parsed: Pair<Alert, List<Area>>?
+            if (cached != null && cached.first == e.updated) parsed = cached.second
+            else {
+                val doc = try { parseXml(get(link, "application/cap+xml, application/xml", 1024 * 1024)) } catch (err: AlertException) { continue }
+                val hasId = doc.descendants().any { it.local() == "identifier" }
+                parsed = capAlert(doc, source, link, colourParam, trustSeverity, if (!hasId) e.id else "")
+                capCache[link] = e.updated to parsed
             }
             parsed?.let { got += it }
         }
