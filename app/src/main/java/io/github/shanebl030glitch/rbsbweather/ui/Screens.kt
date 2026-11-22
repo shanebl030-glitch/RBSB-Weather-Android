@@ -197,7 +197,7 @@ fun SettingsScreen(state: UiState, model: AppModel, modifier: Modifier = Modifie
         Row(Modifier.fillMaxWidth().padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text("Animated sky", fontWeight = FontWeight.Bold)
-                Text("Moving clouds, rain and snow. Turn off to save battery.", fontSize = 13.sp)
+                Text("Moving clouds, rain and snow, in the app and the home-screen widgets. Turn off to save battery.", fontSize = 13.sp)
             }
             Switch(checked = s.animations, onCheckedChange = { model.setAnimations(it) }, modifier = Modifier.testTag("animSwitch"))
         }
@@ -251,6 +251,7 @@ fun AboutScreen(modifier: Modifier = Modifier) {
                 Text("Credits", fontWeight = FontWeight.Bold)
                 Text(OpenMeteo.CREDIT, Modifier.clickable { open("https://open-meteo.com/") })
                 Text(MetNorway.CREDIT, Modifier.clickable { open("https://api.met.no/") })
+                Text(io.github.shanebl030glitch.rbsbweather.ui.scene.MoonRender.CREDIT_DEFAULT + ".", fontSize = 13.sp)
                 Text("With your own keys: OpenWeather, WeatherAPI.com, Visual Crossing, Tomorrow.io and Weather Underground " +
                     "(each credited under the forecast when it supplied it).", fontSize = 13.sp)
                 Text("Sun, sunrise and sunset worked out on your phone.")

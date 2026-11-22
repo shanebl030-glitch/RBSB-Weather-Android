@@ -242,4 +242,47 @@ class AppModelTest {
         assertTrue(m.back())
         assertEquals(Screen.HOME, m.state.value.screen)
     }
+
+    @Test fun failedUpdatesRetryAfter30s1min2minThen5() {
+        var t = 1_000_000_000L
+        val p = FakeProvider()
+        val m = model(p = p, now = { t })
+        m.add(AUCKLAND)
+        p.down = true
+        m.refresh(force = true)
+        val calls = p.calls
+        for ((wait, expectRetry) in listOf(29L to false, 1L to true, 59L to false, 1L to true, 119L to false, 1L to true,
+            299L to false, 1L to true, 299L to false, 1L to true)) {
+            t += wait * 1000
+            val before = p.calls
+            m.refresh()
+            assertEquals("after +${wait}s", expectRetry, p.calls > before)
+        }
+        assertTrue(p.calls > calls)
+        p.down = false
+        t += 300_000
+        m.refresh()
+        assertNull(m.state.value.errors[AUCKLAND.key])
+        t += 60_000
+        val before = p.calls
+        m.refresh()                                        // working again: back to the normal interval
+        assertEquals(before, p.calls)
+    }
+
+    @Test fun startupUpdatesEveryPlaceOneAtATime() {
+        val scope = TestScope(StandardTestDispatcher())
+        val p = FakeProvider()
+        val wellington = Place("Wellington", -41.2866, 174.7756, "New Zealand", "Wellington", "Pacific/Auckland")
+        val chch = Place("Christchurch", -43.5321, 172.6362, "New Zealand", "Canterbury", "Pacific/Auckland")
+        val store = MemoryStore(Settings(places = listOf(AUCKLAND, wellington, chch), selected = wellington.key).toJson().toString())
+        val m = AppModel(store, WeatherRepository(listOf(p), null), SEARCH, scope, StandardTestDispatcher(scope.testScheduler))
+        m.refreshAll()
+        scope.testScheduler.runCurrent()
+        assertEquals(setOf(wellington.key), m.state.value.forecasts.keys)      // the one on screen first
+        scope.testScheduler.advanceTimeBy(1500); scope.testScheduler.runCurrent()
+        assertEquals(2, m.state.value.forecasts.size)
+        scope.advanceUntilIdle()
+        assertEquals(3, m.state.value.forecasts.size)
+        assertEquals(3, p.calls)
+    }
 }

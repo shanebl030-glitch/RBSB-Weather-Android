@@ -34,6 +34,10 @@ interface SettingsStore {
     fun save(json: String)
 }
 
+val RETRY_STEPS_S = listOf(30L, 60L, 120L, 300L)
+const val STARTUP_STAGGER_MS = 1500L
+const val STARTUP_FRESH_MS = 2 * 60_000L
+
 val TEST_PLACE = Place("Auckland", -36.8485, 174.7633, "New Zealand", "Auckland", "Pacific/Auckland")
 
 class MemoryStore(var text: String? = null) : SettingsStore {
@@ -80,6 +84,8 @@ class AppModel(
     val state: StateFlow<UiState> = _state
 
     private var searchJob: Job? = null
+    /** Failed updates in a row and when to try again, by place (as the desktop: 30 s, 1, 2, then every 5 min). */
+    private val failures = mutableMapOf<String, Pair<Int, Long>>()
 
     init {
         // saved forecasts first, so something shows straight away (even offline)
@@ -99,8 +105,11 @@ class AppModel(
         if (place.key in s.loading) return
         val fc = s.forecasts[place.key]
         val ageMin = if (fc == null || fc.fromCache) Long.MAX_VALUE else (now() - fc.fetchedAt) / 60_000
+        val retryAt = failures[place.key]?.second
         val due = when {
-            force || fc == null || fc.fromCache -> true
+            force -> true
+            retryAt != null && s.settings.refreshMinutes != 0 -> now() >= retryAt
+            fc == null || fc.fromCache -> true
             s.settings.refreshMinutes == 0 -> false
             else -> ageMin >= s.settings.refreshMinutes
         }
@@ -120,12 +129,15 @@ class AppModel(
                 val stillSaved = st.settings.places.any { it.key == place.key }
                 result.fold(
                     onSuccess = { f ->
+                        failures.remove(place.key)
                         if (stillSaved) try { onForecast(f) } catch (e: Exception) { }
                         if (!stillSaved) st.copy(loading = st.loading - place.key)
                         else st.copy(loading = st.loading - place.key, forecasts = st.forecasts + (place.key to f),
                             errors = st.errors - place.key)
                     },
                     onFailure = { e ->
+                        val n = (failures[place.key]?.first ?: 0) + 1
+                        failures[place.key] = n to (now() + RETRY_STEPS_S[minOf(n, RETRY_STEPS_S.size) - 1] * 1000L)
                         st.copy(loading = st.loading - place.key,
                             errors = if (stillSaved) st.errors + (place.key to (e.message ?: "Couldn't update.")) else st.errors)
                     })
@@ -133,9 +145,25 @@ class AppModel(
         }
     }
 
-    /** Every saved place, one after the other (at start-up). */
-    fun refreshAll() {
-        _state.value.settings.places.forEach { refresh(it) }
+    /**
+     * At start-up every saved place updates (as the desktop): the one on screen first, then the
+     * others one at a time 1½ seconds apart, so a small free allowance isn't used up in a burst.
+     * A place updated in the last 2 minutes is skipped.
+     */
+    fun refreshAll(staggerMs: Long = STARTUP_STAGGER_MS) {
+        val s = _state.value.settings
+        val first = s.selectedPlace() ?: return
+        refresh(first)
+        val others = s.places.filter { it.key != first.key }
+        scope.launch {
+            for (p in others) {
+                delay(staggerMs)
+                if (_state.value.settings.places.none { it.key == p.key }) continue
+                val fc = _state.value.forecasts[p.key]
+                if (fc != null && !fc.fromCache && now() - fc.fetchedAt < STARTUP_FRESH_MS) continue
+                refresh(p)
+            }
+        }
     }
 
     // --------------------------------------------------------------- places

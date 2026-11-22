@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -144,9 +145,11 @@ fun DrawScope.paintStrip(lay: StripLayout, t: Double, unit: TempUnit, tm: TextMe
     val (f, fb, fs) = lay.styles
     val r = Rect(lay.rect.left - lay.iconPx * 0.6f, lay.rect.top - lay.iconPx * 0.5f, lay.rect.right + lay.iconPx * 0.6f, lay.rect.bottom + lay.iconPx * 0.4f)
     val rad = max(r.width, r.height) * 0.62f
-    // a feathered oval shade, so it blends into the sky rather than looking like a panel
-    drawOval(Brush.radialGradient(0f to Color(0, 10, 30, 95), 0.7f to Color(0, 10, 30, 55), 1f to Color(0, 10, 30, 0),
-        center = r.center, radius = rad), Offset(r.center.x - rad, r.center.y - rad * r.height / r.width), Size(2 * rad, 2 * rad * r.height / r.width))
+    // a feathered shade, squashed to the strip's shape so it fades out evenly on every side
+    scale(1f, r.height / max(1f, r.width), r.center) {
+        drawCircle(Brush.radialGradient(0f to Color(0, 10, 30, 95), 0.7f to Color(0, 10, 30, 55), 1f to Color(0, 10, 30, 0),
+            center = r.center, radius = rad), rad, r.center)
+    }
     lay.cells.forEachIndexed { i, c ->
         val cx = c.rect.center.x
         shadowText(tm, c.name, fb, cx, c.nameTop, Color.White)
