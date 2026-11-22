@@ -4,13 +4,60 @@ Created By Shane BlackbuRn
 
 | Item | Result |
 |---|---|
-| Version | 0.5.2 (test build) |
+| Version | 0.6.0 (test build) |
 | Date | 2026-11-22 |
 | Where | GitHub Actions: Ubuntu 26.04 runner, JDK 17 (Temurin), Gradle 8.14.3, Android Gradle Plugin 8.10.1, Kotlin 2.1.21, Compose BOM 2025.05.01, compile/target SDK 35, min SDK 29 |
 | Command | `./gradlew testDebugUnitTest`, then `./gradlew assembleRelease` |
-| Tests | 154 run, 154 passed, 0 failed, 0 skipped (GitHub Actions run 45056877312), plus the emulator check (run 45056877230): no crash, and the globe turns on screen with Rotate slowly and when dragged |
+| Tests | 180+ run, all passed on GitHub Actions (see the CI run for this commit), plus the emulator check (run 45069457909): every step passed, no crash |
 
 ## What's tested
+
+**New in 0.6:**
+- **GRIB2 reader** (Grib2Test), checked on the desktop's 11 files (real NOAA GFS and synthetic files in every supported packing) against the desktop's reader, itself checked against ECMWF's ecCodes:
+  - every sample point, missing-value count, sum and weighted sum;
+  - real GFS winds are plausible;
+  - a south-first file reads reversed;
+  - damaged files fail cleanly;
+  - sign-magnitude integers.
+- **Wind data** (WindTest), as the desktop's test_wind:
+  - which run and forecast hour to use; the NOMADS and AWS addresses;
+  - index byte ranges, including shared messages;
+  - the direction convention; interpolation, wrapping and the poles;
+  - the temperature and rain layers; the colours; rain see-through where dry.
+  - **Store:** download, then NOMADS down so AWS is used, then everything down so the saved map is kept and it waits 20 minutes; nothing saved gives a clear error.
+- **Wind tab** (WindScreenTest, a 2× screen, NOAA's real sample):
+  - the globe draws, and the streaks move (20+ frames in 2 s);
+  - the temperature and rain layers switch;
+  - a tap gives the wind, temperature and rain there in your units.
+  - The texts and the coloured map (more than 5,000 colours) are checked, and the Pacific counts as sea for the coastlines.
+- **Updates** (UpdatesTest, SixTest):
+  - versions and tags; reading GitHub's reply; only the exact APK name is offered;
+  - drafts, pre-releases, unknown tags, odd links and huge notes are handled;
+  - SHA256SUMS; GitHub-only hosts; the daily and 3-hour schedule; the stored state.
+  - **Download:** checked against its checksum (a wrong one is deleted, one not listed isn't downloaded) and by the this-app-and-newer check.
+  - **On screen:** found, then downloaded, checked and handed to the installer; up to date; a bad checksum is refused; skip a version.
+- **Test connection** (DiagnosticsTest, SixTest):
+  - each server once; IPv6 failures; no DNS;
+  - the summary wording; keys removed;
+  - Android's errors in plain words.
+- **Provider usage:**
+  - Tomorrow.io's headers;
+  - Visual Crossing's cost (from the reply);
+  - OpenWeather's plan;
+  - recorded by the repository.
+- **Temperature notification:** the icon text in °C and °F; the title and text; the icon really drawn.
+- **Settings:** the new switches are saved, older settings get the defaults, and the rows take a tap.
+- **Emulator check (real Android 14):**
+  - the Wind tab downloaded the real map from NOAA, showed it, and the streaks moved (2.8% of the globe changed in 2 s);
+  - all three layers and a tap worked;
+  - Test connection finished its report;
+  - Check for updates asked GitHub (the newest release was v0.5.2: up to date);
+  - the temperature notification was posted;
+  - every other step passed, with no crash.
+- **Not tested here:**
+  - installing a real update: there's no newer release on GitHub yet, so the full download-and-install will first be tried when 0.6.0 is released and 0.5.2 checks for it;
+  - the speed of the wind streaks on a phone (the emulator draws in software).
+
 
 **New in 0.5.2 (the globe must really turn):**
 - **Stress test** (GlobeStressTest, a simulated phone):

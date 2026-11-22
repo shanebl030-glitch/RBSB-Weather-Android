@@ -29,7 +29,7 @@ object Diagnostics {
         } catch (e: SocketTimeoutException) {
             s.close(); return@Prober "NOT WORKING – no reply after ${PROBE_TIMEOUT_MS / 1000} s (${address.hostAddress})"
         } catch (e: Exception) {
-            s.close(); return@Prober "NOT WORKING – ${e.message ?: e.javaClass.simpleName} (${address.hostAddress})"
+            s.close(); return@Prober "NOT WORKING – ${reason(e)} (${address.hostAddress})"
         }
         val connectMs = ms(t1)
         if (!tls) { s.close(); return@Prober "OK – connected in $connectMs ms (${address.hostAddress})" }
@@ -45,6 +45,19 @@ object Diagnostics {
         } catch (e: Exception) {
             "CONNECTS ($connectMs ms) but the secure handshake FAILS – ${e.message ?: e.javaClass.simpleName} (${address.hostAddress})"
         } finally { try { s.close() } catch (e: Exception) { } }
+    }
+
+    /** Android's connection errors in plain words (its own text is long and technical). */
+    fun reason(e: Exception): String {
+        val m = e.message ?: return e.javaClass.simpleName
+        return when {
+            "ENETUNREACH" in m -> "network unreachable"
+            "EHOSTUNREACH" in m -> "server unreachable"
+            "ECONNREFUSED" in m -> "connection refused"
+            "ECONNRESET" in m -> "connection reset"
+            "timed out" in m || "ETIMEDOUT" in m -> "no reply"
+            else -> m.substringAfterLast(": ").take(80)
+        }
     }
 
     fun ms(t0: Long) = ((System.nanoTime() - t0) / 1_000_000).toInt()
