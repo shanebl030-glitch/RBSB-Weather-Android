@@ -1,0 +1,17 @@
+{
+  "source": "nasa-cgi-moon-kit",
+  "bump": 0.008498,
+  "tint": [
+    1.0,
+    1.0,
+    1.0
+  ],
+  "credit": "Moon imagery: NASA's Scientific Visualization Studio, CGI Moon Kit (LRO LROC WAC and LOLA data)",
+  "inputs": [
+    "lroc_color_poles_4k.tif",
+    "ldem_16_uint.tif"
+  ],
+  "size": 2048,
+  "relief_span_m": 2214.8,
+  "exaggeration": 3.0
+}

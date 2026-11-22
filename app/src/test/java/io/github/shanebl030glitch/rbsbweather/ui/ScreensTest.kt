@@ -8,6 +8,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -131,8 +132,10 @@ class ScreensTest {
         val m = model()
         m.add(AUCKLAND)
         compose.setContent { RbsbApp(m) }
-        compose.onNodeWithTag("miniForecast").assertIsDisplayed()
+        compose.onNodeWithTag("sky").assertIsDisplayed()
         compose.onNodeWithTag("playback").assertIsDisplayed()
+        compose.onNodeWithTag("playbackLabel").assertIsDisplayed()
         compose.onNodeWithTag("playbackNow").assertIsDisplayed()
+        compose.onAllNodesWithTag("dayIcon")[0].assertExists()          // animated icons in the 7-day list
     }
 }

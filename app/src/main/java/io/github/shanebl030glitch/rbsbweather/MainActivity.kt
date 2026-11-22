@@ -38,6 +38,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        io.github.shanebl030glitch.rbsbweather.ui.scene.MoonRender.init(applicationContext.assets)
         setContent { RbsbApp(vm.model) }
     }
 

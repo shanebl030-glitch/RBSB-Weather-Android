@@ -127,7 +127,7 @@ fun PlacePage(place: Place, state: UiState, model: AppModel) {
                         }
                     }
                 }
-                item { DailyCard(fc, units) }
+                item { DailyCard(fc, units, state.settings.animations) }
             }
             item { Footer(fc, state.settings.providers.firstOrNull()?.let { providerInfo(it)?.name }) }
         }
@@ -202,29 +202,34 @@ fun dayLabel(date: String, today: LocalDate?): String {
 }
 
 @Composable
-private fun DailyCard(fc: Forecast, u: UnitPrefs) {
+private fun DailyCard(fc: Forecast, u: UnitPrefs, animate: Boolean) {
     val today = try { LocalDate.parse(fc.current.time.take(10)) } catch (e: Exception) { null }
     Card(Modifier.fillMaxWidth().testTag("daily")) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
             Text("${fc.daily.size}-day forecast", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 4.dp))
             fc.daily.forEachIndexed { i, d ->
                 if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-                DayRow(d, dayLabel(d.date, today), u)
+                DayRow(d, dayLabel(d.date, today), u, animate, i * 0.37)
             }
         }
     }
 }
 
 @Composable
-private fun DayRow(d: Day, label: String, u: UnitPrefs) {
+private fun DayRow(d: Day, label: String, u: UnitPrefs, animate: Boolean, phase: Double) {
     Row(Modifier.fillMaxWidth().padding(vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.width(92.dp)) {
             Text(label, fontWeight = FontWeight.Medium, fontSize = 14.sp)
             val pp = d.precipitationProbabilityMax
             Text("💧 ${pp?.toInt()?.let { "$it%" } ?: "–"}  ${Units.fmtPrecip(d.precipitationSum, u.precip)}",
                 fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), maxLines = 1)
+            if (d.windSpeedMax != null) Text("💨 " + Units.fmtWind(d.windSpeedMax, u.wind),
+                fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), maxLines = 1)
         }
-        Text(WeatherCodes.symbol(d.weatherCode), fontSize = 24.sp, modifier = Modifier.width(40.dp), textAlign = TextAlign.Center)
+        io.github.shanebl030glitch.rbsbweather.ui.scene.AnimatedWeatherIcon(d.weatherCode, true, 34.dp, phase, animate,
+            windy = (d.windSpeedMax ?: 0.0) >= io.github.shanebl030glitch.rbsbweather.ui.scene.WINDY_KMH &&
+                io.github.shanebl030glitch.rbsbweather.ui.scene.classify(d.weatherCode).first.ordinal <= 2,
+            modifier = Modifier.padding(horizontal = 3.dp).testTag("dayIcon"))
         Text(WeatherCodes.describe(d.weatherCode), Modifier.weight(1f), fontSize = 14.sp, maxLines = 1,
             overflow = TextOverflow.Ellipsis)
         Text(Units.fmtTemp(d.tempMax, u.temp, false), fontWeight = FontWeight.Bold, fontSize = 15.sp)

@@ -1,68 +1,43 @@
-// Forecast playback (the sky and the big numbers show a chosen time in the next 24 hours)
-// and the sizing of the mini forecast inside the sky. Plain Kotlin, so it is unit tested.
+// Forecast playback, as on the desktop (playback.py and the main window's _apply_playback):
+// ▶ plays the coming hours in the sky at an hour a second, the slider picks any moment up to 24
+// hours ahead in 15-minute steps, and Now returns to the live weather. The card then shows that
+// hour's temperature, weather and chance of rain, marked "▶ Forecast for …". Plain Kotlin.
 // Created By Shane BlackbuRn
 package io.github.shanebl030glitch.rbsbweather.ui
 
+import io.github.shanebl030glitch.rbsbweather.data.ClockFormat
 import io.github.shanebl030glitch.rbsbweather.data.Forecast
-import io.github.shanebl030glitch.rbsbweather.data.Place
-import io.github.shanebl030glitch.rbsbweather.data.zoneOf
-import java.time.Instant
-import java.time.LocalDate
+import io.github.shanebl030glitch.rbsbweather.data.Hour
+import io.github.shanebl030glitch.rbsbweather.data.Units
+import io.github.shanebl030glitch.rbsbweather.ui.scene.hourlyAt
+import io.github.shanebl030glitch.rbsbweather.ui.scene.localTime
 import java.time.LocalDateTime
 import java.time.format.TextStyle
 import java.util.Locale
-import kotlin.math.round
 
-const val PLAYBACK_STEPS = 96                     // 24 hours in 15-minute steps
+const val PLAY_RATE = 3600.0          // forecast seconds per real second: an hour a second
+const val STEP_MIN = 15
+const val WIND_NOTE = "The hourly forecast has no wind, so the clouds keep the wind of now; everything else in the sky is the forecast for this time."
 
-data class Moment(
-    val at: Instant,
-    val label: String,                            // "Mon 14:15" (local time at the place)
-    val temperature: Double?,
-    val weatherCode: Int?,
-    val precipitationProbability: Double?,
-)
+/** Why playback can't be used (when playbackSeconds is 0). */
+fun playbackUnavailable(fc: Forecast): String =
+    if (fc.hourly.isEmpty()) "${fc.source} doesn't provide an hourly forecast" else "No hourly forecast ahead"
 
-/** "1 h 15 min" for a playback step. */
-fun playbackLabel(step: Int): String {
-    val m = step * 15
-    return when {
-        m < 60 -> "$m min"
-        m % 60 == 0 -> "${m / 60} h"
-        else -> "${m / 60} h ${m % 60} min"
-    }
+/** The local time shown at an offset, e.g. "Mon 14:15" (or "Mon 2:15 pm"). */
+fun playbackStamp(fc: Forecast, offsetS: Double, clock: ClockFormat, nowMs: Long = System.currentTimeMillis()): String {
+    val t: LocalDateTime = localTime(fc, nowMs)?.plusSeconds(offsetS.toLong()) ?: return "–"
+    return t.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ENGLISH) + " " + Units.clock(t.hour, t.minute, clock)
 }
 
-/**
- * The forecast at a moment: temperature eased between the hours either side, weather from
- * the hour it falls in. Null when the forecast doesn't reach that far.
- */
-fun momentAt(fc: Forecast, place: Place, at: Instant): Moment? {
-    val zone = zoneOf(place, fc.timezone, fc.utcOffsetSeconds.toDouble())
-    val hours = fc.hourly.mapNotNull { h ->
-        try { LocalDateTime.parse(h.time).atZone(zone).toInstant() to h } catch (e: Exception) { null }
-    }.sortedBy { it.first }
-    if (hours.isEmpty()) return null
-    val i = hours.indexOfLast { !it.first.isAfter(at) }
-    if (i < 0) return null
-    val (t0, h0) = hours[i]
-    if (at.epochSecond - t0.epochSecond > 3 * 3600) return null           // past the end of the hourly data
-    val next = hours.getOrNull(i + 1)
-    val temp = if (next != null && h0.temperature != null && next.second.temperature != null &&
-        next.first.epochSecond > t0.epochSecond) {
-        val f = (at.epochSecond - t0.epochSecond).toDouble() / (next.first.epochSecond - t0.epochSecond)
-        round((h0.temperature + (next.second.temperature!! - h0.temperature) * f.coerceIn(0.0, 1.0)) * 10) / 10
-    } else h0.temperature
-    val local = at.atZone(zone)
-    val label = local.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()) + " " +
-        String.format(Locale.US, "%02d:%02d", local.hour, local.minute)
-    return Moment(at, label, temp, h0.weatherCode, h0.precipitationProbability)
+/** The forecast hour shown at an offset. */
+fun playbackHour(fc: Forecast, offsetS: Double, nowMs: Long = System.currentTimeMillis()): Hour? =
+    hourlyAt(fc, localTime(fc, nowMs)?.plusSeconds(offsetS.toLong()))
+
+/** The slider's number of 15-minute steps for a playback range. */
+fun playbackSteps(maxS: Double): Int = (maxS / (STEP_MIN * 60)).toInt()
+
+/** One tick of playing: the next offset and whether it has reached the end. */
+fun playTick(offsetS: Double, dtS: Double, maxS: Double): Pair<Double, Boolean> {
+    val nxt = offsetS + PLAY_RATE * dtS
+    return if (nxt >= maxS) maxS to true else nxt to false
 }
-
-/** How many days fit along the bottom of the sky (about 62 dp each), between 3 and 7. */
-fun miniDayCount(widthDp: Float, available: Int): Int =
-    minOf(available, (widthDp / 62f).toInt().coerceIn(3, 7))
-
-fun miniDayName(date: String): String = try {
-    LocalDate.parse(date).dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
-} catch (e: Exception) { date.takeLast(5) }
