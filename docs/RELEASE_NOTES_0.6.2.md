@@ -26,7 +26,11 @@ Created By Shane BlackbuRn
 
 <p align="center"><img src="https://raw.githubusercontent.com/shanebl030-glitch/RBSB-Weather-Android/main/docs/screenshots/skies.png" width="760" alt="The animated sky: sun and cloud, thunderstorm, snow, and night with the Moon"><br><sub>The animated sky: sun and cloud, a thunderstorm, snow, and night with the Moon in its real phase</sub></p>
 
-<p align="center"><img src="https://raw.githubusercontent.com/shanebl030-glitch/RBSB-Weather-Android/main/docs/screenshots/widget.png" width="410" alt="Home-screen widget"><br><sub>Home-screen widget (animated)</sub>&nbsp;&nbsp;&nbsp;<img src="https://raw.githubusercontent.com/shanebl030-glitch/RBSB-Weather-Android/main/docs/screenshots/landscape.png" width="430" alt="Sideways"><br><sub>Turned sideways</sub></p>
+<table>
+<tr><td align="center" rowspan="2" width="34%"><img src="https://raw.githubusercontent.com/shanebl030-glitch/RBSB-Weather-Android/main/docs/screenshots/about.png" width="250" alt="About"><br><sub>About</sub></td>
+<td align="center"><img src="https://raw.githubusercontent.com/shanebl030-glitch/RBSB-Weather-Android/main/docs/screenshots/widget.png" width="410" alt="Home-screen widget"><br><sub>Home-screen widget (animated)</sub></td></tr>
+<tr><td align="center"><img src="https://raw.githubusercontent.com/shanebl030-glitch/RBSB-Weather-Android/main/docs/screenshots/landscape.png" width="430" alt="Turned sideways"><br><sub>Turned sideways</sub></td></tr>
+</table>
 
 ## Google Play Protect warning
 
