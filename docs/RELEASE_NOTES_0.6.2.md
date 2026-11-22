@@ -22,7 +22,7 @@ This is because the app can now install its own updates. That needs Android's "i
 - It checks the file against `SHA256SUMS`, and that it's this app and newer.
 - Android itself asks you before installing, and refuses an update not signed like the app you have.
 
-To install, tap **Install anyway** (on some phones: **More details → Install anyway**). To check the file first, its SHA-256 must match the line for it in `SHA256SUMS` below. See the [README](../README.md#google-play-protect-harmful-app-blocked) for the full explanation.
+To install, tap **Install anyway** (on some phones: **More details → Install anyway**). To check the file first, its SHA-256 must match the line for it in `SHA256SUMS` below. See the [README](https://github.com/shanebl030-glitch/RBSB-Weather-Android#google-play-protect-harmful-app-blocked) for the full explanation.
 
 ## Files
 

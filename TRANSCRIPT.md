@@ -11,6 +11,9 @@ Created By Shane BlackbuRn
 - The 0.6.1 test that forbade the install permission was removed with the rest of 0.6.1's changes.
 - The checks that guard the updater (checksum, this app and newer, GitHub-only addresses) are back.
 
+**Shane:** "okay time to update GitHub"
+→ PR #3 merged into `main` (a merge commit, history kept, unsigned). Release `v0.6.2` published with the release notes, `rbsb-weather-android_0.6.2.apk` (the exact file Shane installed) and `SHA256SUMS`. The release was then read back the way the app's updater reads it.
+
 ## 0.6.1 (2026-11-23)
 
 **Shane:** "First time I have had this when installing on the phone. 'Google Play Protect. Harmful app blocked. RBSB-Weather. This app may be harmful. Installing this app may put your device at risk. Learn more about Play Protect. Install anyway'"

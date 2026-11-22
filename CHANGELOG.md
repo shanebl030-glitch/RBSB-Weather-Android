@@ -4,7 +4,7 @@ Created By Shane BlackbuRn
 
 A separate app from RBSB-Weather for the desktop, with its own versions.
 
-## 0.6.2 – 2026-11-23 (test build; on branch claude/android-0.6.0; not released)
+## 0.6.2 – 2026-11-23 (released as v0.6.2)
 
 Shane: "I was about to say before you made the change to keep it as is but we can mention it on the GitHub page update".
 

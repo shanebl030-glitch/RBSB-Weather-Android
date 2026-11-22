@@ -45,11 +45,12 @@ with its own versions, releases and tests.
 
 Needs **Android 10 or newer**.
 
-## Install a test build
+## Install
 
 1. On your phone, download `rbsb-weather-android_0.6.2.apk` from the
-   [test-builds branch](https://github.com/shanebl030-glitch/RBSB-Weather-Android/tree/test-builds)
-   (or use the file sent to you).
+   [latest release](https://github.com/shanebl030-glitch/RBSB-Weather-Android/releases/latest).
+   (Test builds of work in progress are on the
+   [test-builds branch](https://github.com/shanebl030-glitch/RBSB-Weather-Android/tree/test-builds).)
 2. Open it. Android asks to allow installing apps from this source (for example
    Chrome or Files). Allow it once.
 3. Tap **Install**.
