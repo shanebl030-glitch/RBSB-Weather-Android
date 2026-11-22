@@ -74,7 +74,7 @@ fun cloudSprite(w: Int, h: Int, darkness: Double, seed: Int): ImageBitmap {
         }
         val base = Triple(w * 0.5, baseY - h * 0.08, w * 0.38)
         (puffs + base).sortedBy { it.third }.forEach { (cx, cy, r) ->
-            val brush = Brush.radialGradient(0f to lit, 0.55f to body, 1f to body.copy(alpha = 0f),
+            val brush = safeRadial(0f to lit, 0.55f to body, 1f to body.copy(alpha = 0f),
                 center = Offset((cx - r * 0.25).toFloat(), (cy - r * 0.35).toFloat()), radius = (r * 1.25).toFloat())
             if (cx == base.first && cy == base.second && r == base.third) {
                 drawOval(brush, Offset((cx - r).toFloat(), (cy - h * 0.16).toFloat()), Size((2 * r).toFloat(), (h * 0.32).toFloat()))
@@ -155,7 +155,7 @@ private fun DrawScope.drawWeather(e: SceneEngine, wx: Weather, opacity: Double) 
         val fogCol = mix(Color(70, 78, 88), Color(235, 238, 240), c.daylight)
         for (f in wx.fog) {
             val ctr = Offset(f.x.toFloat(), f.y.toFloat())
-            val brush = Brush.radialGradient(listOf(fogCol.copy(alpha = (f.alpha * c.intensity).toFloat().coerceIn(0f, 1f)), fogCol.copy(alpha = 0f)), ctr, w * 0.55f)
+            val brush = safeRadial(listOf(fogCol.copy(alpha = (f.alpha * c.intensity).toFloat().coerceIn(0f, 1f)), fogCol.copy(alpha = 0f)), ctr, w * 0.55f)
             drawOval(brush, Offset(ctr.x - w * 0.55f, ctr.y - h * 0.16f), Size(w * 1.1f, h * 0.32f), alpha = op)
         }
     }
@@ -196,7 +196,7 @@ private fun DrawScope.drawSun(e: SceneEngine, alpha: Double, drawn: Drawn?) {
     val core = mix(Color(255, 248, 215), Color(255, 190, 110), warm.coerceIn(0.0, 1.0))
     val a = alpha.toFloat().coerceIn(0f, 1f)
     val ctr = Offset(cx, cy)
-    drawCircle(Brush.radialGradient(0f to core.a(150), 0.35f to core.a(55), 1f to core.a(0), center = ctr, radius = rad * 4.2f), rad * 4.2f, ctr, alpha = a)
+    drawCircle(safeRadial(0f to core.a(150), 0.35f to core.a(55), 1f to core.a(0), center = ctr, radius = rad * 4.2f), rad * 4.2f, ctr, alpha = a)
     translate(cx, cy) {
         rotate((e.t * 6).toFloat() % 360f, Offset.Zero) {
             val ray = core.a(40)
@@ -212,7 +212,7 @@ private fun DrawScope.drawSun(e: SceneEngine, alpha: Double, drawn: Drawn?) {
             }
         }
     }
-    drawCircle(Brush.radialGradient(listOf(Color(255, 255, 245), core), Offset(cx - rad * 0.3f, cy - rad * 0.3f), rad * 1.3f), rad, ctr, alpha = a)
+    drawCircle(safeRadial(listOf(Color(255, 255, 245), core), Offset(cx - rad * 0.3f, cy - rad * 0.3f), rad * 1.3f), rad, ctr, alpha = a)
 }
 
 fun defaultMoonImage(px: Int, c: Conditions): ImageBitmap? {
@@ -232,7 +232,7 @@ private fun DrawScope.drawMoon(e: SceneEngine, alpha: Double, drawn: Drawn?, moo
     val day = c.daylight.coerceIn(0.0, 1.0)
     val a = alpha.toFloat().coerceIn(0f, 1f)
     val ctr = Offset(cx, cy)
-    drawCircle(Brush.radialGradient(listOf(Color(220, 230, 255).a((70 * (1 - day)).toInt()), Color(220, 230, 255, 0)), ctr, rad * 3), rad * 3, ctr, alpha = a)
+    drawCircle(safeRadial(listOf(Color(220, 230, 255).a((70 * (1 - day)).toInt()), Color(220, 230, 255, 0)), ctr, rad * 3), rad * 3, ctr, alpha = a)
     val px = max(16, ((rad * 2 / 8).roundToInt()) * 8)
     val img = try { moonImage?.invoke(px, c) } catch (ex: Exception) { null }
     if (img != null) {

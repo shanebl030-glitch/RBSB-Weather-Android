@@ -94,6 +94,7 @@ import io.github.shanebl030glitch.rbsbweather.ui.AppModel
 import io.github.shanebl030glitch.rbsbweather.ui.UiState
 import io.github.shanebl030glitch.rbsbweather.ui.scene.AnimatedWeatherIcon
 import io.github.shanebl030glitch.rbsbweather.ui.scene.MoonRender
+import io.github.shanebl030glitch.rbsbweather.ui.scene.safeRadial
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -211,7 +212,7 @@ private fun io.github.shanebl030glitch.rbsbweather.data.Settings.settingsSelecte
 private fun DrawScope.body(p: Offset, sun: Boolean) {
     val rad = if (sun) 7f else 5f
     val col = if (sun) Color(255, 210, 80) else Color(210, 220, 255)
-    drawCircle(Brush.radialGradient(listOf(col.copy(alpha = 150 / 255f), col.copy(alpha = 0f)), p, rad * 3), rad * 3, p)
+    drawCircle(safeRadial(listOf(col.copy(alpha = 150 / 255f), col.copy(alpha = 0f)), p, rad * 3), rad * 3, p)
     drawCircle(col, rad, p)
     drawCircle(if (sun) Color(60, 40, 0) else Color(40, 40, 60), rad, p, style = Stroke(1f))
 }
@@ -444,7 +445,7 @@ private fun GlobeView(img: EarthImage?, ms: List<Marker>, selected: String?, qua
             val now = img?.time ?: Instant.now()
             paintSky(now, c, rad, cLat, cLon)
             // atmosphere glow
-            drawCircle(Brush.radialGradient(0.86f to Color(90, 150, 255, 0), 0.90f to Color(110, 170, 255, 120), 1f to Color(90, 150, 255, 0), center = c, radius = rad * 1.12f), rad * 1.12f, c)
+            drawCircle(safeRadial(0.86f to Color(90, 150, 255, 0), 0.90f to Color(110, 170, 255, 120), 1f to Color(90, 150, 255, 0), center = c, radius = rad * 1.12f), rad * 1.12f, c)
             val g = globe ?: return@Canvas
             drawImage(g, IntOffset.Zero, IntSize(g.width, g.height), IntOffset((c.x - rad).roundToInt(), (c.y - rad).roundToInt()), IntSize((2 * rad).roundToInt(), (2 * rad).roundToInt()))
             sunriseRim(now, c, rad, cLat, cLon)
@@ -498,14 +499,14 @@ private fun DrawScope.paintSky(t: Instant, c: Offset, rad: Float, cLat: Double, 
         val sr = maxOf(7f, rad * Sky.SUN_SIZE.toFloat())
         if (p.x in -sr * 6..size.width + sr * 6 && p.y in -sr * 6..size.height + sr * 6) {
             val glow = sr * 6f
-            drawCircle(Brush.radialGradient(0f to Color(255, 246, 225, 170), 0.12f to Color(255, 228, 175, 95), 0.35f to Color(255, 200, 130, 30),
+            drawCircle(safeRadial(0f to Color(255, 246, 225, 170), 0.12f to Color(255, 228, 175, 95), 0.35f to Color(255, 200, 130, 30),
                 0.7f to Color(255, 180, 110, 8), 1f to Color(255, 170, 100, 0), center = p, radius = glow), glow, p)
             for ((ang, len) in listOf(0f to 0.8f, 90f to 0.8f, 45f to 0.45f, 135f to 0.45f)) rotate(ang, p) {
                 drawOval(Brush.horizontalGradient(0f to Color(255, 245, 225, 0), 0.5f to Color(255, 250, 235, 55), 1f to Color(255, 245, 225, 0), startX = p.x - glow * len, endX = p.x + glow * len),
                     Offset(p.x - glow * len, p.y - sr * 0.15f), Size(2 * glow * len, sr * 0.3f))
             }
-            drawCircle(Brush.radialGradient(0f to Color(255, 255, 250), 0.4f to Color(255, 252, 238, 235), 0.55f to Color(255, 236, 190, 110), 1f to Color(255, 210, 140, 0), center = p, radius = sr * 2.4f), sr * 2.4f, p)
-            drawCircle(Brush.radialGradient(0f to Color(255, 255, 253), 0.7f to Color(255, 251, 236), 1f to Color(255, 228, 165), center = p, radius = sr), sr, p)
+            drawCircle(safeRadial(0f to Color(255, 255, 250), 0.4f to Color(255, 252, 238, 235), 0.55f to Color(255, 236, 190, 110), 1f to Color(255, 210, 140, 0), center = p, radius = sr * 2.4f), sr * 2.4f, p)
+            drawCircle(safeRadial(0f to Color(255, 255, 253), 0.7f to Color(255, 251, 236), 1f to Color(255, 228, 165), center = p, radius = sr), sr, p)
             sunShown = p.x in 0f..size.width && p.y in 0f..size.height
         }
     }
@@ -542,7 +543,7 @@ private fun DrawScope.indicator(d: Sky.V, b: Triple<Sky.V, Sky.V, Sky.V>, kind: 
     val p = Offset(size.width / 2 + ux * s, size.height / 2 + uy * s)
     val alpha = if (v.z > 0) 0.45f else 0.85f
     val col = if (kind == "sun") Color(255, 214, 90) else Color(215, 222, 240)
-    drawCircle(Brush.radialGradient(listOf(col.copy(alpha = 0.63f * alpha), col.copy(alpha = 0f)), p, 12f), 12f, p)
+    drawCircle(safeRadial(listOf(col.copy(alpha = 0.63f * alpha), col.copy(alpha = 0f)), p, 12f), 12f, p)
     drawCircle(col.copy(alpha = alpha), 4.5f, p)
     if (kind == "moon") drawCircle(Color(2, 3, 10), 3.8f, p + Offset(2.2f, -1.2f))
 }
@@ -556,7 +557,7 @@ private fun DrawScope.sunriseRim(t: Instant, c: Offset, rad: Float, cLat: Double
     val s = (1.0 - abs(rr - 1.0) / 0.6).toFloat()
     if (s <= 0) return
     val lp = Offset(c.x + (xy.first / rr).toFloat() * rad, c.y - (xy.second / rr).toFloat() * rad)
-    drawCircle(Brush.radialGradient(0f to Color(255, 240, 210, (230 * s).toInt()), 0.12f to Color(255, 205, 140, (150 * s).toInt()),
+    drawCircle(safeRadial(0f to Color(255, 240, 210, (230 * s).toInt()), 0.12f to Color(255, 205, 140, (150 * s).toInt()),
         0.45f to Color(255, 150, 80, (40 * s).toInt()), 1f to Color(255, 120, 60, 0), center = lp, radius = rad * 0.5f), rad * 0.5f, lp, blendMode = BlendMode.Plus)
 }
 

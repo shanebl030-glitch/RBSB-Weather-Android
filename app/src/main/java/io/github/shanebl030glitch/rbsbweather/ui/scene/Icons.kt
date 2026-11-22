@@ -57,7 +57,7 @@ private fun drawSunIcon(s: DrawScope, cx: Float, cy: Float, rad: Float, t: Doubl
                 max(1f, rad * 0.18f), StrokeCap.Round)
         }
     }
-    drawCircle(Brush.radialGradient(listOf(Color(255, 240, 150), Color(255, 176, 30)), Offset(cx - rad * 0.3f, cy - rad * 0.3f), rad * 1.4f), rad, Offset(cx, cy))
+    drawCircle(safeRadial(listOf(Color(255, 240, 150), Color(255, 176, 30)), Offset(cx - rad * 0.3f, cy - rad * 0.3f), rad * 1.4f), rad, Offset(cx, cy))
 }
 
 private fun drawMoonIcon(s: DrawScope, cx: Float, cy: Float, rad: Float) = with(s) {

@@ -147,7 +147,7 @@ fun DrawScope.paintStrip(lay: StripLayout, t: Double, unit: TempUnit, tm: TextMe
     val rad = max(r.width, r.height) * 0.62f
     // a feathered shade, squashed to the strip's shape so it fades out evenly on every side
     scale(1f, r.height / max(1f, r.width), r.center) {
-        drawCircle(Brush.radialGradient(0f to Color(0, 10, 30, 95), 0.7f to Color(0, 10, 30, 55), 1f to Color(0, 10, 30, 0),
+        drawCircle(safeRadial(0f to Color(0, 10, 30, 95), 0.7f to Color(0, 10, 30, 55), 1f to Color(0, 10, 30, 0),
             center = r.center, radius = rad), rad, r.center)
     }
     lay.cells.forEachIndexed { i, c ->
