@@ -331,3 +331,7 @@ The `main` branch only has the README. All the work is on
 - Not tested on a phone yet: there's no device or emulator here.
 
 Created By Shane BlackbuRn
+
+**Shane (23 Nov):** "buy me a coffee to be $1.47 NZD", not as a new version and not announced. About now shows NZ$1.47 and the PayPal link asks for 1.47 NZD, with a new test for the link. There is no version bump or CHANGELOG entry; it ships with the next release.
+
+Created By Shane BlackbuRn

@@ -245,7 +245,7 @@ fun HelpScreen(modifier: Modifier = Modifier) {
 
 // ------------------------------------------------------------------ about
 const val COFFEE_URL = "https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=M4EDN77T6EEPJ" +
-    "&item_name=Coffee+for+RBSB-Weather&amount=0.99&currency_code=NZD"
+    "&item_name=Coffee+for+RBSB-Weather&amount=1.47&currency_code=NZD"
 const val REPO_URL = "https://github.com/shanebl030-glitch/RBSB-Weather-Android"
 
 @Composable
@@ -279,7 +279,7 @@ fun AboutScreen(modifier: Modifier = Modifier) {
                 Text("The Sun, Moon, sunrise and sunset, and day and night on the Earth are worked out on your phone.")
             }
         }
-        TextButton(onClick = { open(COFFEE_URL) }) { Text("☕ If you enjoy this app, consider buying me a coffee for NZ$0.99") }
+        TextButton(onClick = { open(COFFEE_URL) }) { Text("☕ If you enjoy this app, consider buying me a coffee for NZ$1.47") }
         TextButton(onClick = { open(REPO_URL) }) { Text("RBSB-Weather for Android on GitHub") }
         Text("A separate app from RBSB-Weather for the desktop.", fontSize = 12.sp)
     }
