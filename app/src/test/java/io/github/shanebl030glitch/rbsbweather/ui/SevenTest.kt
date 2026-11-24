@@ -165,6 +165,16 @@ class SevenTest {
         assertEquals(asked, gps.asked)
     }
 
+    @Test fun theNewestFixWinsThenTheMostAccurate() {
+        val old = Fix(-36.8, 174.7, 20f, 1_000_000L, "fused")            // from before you moved
+        val newer = Fix(-41.2, 174.7, 1500f, 1_000_000L + 10 * 60_000L, "gps")
+        val sameMinuteBetter = Fix(-41.2, 174.7, 15f, 1_000_000L + 10 * 60_000L + 5_000L, "network")
+        val pick = io.github.shanebl030glitch.rbsbweather.background.LocationFinder::best
+        assertEquals("gps", pick(listOf(old, newer))!!.provider)
+        assertEquals("network", pick(listOf(old, newer, sameMinuteBetter))!!.provider)
+        assertNull(pick(emptyList()))
+    }
+
     private fun waitFor(tag: String) = compose.waitUntil(20_000) { compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty() }
 
     @Test fun settingsSectionWithPermissionGranted() {

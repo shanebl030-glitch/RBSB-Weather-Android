@@ -47,30 +47,49 @@ object LocationFinder {
 
     private fun Location.toFix() = Fix(latitude, longitude, if (hasAccuracy()) accuracy else 0f, time, provider ?: "")
 
-    /** Android's location service: a fresh position (up to 20 s), else the most recent one it already has. */
+    /** Fixes this old are refreshed from GPS too (a cached network or fused position may be from before you moved). */
+    const val STALE_MS = 2 * 60_000L
+
+    private suspend fun fresh(lm: LocationManager, provider: String): Fix? {
+        if (Build.VERSION.SDK_INT < 30) return null
+        return withTimeoutOrNull(TIMEOUT_MS) {
+            suspendCancellableCoroutine<Fix?> { cont ->
+                val cancel = CancellationSignal()
+                val ex = Executors.newSingleThreadExecutor()
+                cont.invokeOnCancellation { cancel.cancel(); ex.shutdown() }
+                try {
+                    lm.getCurrentLocation(provider, cancel, ex) { loc -> ex.shutdown(); if (cont.isActive) cont.resume(loc?.toFix()) }
+                } catch (e: Exception) { ex.shutdown(); if (cont.isActive) cont.resume(null) }       // SecurityException, provider gone
+            }
+        }
+    }
+
+    /** The newest of some fixes; within a minute of each other, the more accurate one. */
+    fun best(fixes: List<Fix>): Fix? = fixes.maxWithOrNull(compareBy<Fix> { it.timeMs / 60_000L }.thenBy { -(if (it.accuracyM > 0f) it.accuracyM else 1e6f) })
+
+    /**
+     * Android's location service: a fresh position (fused or network, up to 20 s), compared with the
+     * last position each provider already has; if the newest is more than 2 minutes old, GPS is
+     * asked as well. Logs which provider answered (no coordinates).
+     */
     fun androidSource(ctx: Context) = LocationSource {
         val app = ctx.applicationContext
         if (!hasPermission(app)) return@LocationSource null
         val lm = app.getSystemService(LocationManager::class.java) ?: return@LocationSource null
         val enabled = try { lm.getProviders(true) } catch (e: Exception) { emptyList() }
-        val order = listOfNotNull(if (Build.VERSION.SDK_INT >= 31) LocationManager.FUSED_PROVIDER else null,
-            LocationManager.NETWORK_PROVIDER, LocationManager.GPS_PROVIDER, LocationManager.PASSIVE_PROVIDER).filter { it in enabled }
-        var fresh: Fix? = null
-        if (Build.VERSION.SDK_INT >= 30) {
-            for (p in order.filter { it != LocationManager.PASSIVE_PROVIDER }) {
-                fresh = withTimeoutOrNull(TIMEOUT_MS) {
-                    suspendCancellableCoroutine<Fix?> { cont ->
-                        val cancel = CancellationSignal()
-                        cont.invokeOnCancellation { cancel.cancel() }
-                        try {
-                            lm.getCurrentLocation(p, cancel, Executors.newSingleThreadExecutor()) { loc -> if (cont.isActive) cont.resume(loc?.toFix()) }
-                        } catch (e: SecurityException) { if (cont.isActive) cont.resume(null) } catch (e: Exception) { if (cont.isActive) cont.resume(null) }
-                    }
-                }
-                if (fresh != null) break
-            }
+        val quick = listOfNotNull(if (Build.VERSION.SDK_INT >= 31) LocationManager.FUSED_PROVIDER else null, LocationManager.NETWORK_PROVIDER)
+            .firstOrNull { it in enabled }
+        val got = mutableListOf<Fix>()
+        quick?.let { fresh(lm, it) }?.let { got += it }
+        got += enabled.mapNotNull { p -> try { lm.getLastKnownLocation(p)?.toFix() } catch (e: Exception) { null } }
+        var pick = best(got)
+        val now = System.currentTimeMillis()
+        if ((pick == null || now - pick.timeMs > STALE_MS) && LocationManager.GPS_PROVIDER in enabled && hasPrecise(app)) {
+            fresh(lm, LocationManager.GPS_PROVIDER)?.let { got += it; pick = best(got) }
         }
-        fresh ?: order.mapNotNull { p -> try { lm.getLastKnownLocation(p)?.toFix() } catch (e: SecurityException) { null } }.maxByOrNull { it.timeMs }
+        android.util.Log.i("RBSB-Weather", "My location: ${got.size} fixes from ${enabled.joinToString(",")}; using " +
+            (pick?.let { "${it.provider}, ${(now - it.timeMs) / 1000} s old, ±${it.accuracyM.toInt()} m" } ?: "none"))
+        pick
     }
 
     /** Android's geocoder: suburb (or town), region, country. Null when it's not available or can't name the spot. */

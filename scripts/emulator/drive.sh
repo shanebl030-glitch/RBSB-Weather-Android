@@ -143,7 +143,11 @@ check "turning on My location"; shot here-auckland
 AKL="$(here_now | grep 'Now:')"; echo "HERE (Auckland fix): $AKL"
 dump; grep -q "On: about every 15 minutes" "$OUT/ui.xml" && echo "HERE BACKGROUND: allowed" || echo "HERE BACKGROUND: not shown as allowed"
 for i in 1 2 3 4 5; do adb emu geo fix 174.7756 -41.2866; sleep 1; done   # Wellington, 490 km south
-tap "Update my location now"; for i in $(seq 1 10); do sleep 3; W="$(here_now | grep 'Now:')"; [ -n "$W" ] && [ "$W" != "$AKL" ] && break; done
+for t in 1 2 3; do                                     # the emulator's location service can lag a moment behind
+  tap "Update my location now"
+  for i in $(seq 1 8); do adb emu geo fix 174.7756 -41.2866 >/dev/null; sleep 3; W="$(here_now | grep 'Now:')"; [ -n "$W" ] && [ "$W" != "$AKL" ] && break 2; done
+done
+adb logcat -d -s RBSB-Weather | grep "My location" | tail -6
 check "moving to Wellington"; shot here-wellington
 echo "HERE (Wellington fix): $W"
 [ -n "$AKL" ] && [ -n "$W" ] && [ "$W" != "$AKL" ] && echo "HERE MOVED: yes" || { echo "HERE MOVED: no"; HERE_FAILED=1; }
