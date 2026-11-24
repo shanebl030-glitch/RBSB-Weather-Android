@@ -1,0 +1,87 @@
+// Finds the phone's position for 📍 My location (0.7), using Android's own location service (no
+// Google Play services needed), and names it with Android's geocoder (suburb or town, region,
+// country). Nothing leaves the phone except the rounded coordinates, which go to the weather
+// service the same way a saved place's do. Created By Shane BlackbuRn
+package io.github.shanebl030glitch.rbsbweather.background
+
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.Geocoder
+import android.location.Location
+import android.location.LocationManager
+import android.os.Build
+import android.os.CancellationSignal
+import androidx.core.content.ContextCompat
+import io.github.shanebl030glitch.rbsbweather.data.Fix
+import io.github.shanebl030glitch.rbsbweather.data.Naming
+import io.github.shanebl030glitch.rbsbweather.data.PlaceNamer
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
+import java.util.Locale
+import java.util.concurrent.Executors
+import kotlin.coroutines.resume
+
+/** Where the phone is: a fix, or null if it can't tell right now. */
+fun interface LocationSource { suspend fun current(): Fix? }
+
+object LocationFinder {
+    const val TIMEOUT_MS = 20_000L
+
+    fun hasPermission(ctx: Context) =
+        ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+    fun hasPrecise(ctx: Context) =
+        ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+    /** "Allow all the time": needed for the widget to follow you while the app is closed. */
+    fun hasBackground(ctx: Context) =
+        ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+    /** Is the phone's Location switch on? */
+    fun locationOn(ctx: Context): Boolean = try {
+        val lm = ctx.getSystemService(LocationManager::class.java)
+        if (Build.VERSION.SDK_INT >= 28) lm.isLocationEnabled else true
+    } catch (e: Exception) { false }
+
+    private fun Location.toFix() = Fix(latitude, longitude, if (hasAccuracy()) accuracy else 0f, time, provider ?: "")
+
+    /** Android's location service: a fresh position (up to 20 s), else the most recent one it already has. */
+    fun androidSource(ctx: Context) = LocationSource {
+        val app = ctx.applicationContext
+        if (!hasPermission(app)) return@LocationSource null
+        val lm = app.getSystemService(LocationManager::class.java) ?: return@LocationSource null
+        val enabled = try { lm.getProviders(true) } catch (e: Exception) { emptyList() }
+        val order = listOfNotNull(if (Build.VERSION.SDK_INT >= 31) LocationManager.FUSED_PROVIDER else null,
+            LocationManager.NETWORK_PROVIDER, LocationManager.GPS_PROVIDER, LocationManager.PASSIVE_PROVIDER).filter { it in enabled }
+        var fresh: Fix? = null
+        if (Build.VERSION.SDK_INT >= 30) {
+            for (p in order.filter { it != LocationManager.PASSIVE_PROVIDER }) {
+                fresh = withTimeoutOrNull(TIMEOUT_MS) {
+                    suspendCancellableCoroutine<Fix?> { cont ->
+                        val cancel = CancellationSignal()
+                        cont.invokeOnCancellation { cancel.cancel() }
+                        try {
+                            lm.getCurrentLocation(p, cancel, Executors.newSingleThreadExecutor()) { loc -> if (cont.isActive) cont.resume(loc?.toFix()) }
+                        } catch (e: SecurityException) { if (cont.isActive) cont.resume(null) } catch (e: Exception) { if (cont.isActive) cont.resume(null) }
+                    }
+                }
+                if (fresh != null) break
+            }
+        }
+        fresh ?: order.mapNotNull { p -> try { lm.getLastKnownLocation(p)?.toFix() } catch (e: SecurityException) { null } }.maxByOrNull { it.timeMs }
+    }
+
+    /** Android's geocoder: suburb (or town), region, country. Null when it's not available or can't name the spot. */
+    fun androidNamer(ctx: Context) = PlaceNamer { lat, lon ->
+        if (!Geocoder.isPresent()) return@PlaceNamer null
+        try {
+            @Suppress("DEPRECATION")
+            val a = Geocoder(ctx.applicationContext, Locale.getDefault()).getFromLocation(lat, lon, 1)?.firstOrNull() ?: return@PlaceNamer null
+            val name = listOf(a.subLocality, a.locality, a.subAdminArea, a.adminArea).firstOrNull { !it.isNullOrBlank() } ?: return@PlaceNamer null
+            val region = listOf(a.locality, a.subAdminArea, a.adminArea).firstOrNull { !it.isNullOrBlank() && it != name } ?: ""
+            Naming(name, region, a.countryName ?: "")
+        } catch (e: Exception) { null }
+    }
+}

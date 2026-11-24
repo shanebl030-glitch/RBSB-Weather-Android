@@ -21,6 +21,9 @@ import io.github.shanebl030glitch.rbsbweather.data.cleanKey
 import io.github.shanebl030glitch.rbsbweather.data.providerInfo
 import io.github.shanebl030glitch.rbsbweather.data.OpenMeteo
 import io.github.shanebl030glitch.rbsbweather.data.Place
+import io.github.shanebl030glitch.rbsbweather.data.Fix
+import io.github.shanebl030glitch.rbsbweather.data.Here
+import io.github.shanebl030glitch.rbsbweather.data.PlaceNamer
 import io.github.shanebl030glitch.rbsbweather.data.Settings
 import io.github.shanebl030glitch.rbsbweather.data.UnitPrefs
 import io.github.shanebl030glitch.rbsbweather.data.WeatherException
@@ -90,6 +93,8 @@ data class UiState(
     val checking: Boolean = false,
     val earthGlobe: Boolean = false,                          // Earth screen: globe (true) or flat map
     val focusQuake: String? = null,
+    val locating: Boolean = false,                            // 📍 My location (0.7): finding where the phone is
+    val hereNote: String? = null,                             // why My location couldn't update, if it couldn't
 )
 
 class AppModel(
@@ -104,6 +109,7 @@ class AppModel(
     private val watch: Watch? = null,                         // warnings and earthquakes
     private val notify: (List<Notice>, Settings) -> Unit = { _, _ -> },
     private val onTempNotification: (Boolean) -> Unit = {},     // show or remove the temperature notification
+    private val onWidgetPlace: () -> Unit = {},                 // the widgets' place changed (0.7)
 ) {
     private val _state = MutableStateFlow(UiState(settings = Settings.fromJson(store.load()),
         keysSaved = ALL_PROVIDERS.filter { it.needsKey && providers?.hasKey(it.id) == true }.map { it.id }.toSet()))
@@ -155,7 +161,8 @@ class AppModel(
                 }
             }
             _state.update { st ->
-                val stillSaved = st.settings.places.any { it.key == place.key }
+                // still saved, and (for 📍 My location) still at the same spot it was fetched for
+                val stillSaved = st.settings.places.any { it.key == place.key && it.latitude == place.latitude && it.longitude == place.longitude }
                 result.fold(
                     onSuccess = { f ->
                         failures.remove(place.key)
@@ -223,6 +230,7 @@ class AppModel(
     fun remove(key: String) {
         val s = _state.value.settings
         val place = s.places.firstOrNull { it.key == key } ?: return
+        if (place.current) { setFollowLocation(false); _state.update { it.copy(message = "Stopped using your location") }; return }
         saveSettings(s.withoutPlace(key))
         _state.update { it.copy(forecasts = it.forecasts - key, errors = it.errors - key,
             loading = it.loading - key, message = "Removed ${place.name}") }
@@ -230,6 +238,87 @@ class AppModel(
     }
 
     fun move(key: String, delta: Int) = saveSettings(_state.value.settings.moved(key, delta))
+
+    // ------------------------------------------------------- 📍 My location (0.7)
+    /** Turn "Use my location" on or off. Off removes 📍 My location and its saved forecast. */
+    fun setFollowLocation(on: Boolean) {
+        val s = _state.value.settings
+        if (on) {
+            saveSettings(s.copy(followLocation = true))
+        } else {
+            val h = s.here()
+            saveSettings(s.withoutHere().copy(followLocation = false))
+            if (h != null) {
+                _state.update { it.copy(forecasts = it.forecasts - h.key, errors = it.errors - h.key, loading = it.loading - h.key) }
+                scope.launch { withContext(io) { repo.forget(h) } }
+            }
+            _state.update { it.copy(hereNote = null) }
+        }
+        widgetPlaceChanged()
+    }
+
+    /** Whether the widgets (and the status-bar temperature) show 📍 My location rather than the place you're looking at. */
+    fun setWidgetHere(on: Boolean) {
+        saveSettings(_state.value.settings.copy(widgetHere = on))
+        widgetPlaceChanged()
+    }
+
+    private fun widgetPlaceChanged() {
+        try { onWidgetPlace() } catch (e: Exception) { }
+        if (_state.value.settings.tempNotification) try { onTempNotification(true) } catch (e: Exception) { }
+    }
+
+    /**
+     * Ask where the phone is and move 📍 My location if it has moved more than a kilometre (a new
+     * suburb, town or country). Does nothing when "Use my location" is off or a look-up is running.
+     */
+    fun locate(source: suspend () -> Fix?, namer: PlaceNamer) {
+        if (!_state.value.settings.followLocation || _state.value.locating) return
+        _state.update { it.copy(locating = true) }
+        scope.launch {
+            val old = _state.value.settings.here()
+            val (next, note) = withContext(io) {
+                try {
+                    val fix = source()
+                    when {
+                        fix == null -> null to "Couldn't find where you are right now (is Location on?)."
+                        !Here.usable(fix, now()) -> null to "Your phone's position wasn't accurate enough this time."
+                        else -> Here.next(old, fix, now(), namer) to null
+                    }
+                } catch (e: Exception) { null to "Couldn't find where you are: ${e.javaClass.simpleName}." }
+            }
+            _state.update { it.copy(locating = false, hereNote = note) }
+            if (next != null && _state.value.settings.followLocation) setHere(next)
+            else if (old != null) refresh(old)         // same spot: just update it if it's due
+        }
+    }
+
+    fun setHereNote(note: String?) = _state.update { it.copy(hereNote = note) }
+
+    /** Put 📍 My location at `place` (from [locate], or from the background check while the app is open). */
+    fun setHere(place: Place) {
+        val s = _state.value.settings
+        if (!s.followLocation) return
+        val old = s.here()
+        val h = place.copy(current = true)
+        if (old != null && old.latitude == h.latitude && old.longitude == h.longitude) {
+            if (old.name != h.name) saveSettings(s.withHere(h))
+            return
+        }
+        saveSettings(s.withHere(h))
+        // the old spot's weather isn't shown for the new one
+        _state.update { it.copy(forecasts = it.forecasts - h.key, errors = it.errors - h.key, loading = it.loading - h.key) }
+        failures.remove(h.key)
+        if (old != null) say("📍 Now at ${h.name}")
+        widgetPlaceChanged()
+        scope.launch {
+            val cached = withContext(io) { repo.cached(h) }       // the background check may have it already
+            if (cached != null && _state.value.settings.here()?.let { it.latitude == h.latitude && it.longitude == h.longitude } == true)
+                _state.update { it.copy(forecasts = it.forecasts + (h.key to cached)) }
+            refresh(h, force = true)
+            checkWatch(force = true)
+        }
+    }
 
     // ------------------------------------------------------------- settings
     fun setUnits(u: UnitPrefs) = saveSettings(_state.value.settings.copy(units = u))

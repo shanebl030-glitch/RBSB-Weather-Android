@@ -39,9 +39,9 @@ fun ageText(seconds: Long): String {
 }
 
 fun widgetData(settings: Settings, fc: Forecast?, nowMs: Long = System.currentTimeMillis(), alerts: List<Alert> = emptyList()): WidgetData {
-    val place = settings.selectedPlace()
+    val place = settings.widgetPlace()
         ?: return WidgetData("RBSB-Weather", "", "–", "Open the app to add a place", "", "", false)
-    if (fc == null) return WidgetData(place.name, "", "–", "Waiting for the weather", "", "Updating…", false)
+    if (fc == null) return WidgetData(place.label, "", "–", "Waiting for the weather", "", "Updating…", false)
     val u = settings.units
     val c = fc.current
     val today = fc.daily.firstOrNull()
@@ -61,6 +61,6 @@ fun widgetData(settings: Settings, fc: Forecast?, nowMs: Long = System.currentTi
         updated = "↻ $stamp" + if (warn) " (${ageText(age)})" else ""
     }
     val top = if (settings.alerts.banner) alerts.firstOrNull() else null
-    return WidgetData(place.name, source, Units.fmtTemp(c.temperature, u.temp), WeatherCodes.describe(c.weatherCode), hiLo, updated, warn,
+    return WidgetData(place.label, source, Units.fmtTemp(c.temperature, u.temp), WeatherCodes.describe(c.weatherCode), hiLo, updated, warn,
         top?.let { "⚠ " + it.title() } ?: "", top?.level ?: "")
 }

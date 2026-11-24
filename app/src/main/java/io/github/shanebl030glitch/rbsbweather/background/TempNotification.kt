@@ -63,14 +63,14 @@ object TempNotification {
         try {
             val g = AppGraph.get(app)
             val s = g.settings()
-            val place = s.selectedPlace()
+            val place = s.widgetPlace()
             if (!s.tempNotification || place == null || !Notifier.allowed(app)) { nm.cancel(ID); return }
             if (Build.VERSION.SDK_INT >= 26) app.getSystemService(NotificationManager::class.java)?.createNotificationChannel(
                 NotificationChannel(CHANNEL, "Temperature in the status bar", NotificationManager.IMPORTANCE_LOW).apply {
                     description = "Keeps the temperature of the place on screen in the status bar"; setShowBadge(false)
                 })
             val fc = g.repo.cached(place)
-            val (title, text) = texts(s, fc, place.name)
+            val (title, text) = texts(s, fc, place.label)
             val open = PendingIntent.getActivity(app, ID, Intent(app, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
             val n = NotificationCompat.Builder(app, CHANNEL)

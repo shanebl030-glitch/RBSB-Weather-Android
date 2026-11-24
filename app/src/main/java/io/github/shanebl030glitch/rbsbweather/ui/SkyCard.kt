@@ -158,7 +158,7 @@ fun SkyCard(
                     WarningBanner(alert, moreAlerts, io.github.shanebl030glitch.rbsbweather.data.Sun.zoneFor(place, fc?.utcOffsetSeconds), units.clock, onAlert,
                         Modifier.padding(bottom = 6.dp).avoid("banner"))
                 }
-                Text(place.displayName, style = white.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold), maxLines = 2,
+                Text((if (place.current) "📍 " else "") + place.displayName, style = white.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold), maxLines = 2,
                     modifier = Modifier.widthIn(max = 260.dp).avoid("place"))
                 val c = fc?.current
                 val temp = if (hp != null) hp.temperature else c?.temperature

@@ -128,7 +128,7 @@ fun PlacesScreen(state: UiState, model: AppModel, modifier: Modifier = Modifier)
                     modifier = Modifier.padding(end = 10.dp))
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(p.name, fontWeight = if (p.key == state.settings.selected) FontWeight.Bold else FontWeight.Normal)
+                        Text(p.label, fontWeight = if (p.key == state.settings.selected) FontWeight.Bold else FontWeight.Normal)
                         if (state.settings.alerts.banner) state.alerts[p.key]?.firstOrNull()?.let {
                             Badge(it.level, it.badge, Modifier.padding(start = 6.dp).clickable { model.openWarnings(p.key) }.testTag("badge-${p.name}"))
                         }
@@ -157,8 +157,9 @@ fun PlacesScreen(state: UiState, model: AppModel, modifier: Modifier = Modifier)
     confirm?.let { p ->
         AlertDialog(
             onDismissRequest = { confirm = null },
-            title = { Text("Remove ${p.name}?") },
-            text = { Text("Its saved forecast is deleted too. You can add it again any time.") },
+            title = { Text(if (p.current) "Stop using your location?" else "Remove ${p.name}?") },
+            text = { Text(if (p.current) "📍 My location is removed and \"Use my location\" is turned off. Turn it on again in Settings any time."
+                else "Its saved forecast is deleted too. You can add it again any time.") },
             confirmButton = { TextButton(onClick = { model.remove(p.key); confirm = null }, modifier = Modifier.testTag("confirmRemove")) { Text("Remove") } },
             dismissButton = { TextButton(onClick = { confirm = null }) { Text("Cancel") } },
         )
@@ -183,6 +184,7 @@ fun SettingsScreen(state: UiState, model: AppModel, modifier: Modifier = Modifie
     val s = state.settings
     val u = s.units
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).testTag("settings")) {
+        MyLocationSection(state, model)
         SettingsLink("Weather Alerts", "Official warnings, your own limits, notifications", "openAlertSettings") { model.go(Screen.ALERT_SETTINGS) }
         SettingsLink("Earthquakes", "What to show, and when to notify", "openQuakeSettings") { model.go(Screen.QUAKE_SETTINGS) }
         Card(Modifier.fillMaxWidth().clickable { model.go(Screen.PROVIDERS) }.testTag("openProviders")) {
@@ -286,7 +288,7 @@ fun AboutScreen(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SwitchRow(title: String, sub: String, checked: Boolean, tag: String, onChange: (Boolean) -> Unit) {
+internal fun SwitchRow(title: String, sub: String, checked: Boolean, tag: String, onChange: (Boolean) -> Unit) {
     // the whole row (title and words too) turns it on and off, not just the small switch
     Row(Modifier.fillMaxWidth().padding(top = 16.dp)
         .toggleable(checked, role = androidx.compose.ui.semantics.Role.Switch, onValueChange = onChange).testTag(tag),

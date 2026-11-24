@@ -70,7 +70,7 @@ object Widgets {
     fun refreshIfDue(context: Context): Boolean {
         val g = AppGraph.get(context)
         val s = g.settings()
-        val place = s.selectedPlace() ?: return false
+        val place = s.widgetPlace() ?: return false
         val fc = g.repo.cached(place)
         val maxAge = (if (s.refreshMinutes == 0) 60 else s.refreshMinutes) * 60_000L
         if (fc != null && System.currentTimeMillis() - fc.fetchedAt < maxAge) return false
@@ -122,8 +122,8 @@ object Widgets {
         if (ids.isEmpty()) return
         val g = AppGraph.get(context)
         val s = g.settings()
-        val fc = s.selectedPlace()?.let { g.repo.cached(it) }
-        val alerts = s.selectedPlace()?.let { p -> try { g.watch.alertsFor(p, s, fc) } catch (e: Exception) { emptyList() } } ?: emptyList()
+        val fc = s.widgetPlace()?.let { g.repo.cached(it) }
+        val alerts = s.widgetPlace()?.let { p -> try { g.watch.alertsFor(p, s, fc) } catch (e: Exception) { emptyList() } } ?: emptyList()
         val data = widgetData(s, fc, alerts = alerts)
         val density = context.resources.displayMetrics.density
         for (id in ids) {

@@ -39,6 +39,8 @@ class AppGraph private constructor(context: Context) {
     /** Set by the open app so the chain follows changes at once; otherwise read from storage. */
     @Volatile var liveSettings: (() -> Settings)? = null
     fun settings(): Settings = liveSettings?.invoke() ?: Settings.fromJson(store.load())
+    /** Set by the open app (0.7): the background check hands a new 📍 My location to it instead of writing the settings itself. */
+    @Volatile var onHere: ((io.github.shanebl030glitch.rbsbweather.data.Place) -> Unit)? = null
     val providers = ProviderManager(Http.default, PrefsKeys(context), ::settings)
     val repo = WeatherRepository({ providers.chain() }, ForecastCache(File(context.filesDir, "forecasts")),
         { settings().recovery })
