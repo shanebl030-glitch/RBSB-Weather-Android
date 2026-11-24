@@ -183,7 +183,7 @@ class SevenTest {
         compose.onNodeWithTag("widgetHereSwitch").assertIsOn()
         compose.onNodeWithTag("backgroundOff").assertExists()
         gps.fix = AKL_FIX
-        compose.onNodeWithTag("locateNow").performScrollTo().performClick()
+        compose.onNodeWithTag("locateNow").performClick()
         compose.waitUntil(10_000) { m.state.value.settings.here()?.name == "Auckland Central" }
         compose.onNodeWithTag("widgetHereSwitch").performClick()
         compose.waitUntil(5_000) { !m.state.value.settings.widgetHere }

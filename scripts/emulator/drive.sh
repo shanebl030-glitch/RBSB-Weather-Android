@@ -131,6 +131,26 @@ adb shell input keyevent KEYCODE_HOME; sleep 5
 adb shell am start -n $PKG/.MainActivity; sleep 6; check "reopening"; shot reopened
 tap "Earth"; sleep 3; tap "Earth Globe"; sleep 8; check "globe after reopening"; shot globe-reopened
 
+step "📍 My location: Auckland, then Wellington (0.7)"
+here_now() { dump; grep -o 'text="\(Now: [^"]*\|Finding[^"]*\|Waiting for your[^"]*\|Couldn.t find[^"]*\|Your phone[^"]*\)"' "$OUT/ui.xml" | head -2; }
+adb shell pm grant $PKG android.permission.ACCESS_COARSE_LOCATION
+adb shell pm grant $PKG android.permission.ACCESS_FINE_LOCATION
+adb shell pm grant $PKG android.permission.ACCESS_BACKGROUND_LOCATION
+adb emu geo fix 174.7635 -36.8485; sleep 3           # longitude first: Auckland CBD
+back_to_forecast; tap "Menu" && sleep 1 && tap "Settings"; sleep 4
+tap "📍 Use my location"; for i in $(seq 1 10); do sleep 3; here_now | grep -q "Now:" && break; done
+check "turning on My location"; shot here-auckland
+AKL="$(here_now | grep 'Now:')"; echo "HERE (Auckland fix): $AKL"
+dump; grep -q "On: about every 15 minutes" "$OUT/ui.xml" && echo "HERE BACKGROUND: allowed" || echo "HERE BACKGROUND: not shown as allowed"
+for i in 1 2 3 4 5; do adb emu geo fix 174.7756 -41.2866; sleep 1; done   # Wellington, 490 km south
+tap "Update my location now"; for i in $(seq 1 10); do sleep 3; W="$(here_now | grep 'Now:')"; [ -n "$W" ] && [ "$W" != "$AKL" ] && break; done
+check "moving to Wellington"; shot here-wellington
+echo "HERE (Wellington fix): $W"
+[ -n "$AKL" ] && [ -n "$W" ] && [ "$W" != "$AKL" ] && echo "HERE MOVED: yes" || { echo "HERE MOVED: no"; HERE_FAILED=1; }
+back_to_forecast; check "forecast with My location"; shot here-forecast
+adb shell input keyevent KEYCODE_HOME; sleep 3
+adb shell am start -n $PKG/.MainActivity; sleep 6; check "reopening with My location"
+
 step "pull to refresh"
 tap "Forecast"; sleep 3; adb shell input swipe 540 700 540 1500 400; sleep 8; check "refresh"
 
@@ -138,3 +158,4 @@ adb logcat -d > "$OUT/logcat.txt"
 grep -n "FATAL\|ANR in\|OutOfMemory\|Skipped [0-9]* frames\|Davey" "$OUT/logcat.txt" | head -40
 echo "APP ALIVE: no crash"
 [ "${GLOBE_FAILED:-0}" = 0 ] || exit 3
+[ "${HERE_FAILED:-0}" = 0 ] || exit 4

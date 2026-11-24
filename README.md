@@ -10,7 +10,7 @@ with its own versions, releases and tests.
 
 **Designed and Created By Shane BlackbuRn** · **Coded By Claude AI**
 
-## What it does (0.6)
+## What it does (0.7)
 
 - Search for any city or town and save up to 50 places. Swipe between them.
 - The desktop app's animated sky, ported: the Sun and the Moon in its real
@@ -40,6 +40,9 @@ with its own versions, releases and tests.
   with moving wind streaks.
 - Check for updates (from GitHub, checked against SHA256SUMS, then Android asks you to install it), Test connection, and an
   optional temperature in the status bar.
+- 📍 My location (0.7, Android only): a place that follows your phone to another suburb,
+  town or country, and the widget and status-bar temperature can follow it too
+  (also while the app is closed, with "Allow all the time" location access).
 - See [PARITY.md](PARITY.md) for every desktop feature and its Android status.
 - °C/°F, km/h · m/s · mph · knots, mm/inches, 12/24-hour time.
 
@@ -153,7 +156,10 @@ To build on your own computer, you need JDK 17 and the Android SDK:
 ## Data and privacy
 
 Only the coordinates of your saved places (and what you type when searching) are
-sent, and only to the weather services you've chosen. API keys you enter are
+sent, and only to the weather services you've chosen. If you turn on 📍 My
+location, the phone's position is rounded to about 100 m first and treated
+the same way; it's never sent anywhere else. Location access is only asked for
+when you turn it on. API keys you enter are
 kept in the app's private storage, apart from the settings, and are excluded
 from phone backups. There's no tracking and no account.
 

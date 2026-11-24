@@ -78,6 +78,8 @@ fun MyLocationSection(state: UiState, model: AppModel,
                 val small = Modifier.padding(top = 6.dp)
                 Text(when {
                     state.locating -> "Finding where you are…"
+                    here != null && here.name == io.github.shanebl030glitch.rbsbweather.data.Here.UNNAMED ->       // no geocoder: show where
+                        "Now: ${here.name} (" + String.format(java.util.Locale.US, "%.3f, %.3f", here.latitude, here.longitude) + ")"
                     here != null -> "Now: ${here.displayName}"
                     else -> "Waiting for your phone's location…"
                 }, fontSize = 13.sp, modifier = small.testTag("hereStatus"))

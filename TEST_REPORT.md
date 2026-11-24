@@ -4,13 +4,23 @@ Created By Shane BlackbuRn
 
 | Item | Result |
 |---|---|
-| Version | 0.6.2 (test build) |
-| Date | 2026-11-22 |
+| Version | 0.7.0 (test build) |
+| Date | 2026-11-25 |
 | Where | GitHub Actions: Ubuntu 26.04 runner, JDK 17 (Temurin), Gradle 8.14.3, Android Gradle Plugin 8.10.1, Kotlin 2.1.21, Compose BOM 2025.05.01, compile/target SDK 35, min SDK 29 |
 | Command | `./gradlew testDebugUnitTest`, then `./gradlew assembleRelease` |
 | Tests | 180+ run, all passed on GitHub Actions (see the CI run for this commit), plus the emulator check (run 45069457909): every step passed, no crash |
 
 ## What's tested
+
+**New in 0.7 (📍 My location):**
+- **When it moves** (HereTest): a first fix makes My location, rounded to 3 decimals and named; under 1 km changes nothing and doesn't ask for a name; 1.5 km, another city and another country move it; NaN, out-of-range, older than 30 minutes or vaguer than 5 km fixes are ignored; without a name it keeps the old name nearby, else "My location".
+- **Settings:** saved and read back; first in the list when new, keeps its spot after that; the widget's place with each switch; settings from before 0.7 still read.
+- **Saved forecast:** Auckland's saved weather isn't shown after My location moves to Wellington; its file is kept while it's in use.
+- **The app** (SevenTest): off by default and never looks; on, it adds My location and fetches its weather; a few hundred metres changes nothing; driving to Wellington renames it, fetches Wellington's weather, says "📍 Now at …" and updates the widget; no fix explains why and keeps the last place; turning it off or the bin removes it and its saved forecast; the widget shows 📍 My location or the place on screen.
+- **The background check:** without "Allow all the time" it never looks; with it, it moves My location and gets the weather; unchanged, it does nothing; with the app open it hands the place to the app instead; turned off, it never looks.
+- **The Settings section** (Robolectric, with Android's location permission granted): the switch, the status ("Now: …"), the approximate-location note, Update my location now, Widgets show my location, the "while the app is closed" text with and without background access, and turning it off. My places shows 📍 and the bin asks "Stop using your location?".
+- **Emulator check:** location permissions granted, the emulator's position set to Auckland and then Wellington (`adb emu geo fix`); the step passes only if My location changes.
+- **Not testable here:** a real phone travelling, Android's battery limits on the background check, and the geocoder names on your phone (the test emulator may not have one).
 
 **0.6.2:**
 - The same code and tests as 0.6.0. 0.6.1 had removed the in-app installer, and Shane chose to keep it and explain the Play Protect warning instead.

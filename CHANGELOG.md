@@ -4,6 +4,25 @@ Created By Shane BlackbuRn
 
 A separate app from RBSB-Weather for the desktop, with its own versions.
 
+## 0.7.0 – 2026-11-25 (test build)
+
+Shane: "I'd like to add GPS tracking so if I travel to a different suburb or city or country it updates the widget. This is only for the android not the desktop app."
+
+### Added
+- **📍 My location** (Android only). Settings → **📍 Use my location** adds a place that follows the phone:
+  - it moves when you've travelled more than 1 km (another suburb, town or country), and is named by Android's geocoder (suburb or town, region, country). Small wobbles of the location fix don't cause new downloads;
+  - it's an ordinary place in the pager, My places, warnings, earthquakes, Moon, Earth and Wind, shown with 📍;
+  - it updates whenever you open the app, and **Update my location now** updates it at once.
+- **Widgets show my location** (on by default when Use my location is on): the home-screen widgets and the status-bar temperature show 📍 My location instead of the place you last looked at.
+- **While the app is closed:** with Android's **Allow all the time** location access, the background check (about every 15 minutes, when Android allows) moves My location and refreshes the widget. Without it, My location updates when you open the app. Settings shows which, with a button to Android's setting.
+- **Permissions:** approximate or precise location (asked only when you turn it on; approximate is enough), and optional background location. No Google Play services needed.
+- **Privacy:** coordinates are rounded to 3 decimals (about 100 m) before they're stored or sent, and go only to your weather providers, the same as any saved place.
+
+### Changed
+- **Buy me a coffee** is now NZ$1.47 (About and the PayPal link). This was changed on main without a release on 23 Nov and ships with this version.
+- Removing 📍 My location from My places turns Use my location off.
+- A saved forecast for My location is only shown if it's for the same spot (within 1 km).
+
 ## 0.6.2 – 2026-11-23 (released as v0.6.2)
 
 Shane: "I was about to say before you made the change to keep it as is but we can mention it on the GitHub page update".

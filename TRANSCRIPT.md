@@ -334,4 +334,17 @@ Created By Shane BlackbuRn
 
 **Shane (23 Nov):** "buy me a coffee to be $1.47 NZD", not as a new version and not announced. About now shows NZ$1.47 and the PayPal link asks for 1.47 NZD, with a new test for the link. There is no version bump or CHANGELOG entry; it ships with the next release.
 
+## 0.7.0: 📍 My location (25 Nov)
+
+**Shane:** "I'd like to add GPS tracking so if I travel to a different suburb or city or country it updates the widget. This is only for the android not the desktop app."
+
+**What I built** (branch `claude/android-0.7.0`):
+- Settings → **📍 Use my location** adds a special place, 📍 My location, that follows the phone. It moves once you're more than 1 km away and is named by Android's geocoder.
+- **Widgets show my location** makes the widgets and the status-bar temperature show it.
+- It updates when the app opens. With **Allow all the time**, the background check (about every 15 minutes) moves it and refreshes the widget while the app is closed.
+- Android's own location service is used (no Google Play services). Coordinates are rounded to about 100 m. The desktop app is unchanged.
+- The NZ$1.47 coffee change from 23 Nov ships with this version.
+
+**Tested:** see TEST_REPORT.md: new unit, app and screen tests, plus an emulator step that moves the emulator from Auckland to Wellington. A real phone travelling still needs checking by Shane.
+
 Created By Shane BlackbuRn
