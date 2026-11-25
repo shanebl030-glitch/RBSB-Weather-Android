@@ -151,7 +151,23 @@ adb logcat -d -s RBSB-Weather | grep "My location" | tail -6
 check "moving to Wellington"; shot here-wellington
 echo "HERE (Wellington fix): $W"
 [ -n "$AKL" ] && [ -n "$W" ] && [ "$W" != "$AKL" ] && echo "HERE MOVED: yes" || { echo "HERE MOVED: no"; HERE_FAILED=1; }
-back_to_forecast; check "forecast with My location"; shot here-forecast
+# Shane's examples: My location must show the suburb or town, not just "Auckland"
+for spot in "Waiuku|174.7310|-37.2490" "East Tamaki|174.8960|-36.9460" "Clarks Beach|174.7000|-37.1330"; do
+  IFS='|' read -r want lon lat <<< "$spot"
+  prev="$(here_now | grep 'Now:')"; got=""
+  for t in 1 2 3; do
+    tap "Update my location now" >/dev/null
+    for i in $(seq 1 8); do adb emu geo fix $lon $lat >/dev/null; sleep 3; got="$(here_now | grep 'Now:')"; [ -n "$got" ] && [ "$got" != "$prev" ] && break 2; done
+  done
+  echo "SUBURB ($want): $got"
+  echo "$got" | grep -qi "$want" && echo "SUBURB OK: $want" || { echo "SUBURB WRONG: wanted $want"; HERE_FAILED=1; }
+  shot "here-${want// /-}"
+done
+adb logcat -d -s RBSB-Weather | grep "My location name" | tail -4
+back_to_forecast; check "forecast with My location"
+for i in 1 2 3; do adb shell input swipe 150 1200 950 1200 300; sleep 1; done     # the first page: 📍 My location
+sleep 3; shot here-forecast
+dump; grep -o 'text="📍[^"]*"' "$OUT/ui.xml" | head -2
 adb shell input keyevent KEYCODE_HOME; sleep 3
 adb shell am start -n $PKG/.MainActivity; sleep 6; check "reopening with My location"
 
