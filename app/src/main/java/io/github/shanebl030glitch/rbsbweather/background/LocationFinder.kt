@@ -73,7 +73,8 @@ object LocationFinder {
     }
 
     /**
-     * Android 10 has no "current location" call: ask for one update and stop listening as soon as
+     * One update by listening: used for GPS, and for everything on Android 10, which has no
+     * "current location" call. Ask for one update and stop listening as soon as
      * it comes, or after 20 s. (Found by the stability audit: without this, Android 10 only had a
      * position if another app had asked recently.)
      */
@@ -123,7 +124,8 @@ object LocationFinder {
         var pick = best(got)
         val now = System.currentTimeMillis()
         if ((pick == null || now - pick.timeMs > staleMs) && LocationManager.GPS_PROVIDER in enabled && hasPrecise(app)) {
-            fresh(lm, LocationManager.GPS_PROVIDER)?.let { got += it; pick = best(got) }
+            // GPS: one update by listening (getCurrentLocation for GPS gave nothing after the first fix on Android 12 in the audit)
+            freshAndroid10(lm, LocationManager.GPS_PROVIDER)?.let { got += it; pick = best(got) }
         }
         android.util.Log.i("RBSB-Weather", "My location: ${got.size} fixes from ${enabled.joinToString(",")}; using " +
             (pick?.let { "${it.provider}, ${(now - it.timeMs) / 1000} s old, ±${it.accuracyM.toInt()} m" } ?: "none"))
