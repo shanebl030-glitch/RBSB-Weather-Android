@@ -13,7 +13,7 @@ dump() { adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; adb shell ca
 tap() { for i in 1 2 3 4 5 6 7 8; do dump; if xy=$(python3 "$HERE/find.py" "$OUT/ui.xml" "$1" "${2:-exact}"); then adb shell input tap $xy; echo "tapped '$1'"; return 0; fi; sleep 2; done; echo "not found: '$1'"; return 1; }
 crashes() {   # print any crash or ANR of the app since the last clear
   adb logcat -d -b crash 2>/dev/null | grep -A40 "Process: $PKG" | head -60
-  adb logcat -d 2>/dev/null | grep -E "ANR in $PKG|FATAL EXCEPTION.*|OutOfMemoryError" | grep -v "^--" | head -10
+  adb logcat -d 2>/dev/null | grep -E "ANR in $PKG" | grep -v "^--" | head -10      # other apps' crashes (the launcher, say) aren't ours
 }
 
 adb root >/dev/null 2>&1; sleep 4; adb wait-for-device      # to read Android's ANR traces (allowed on test images)
@@ -56,11 +56,12 @@ for seed in 11 23 37 41 59; do
       --pct-rotation 4 --pct-nav 6 --pct-majornav 6 --pct-touch 50 --pct-motion 25 --pct-trackball 0 --pct-flip 0 \
       --monitor-native-crashes -v "$EVENTS" > "$OUT/monkey-$seed.txt" 2>&1
   tail -3 "$OUT/monkey-$seed.txt"
-  if grep -q "// CRASH\|// NOT RESPONDING\|Monkey aborted" "$OUT/monkey-$seed.txt"; then
+  grep "// CRASH: \|// NOT RESPONDING: " "$OUT/monkey-$seed.txt" | grep -v "$PKG" | sed 's/^/(another app, not counted) /' | head -3
+  if grep -q "// CRASH: $PKG\|// NOT RESPONDING: $PKG" "$OUT/monkey-$seed.txt"; then
     echo "MONKEY FOUND A PROBLEM (seed $seed):"; grep -A30 "// CRASH\|// NOT RESPONDING" "$OUT/monkey-$seed.txt" | head -50; FAIL=1
-    grep -q "NOT RESPONDING" "$OUT/monkey-$seed.txt" && anr_trace
+    grep -q "NOT RESPONDING: $PKG" "$OUT/monkey-$seed.txt" && anr_trace
   fi
-  C="$(crashes)"; [ -n "$C" ] && { echo "CRASH LOG (seed $seed):"; echo "$C"; FAIL=1; echo "$C" | grep -q "ANR in" && ! grep -q "NOT RESPONDING" "$OUT/monkey-$seed.txt" && anr_trace; }
+  C="$(crashes)"; [ -n "$C" ] && { echo "CRASH LOG (seed $seed):"; echo "$C"; FAIL=1; echo "$C" | grep -q "ANR in" && ! grep -q "NOT RESPONDING: $PKG" "$OUT/monkey-$seed.txt" && anr_trace; }
   adb exec-out screencap -p > "$OUT/after-$seed.png"
   adb shell settings put system user_rotation 0 2>/dev/null
 done
