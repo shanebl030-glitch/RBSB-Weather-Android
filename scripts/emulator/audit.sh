@@ -101,9 +101,12 @@ for r in 1 2 3 4 5 6; do for t in "Moon" "Earth" "Wind" "Warnings" "Forecast"; d
 tap "Forecast" >/dev/null; sleep 8; m1=$(pss)
 for r in 1 2 3 4 5 6; do for t in "Moon" "Earth" "Wind" "Warnings" "Forecast"; do tap "$t" >/dev/null; sleep 3; done; done
 tap "Forecast" >/dev/null; sleep 8; m2=$(pss)
-crashcheck "30 rounds of the tabs"
-echo "AUDIT MEMORY (PSS kB): start $m0, after 6 rounds $m1, after 12 rounds $m2"
-if [ -n "$m1" ] && [ -n "$m2" ] && [ $(( m2 - m1 )) -gt 60000 ]; then bad "memory still growing (+$(( (m2 - m1) / 1024 )) MB between round 6 and 12)"; else ok "memory levels off (round 6 to 12: $(( (${m2:-0} - ${m1:-0}) / 1024 )) MB)"; fi
+for r in 1 2 3 4 5 6; do for t in "Moon" "Earth" "Wind" "Warnings" "Forecast"; do tap "$t" >/dev/null; sleep 3; done; done
+tap "Forecast" >/dev/null; sleep 8; m3=$(pss)
+crashcheck "90 tab changes"
+echo "AUDIT MEMORY (PSS kB): start $m0, after 6 rounds $m1, after 12 rounds $m2, after 18 rounds $m3"
+d1=$(( (${m2:-0} - ${m1:-0}) / 1024 )); d2=$(( (${m3:-0} - ${m2:-0}) / 1024 ))
+if [ -n "$m3" ] && [ $d2 -gt 25 ]; then bad "memory still growing (round 6 to 12: $d1 MB, round 12 to 18: $d2 MB)"; else ok "memory levels off (round 6 to 12: $d1 MB, round 12 to 18: $d2 MB)"; fi
 adb shell dumpsys meminfo $PKG | grep -E "Java Heap:|Native Heap:|Graphics:|TOTAL PSS:|Views:|Activities:" | head -8
 
 echo "== 6. Frame timing (software-rendered emulator: slower than a phone)"
