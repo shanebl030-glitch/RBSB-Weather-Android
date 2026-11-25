@@ -55,6 +55,9 @@ object LocationFinder {
     const val STALE_MS = 60_000L
     const val STALE_BACKGROUND_MS = 10 * 60_000L
 
+    // Every caller has checked the permission first (androidSource), and a SecurityException (it
+    // was taken away a moment ago) is caught and treated as "no position".
+    @android.annotation.SuppressLint("MissingPermission")
     private suspend fun fresh(lm: LocationManager, provider: String): Fix? {
         if (Build.VERSION.SDK_INT < 30) return null
         return withTimeoutOrNull(TIMEOUT_MS) {
@@ -77,6 +80,7 @@ object LocationFinder {
      * last position each provider already has; if the newest is older than `staleMs`, GPS is
      * asked as well. Logs which provider answered (no coordinates).
      */
+    @android.annotation.SuppressLint("MissingPermission")     // checked just below; SecurityException caught
     fun androidSource(ctx: Context, staleMs: Long = STALE_MS) = LocationSource {
         val app = ctx.applicationContext
         if (!hasPermission(app)) return@LocationSource null

@@ -70,7 +70,8 @@ class WindScreenTest {
             WeatherRepository(listOf(FakeProvider()), ForecastCache(tmp.root)), SEARCH, CoroutineScope(Dispatchers.Unconfined), Dispatchers.Unconfined)
         m.add(AUCKLAND)
         compose.mainClock.autoAdvance = false
-        compose.setContent { WindScreen(m.state.value, m, wind = WindState(field, "", "", "NOAA NOMADS")) }
+        val st = m.state.value
+        compose.setContent { WindScreen(st, m, wind = WindState(field, "", "", "NOAA NOMADS")) }
         val end = System.currentTimeMillis() + 120_000
         while (compose.onAllNodes(drawn).fetchSemanticsNodes().isEmpty()) { check(System.currentTimeMillis() < end) { "globe never drawn" }; pump(200) }
         val a = view(); pump(2000); val b = view()

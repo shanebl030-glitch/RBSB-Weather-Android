@@ -83,7 +83,7 @@ fun SkyCard(
     onAlert: () -> Unit = {},
 ) {
     val ctx = LocalContext.current
-    remember { try { MoonRender.init(ctx.applicationContext.assets) } catch (e: Exception) { } }
+    remember { try { MoonRender.init(ctx.applicationContext.assets) } catch (e: Exception) { }; true }
     val density = LocalDensity.current.density
     val tm = rememberTextMeasurer()
     val engine = remember(place.key) { SceneEngine(seed = 7) }

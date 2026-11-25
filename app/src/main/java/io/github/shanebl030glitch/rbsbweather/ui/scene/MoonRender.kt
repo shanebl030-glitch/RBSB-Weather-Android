@@ -50,8 +50,8 @@ object MoonRender {
         val a = assets ?: return null
         val (alb, hgt) = full ?: try {
             val opts = BitmapFactory.Options().apply { inPreferredConfig = Bitmap.Config.ARGB_8888 }
-            val x = BitmapFactory.decodeStream(a.open("textures/moon_albedo.jpg"), null, opts)!!
-            val y = BitmapFactory.decodeStream(a.open("textures/moon_height.jpg"), null, opts)!!
+            val x = a.open("textures/moon_albedo.jpg").use { BitmapFactory.decodeStream(it, null, opts) } ?: return null
+            val y = a.open("textures/moon_height.jpg").use { BitmapFactory.decodeStream(it, null, opts) } ?: run { x.recycle(); return null }
             (x to y).also { full = it }
         } catch (e: Exception) { return null }
         val sa = Bitmap.createScaledBitmap(alb, size, size, true)
@@ -82,7 +82,16 @@ object MoonRender {
      * textures. rotation: degrees clockwise (the parallactic angle); null: north up, or turned
      * over in the southern hemisphere.
      */
-    fun render(sizeIn: Int, phaseAngle: Double, brightLimb: Double, southern: Boolean = false, rotation: Double? = null): Bitmap? {
+    fun render(sizeIn: Int, phaseAngle: Double, brightLimb: Double, southern: Boolean = false, rotation: Double? = null): Bitmap? = try {
+        renderOrThrow(sizeIn, phaseAngle, brightLimb, southern, rotation)
+    } catch (e: OutOfMemoryError) {
+        // never crash the sky, widget or Earth screens over a picture of the Moon: free what's kept and skip it
+        synchronized(this) { texCache.clear(); full = null }
+        synchronized(imgCache) { imgCache.clear() }
+        null
+    } catch (e: Exception) { null }
+
+    private fun renderOrThrow(sizeIn: Int, phaseAngle: Double, brightLimb: Double, southern: Boolean, rotation: Double?): Bitmap? {
         val size = sizeIn.coerceIn(8, MAX_SIZE)
         val rot = (((rotation ?: if (southern) 180.0 else 0.0) % 360 + 360) % 360).let { Math.round(it).toInt() % 360 }
         val key = "$size/${Math.round(phaseAngle * 10)}/${Math.round(brightLimb) % 360}/$rot"
