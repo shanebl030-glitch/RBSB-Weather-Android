@@ -123,8 +123,8 @@ class HereTest {
         assertEquals(Naming("Ponsonby", "Auckland", "New Zealand"), n)
         assertTrue(asked.startsWith("https://nominatim.openstreetmap.org/reverse?"))
         assertTrue("lat=-36.858" in asked && "lon=174.746" in asked && "zoom=17" in asked && asked.endsWith("en-NZ"))   // only the rounded spot
-        // a country town: no suburb
-        assertEquals(Naming("Taupō", "Waikato", "New Zealand"), OsmNamer.parse("""{"address":{"town":"Taupō","state":"Waikato","country":"New Zealand"}}"""))
+        // a country town: no smaller area, so the town (as a town)
+        assertEquals(Naming("Taupō", "Waikato", "New Zealand", Naming.TOWN), OsmNamer.parse("""{"address":{"town":"Taupō","state":"Waikato","country":"New Zealand"}}"""))
         // a city with no suburb: the city, and its region
         assertEquals(Naming("Wellington", "", "New Zealand", Naming.TOWN), OsmNamer.parse("""{"address":{"city":"Wellington","country":"New Zealand"}}"""))
         // as Nominatim really answered for Grey Lynn (the emulator check): the suburb, not the smaller quarter

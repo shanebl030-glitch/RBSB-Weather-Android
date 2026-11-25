@@ -169,7 +169,9 @@ object LocationFinder {
                 g.getFromLocation(lat, lon, 1)?.firstOrNull()
             }
             a ?: return@PlaceNamer null
-            val levels = listOf(a.subLocality to Naming.SUBURB, a.locality to Naming.TOWN, a.subAdminArea to Naming.REGION, a.adminArea to Naming.REGION)
+            // the suburb only when it's a real local area, not an administrative unit or the city's name again
+            val sub = a.subLocality?.trim()?.takeIf { it.isNotEmpty() && !io.github.shanebl030glitch.rbsbweather.data.OsmNamer.administrative(it) && !it.equals(a.locality?.trim(), ignoreCase = true) }
+            val levels = listOf(sub to Naming.SUBURB, a.locality to Naming.TOWN, a.subAdminArea to Naming.REGION, a.adminArea to Naming.REGION)
             val (name, level) = levels.firstOrNull { !it.first.isNullOrBlank() }?.let { it.first!!.trim() to it.second } ?: return@PlaceNamer null
             val region = listOf(a.locality, a.subAdminArea, a.adminArea).firstOrNull { !it.isNullOrBlank() && it.trim() != name }?.trim() ?: ""
             Naming(name, region, a.countryName?.trim() ?: "", level)
