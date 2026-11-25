@@ -158,7 +158,8 @@ To build on your own computer, you need JDK 17 and the Android SDK:
 Only the coordinates of your saved places (and what you type when searching) are
 sent, and only to the weather services you've chosen. If you turn on 📍 My
 location, the phone's position is rounded to about 100 m first and treated
-the same way; it's never sent anywhere else. Location access is only asked for
+the same way; if the phone can't name the spot, that rounded position is also
+sent to OpenStreetMap's Nominatim to get the suburb's name. It's never sent anywhere else. Location access is only asked for
 when you turn it on. API keys you enter are
 kept in the app's private storage, apart from the settings, and are excluded
 from phone backups. There's no tracking and no account.
@@ -169,5 +170,6 @@ Tomorrow.io and Weather Underground / The Weather Company. Weather warnings from
 (public domain), MET Norway (CC BY 4.0) and MeteoAlarm. Earthquakes: USGS (public
 domain) and GeoNet (CC BY 3.0 NZ). Moon imagery: NASA's
 Scientific Visualization Studio, CGI Moon Kit (LRO LROC WAC and LOLA data).
+Place names for My location, when the phone can't give one: © OpenStreetMap contributors (Nominatim).
 
 Created By Shane BlackbuRn

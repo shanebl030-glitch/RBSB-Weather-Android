@@ -97,12 +97,37 @@ object LocationFinder {
         pick
     }
 
-    /** Android's geocoder: suburb (or town), region, country. Null when it's not available or can't name the spot. */
-    fun androidNamer(ctx: Context) = PlaceNamer { lat, lon ->
+    /** Android's geocoder, then OpenStreetMap if the phone can't name the spot. */
+    fun androidNamer(ctx: Context): PlaceNamer {
+        val phone = phoneNamer(ctx)
+        val osm = io.github.shanebl030glitch.rbsbweather.data.OsmNamer()
+        return PlaceNamer { lat, lon ->
+            val n = phone.name(lat, lon)
+            val used = n ?: osm.name(lat, lon)
+            android.util.Log.i("RBSB-Weather", "My location name: " + when { n != null -> "from the phone"; used != null -> "from OpenStreetMap"; else -> "none found" })
+            used
+        }
+    }
+
+    /** The phone's own geocoder (suburb or town, region, country), waiting at most 8 s. Null when it's missing or can't name the spot. */
+    fun phoneNamer(ctx: Context) = PlaceNamer { lat, lon ->
         if (!Geocoder.isPresent()) return@PlaceNamer null
         try {
-            @Suppress("DEPRECATION")
-            val a = Geocoder(ctx.applicationContext, Locale.getDefault()).getFromLocation(lat, lon, 1)?.firstOrNull() ?: return@PlaceNamer null
+            val g = Geocoder(ctx.applicationContext, Locale.getDefault())
+            val a: android.location.Address? = if (Build.VERSION.SDK_INT >= 33) {
+                val latch = java.util.concurrent.CountDownLatch(1)
+                val got = java.util.concurrent.atomic.AtomicReference<android.location.Address?>(null)
+                g.getFromLocation(lat, lon, 1, object : Geocoder.GeocodeListener {
+                    override fun onGeocode(list: MutableList<android.location.Address>) { got.set(list.firstOrNull()); latch.countDown() }
+                    override fun onError(msg: String?) { latch.countDown() }
+                })
+                latch.await(8, java.util.concurrent.TimeUnit.SECONDS)
+                got.get()
+            } else {
+                @Suppress("DEPRECATION")
+                g.getFromLocation(lat, lon, 1)?.firstOrNull()
+            }
+            a ?: return@PlaceNamer null
             val name = listOf(a.subLocality, a.locality, a.subAdminArea, a.adminArea).firstOrNull { !it.isNullOrBlank() } ?: return@PlaceNamer null
             val region = listOf(a.locality, a.subAdminArea, a.adminArea).firstOrNull { !it.isNullOrBlank() && it != name } ?: ""
             Naming(name, region, a.countryName ?: "")

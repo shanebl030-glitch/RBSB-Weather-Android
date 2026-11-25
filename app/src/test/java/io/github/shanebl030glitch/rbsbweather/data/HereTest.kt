@@ -63,6 +63,35 @@ class HereTest {
         assertEquals(Here.UNNAMED, Here.next(null, Fix(-41.2866, 174.7756), NOW, PlaceNamer { _, _ -> Naming("  ") })!!.name)
     }
 
+    @Test fun anUnnamedMyLocationIsNamedLaterWithoutMoving() {
+        val old = Here.next(null, Fix(-36.8485, 174.7635), NOW) { _, _ -> null }!!
+        assertEquals(Here.UNNAMED, old.name)
+        assertNull(Here.next(old, Fix(-36.8490, 174.7635), NOW) { _, _ -> null })            // still no name: nothing changes
+        val named = Here.next(old, Fix(-36.8490, 174.7635), NOW, NAMES)!!
+        assertEquals("Ponsonby", named.name); assertEquals("New Zealand", named.country)
+        assertEquals(old.latitude, named.latitude, 0.0)                                          // same spot, no new download needed
+        assertNull(Here.next(named, Fix(-36.8490, 174.7635), NOW, NAMES))                      // named: small moves change nothing again
+    }
+
+    @Test fun openStreetMapNamesTheSuburbCityAndCountry() {
+        var asked = ""
+        val body = """{"place_id":1,"lat":"-36.858","lon":"174.746","display_name":"Ponsonby, Auckland, New Zealand",
+            "address":{"road":"Ponsonby Road","suburb":"Ponsonby","city":"Auckland","state":"Auckland","country":"New Zealand","country_code":"nz"}}"""
+        val n = OsmNamer(HttpClient { url, h -> asked = url + " " + h["Accept-Language"]; body }, language = { "en-NZ" }).name(-36.85812, 174.74633)!!
+        assertEquals(Naming("Ponsonby", "Auckland", "New Zealand"), n)
+        assertTrue(asked.startsWith("https://nominatim.openstreetmap.org/reverse?"))
+        assertTrue("lat=-36.858" in asked && "lon=174.746" in asked && "zoom=14" in asked && asked.endsWith("en-NZ"))   // only the rounded spot
+        // a country town: no suburb
+        assertEquals(Naming("Taupō", "Waikato", "New Zealand"), OsmNamer.parse("""{"address":{"town":"Taupō","state":"Waikato","country":"New Zealand"}}"""))
+        // a city with no suburb: the city, and its region
+        assertEquals(Naming("Wellington", "Wellington", "New Zealand").copy(admin1 = ""), OsmNamer.parse("""{"address":{"city":"Wellington","country":"New Zealand"}}"""))
+        // the sea, errors and junk: no name
+        assertNull(OsmNamer.parse("""{"error":"Unable to geocode"}"""))
+        assertNull(OsmNamer.parse("""{"address":{"country":""}}"""))
+        assertNull(OsmNamer(HttpClient { _, _ -> throw WeatherException("No internet connection.") }).name(-36.8, 174.7))
+        assertNull(OsmNamer(HttpClient { _, _ -> "<html>" }).name(-36.8, 174.7))
+    }
+
     @Test fun settingsKeepMyLocationAndTheWidgetChoice() {
         val here = Here.next(null, Fix(-41.2866, 174.7756), NOW, NAMES)!!
         val s = Settings(places = listOf(AUCKLAND), selected = AUCKLAND.key, followLocation = true).withHere(here)

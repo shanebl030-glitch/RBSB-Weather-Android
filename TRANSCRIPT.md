@@ -347,4 +347,15 @@ Created By Shane BlackbuRn
 
 **Tested:** see TEST_REPORT.md: new unit, app and screen tests, plus an emulator step that moves the emulator from Auckland to Wellington. A real phone travelling still needs checking by Shane.
 
+**Shane (25 Nov, testing 0.7.0 on his phone):** "It's just saying My Location not the actual suburb name, city or country."
+
+**Cause:** the phone's own place-name lookup (Android's geocoder) gave no name. The test emulator has a working one, so the emulator check didn't show this.
+
+**Fix:**
+- If the phone can't name the spot, OpenStreetMap's Nominatim is asked, with the rounded position only.
+- On Android 13 and newer, the phone's lookup uses the newer method with an 8-second limit.
+- A My location that is still unnamed is named as soon as a name is found, without having to move.
+- The log records where the name came from.
+- The credit is in About; the privacy notes are updated.
+
 Created By Shane BlackbuRn

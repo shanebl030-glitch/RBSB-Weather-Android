@@ -18,11 +18,11 @@ The tabs along the bottom: **Forecast**, **Moon**, **Earth**, **Wind** and **War
 ## 📍 My location
 
 * Menu (⋮) → **Settings** → **📍 Use my location**. Android asks for location access: **approximate** is enough.
-* **My location** is added to your places, shown with 📍. When you travel to another suburb, town or country (more than 1 km), it moves and gets that place's weather. It's named after the suburb or town, as Android's maps know it; if Android can't name it, it shows **My location** with its coordinates.
+* **My location** is added to your places, shown with 📍. When you travel to another suburb, town or country (more than 1 km), it moves and gets that place's weather. It's named after the suburb or town, as your phone's maps know it. If your phone can't name it, the name is looked up from OpenStreetMap; if neither can (no internet, say), it shows **My location** with its coordinates until a name is found.
 * It updates when you open the app. **Update my location now** updates it straight away.
 * **Widgets show my location** (on by default): the home-screen widgets and the status-bar temperature show My location instead of the place you last looked at.
 * **While the app is closed:** for the widget to follow you without opening the app, tap **Allow all the time…** and choose **Allow all the time** for Location. Then about every 15 minutes (when Android allows; it may wait longer to save battery) My location and the widget follow you.
-* **Privacy:** your location stays on your phone. Only the rounded position (about 100 m) is sent, to your weather providers, the same as for any saved place.
+* **Privacy:** your location stays on your phone. Only the rounded position (about 100 m) is sent, to your weather providers, the same as for any saved place, and to OpenStreetMap only when your phone can't name the spot.
 * To stop, turn **Use my location** off, or remove 📍 My location in My places.
 
 ## Reading the screen

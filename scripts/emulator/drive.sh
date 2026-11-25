@@ -155,6 +155,14 @@ back_to_forecast; check "forecast with My location"; shot here-forecast
 adb shell input keyevent KEYCODE_HOME; sleep 3
 adb shell am start -n $PKG/.MainActivity; sleep 6; check "reopening with My location"
 
+step "OpenStreetMap names (the backup when a phone can't name My location)"
+for ll in "-36.858 174.746" "-41.287 174.776" "-33.869 151.209"; do set -- $ll
+  curl -s -m 20 -A "RBSB-Weather-Android emulator check (github.com/shanebl030-glitch/RBSB-Weather-Android)" \
+    "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=$1&lon=$2&zoom=14&addressdetails=1" \
+    | python3 -c 'import json,sys; a=json.load(sys.stdin).get("address",{}); print("OSM NAME:", {k:a[k] for k in a if k in ("suburb","neighbourhood","quarter","city_district","village","town","city","county","state","country")})' || echo "OSM NAME: no answer"
+  sleep 2
+done
+
 step "pull to refresh"
 tap "Forecast"; sleep 3; adb shell input swipe 540 700 540 1500 400; sleep 8; check "refresh"
 

@@ -16,6 +16,7 @@ Shane: "I'd like to add GPS tracking so if I travel to a different suburb or cit
 - **Widgets show my location** (on by default when Use my location is on): the home-screen widgets and the status-bar temperature show 📍 My location instead of the place you last looked at.
 - **While the app is closed:** with Android's **Allow all the time** location access, the background check (about every 15 minutes, when Android allows) moves My location and refreshes the widget. Without it, My location updates when you open the app. Settings shows which, with a button to Android's setting.
 - **Permissions:** approximate or precise location (asked only when you turn it on; approximate is enough), and optional background location. No Google Play services needed.
+- **Naming:** Android's own geocoder first; if the phone can't name the spot (Shane's phone showed just "My location"), OpenStreetMap (Nominatim) is asked with the rounded position. An unnamed My location is named as soon as a name is found, without having to move.
 - **Privacy:** coordinates are rounded to 3 decimals (about 100 m) before they're stored or sent, and go only to your weather providers, the same as any saved place.
 
 ### Changed

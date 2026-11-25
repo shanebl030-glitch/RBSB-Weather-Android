@@ -38,7 +38,13 @@ object Here {
     fun next(old: Place?, fix: Fix, now: Long, namer: PlaceNamer): Place? {
         if (!usable(fix, now)) return null
         val lat = round3(fix.lat); val lon = round3(fix.lon)
-        if (old != null && kmBetween(old.latitude, old.longitude, lat, lon) < MOVE_KM) return null
+        if (old != null && kmBetween(old.latitude, old.longitude, lat, lon) < MOVE_KM) {
+            // hasn't moved; but if it couldn't be named last time, try again (and keep its spot)
+            if (old.name != UNNAMED) return null
+            val n = try { namer.name(old.latitude, old.longitude) } catch (e: Exception) { null }
+            val nm = n?.name?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+            return old.copy(name = nm.take(100), country = n.country.take(100), admin1 = n.admin1.take(100), current = true)
+        }
         val n = try { namer.name(lat, lon) } catch (e: Exception) { null }
         val name = n?.name?.trim()?.takeIf { it.isNotEmpty() }
             ?: old?.name?.takeIf { kmBetween(old.latitude, old.longitude, lat, lon) < 5.0 }       // unnamed: keep the old name nearby

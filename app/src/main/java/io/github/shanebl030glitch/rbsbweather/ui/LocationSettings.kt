@@ -106,7 +106,7 @@ fun MyLocationSection(state: UiState, model: AppModel,
                     }
                 }
                 Text("Your location stays on your phone; only the rounded position (about 100 m) is sent to the weather service, " +
-                    "the same as for any saved place.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+                    "the same as for any saved place. If your phone can't name the spot, its name is looked up from OpenStreetMap with that rounded position.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
                     modifier = Modifier.padding(bottom = 10.dp))
             }
         }
