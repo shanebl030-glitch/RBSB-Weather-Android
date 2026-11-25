@@ -59,7 +59,7 @@ object LocationFinder {
     // was taken away a moment ago) is caught and treated as "no position".
     @android.annotation.SuppressLint("MissingPermission")
     private suspend fun fresh(lm: LocationManager, provider: String): Fix? {
-        if (Build.VERSION.SDK_INT < 30) return null
+        if (Build.VERSION.SDK_INT < 30) return freshAndroid10(lm, provider)
         return withTimeoutOrNull(TIMEOUT_MS) {
             suspendCancellableCoroutine<Fix?> { cont ->
                 val cancel = CancellationSignal()
@@ -69,6 +69,35 @@ object LocationFinder {
                     lm.getCurrentLocation(provider, cancel, ex) { loc -> ex.shutdown(); if (cont.isActive) cont.resume(loc?.toFix()) }
                 } catch (e: Exception) { ex.shutdown(); if (cont.isActive) cont.resume(null) }       // SecurityException, provider gone
             }
+        }
+    }
+
+    /**
+     * Android 10 has no "current location" call: ask for one update and stop listening as soon as
+     * it comes, or after 20 s. (Found by the stability audit: without this, Android 10 only had a
+     * position if another app had asked recently.)
+     */
+    @android.annotation.SuppressLint("MissingPermission")
+    @Suppress("DEPRECATION")
+    private suspend fun freshAndroid10(lm: LocationManager, provider: String): Fix? = withTimeoutOrNull(TIMEOUT_MS) {
+        suspendCancellableCoroutine<Fix?> { cont ->
+            // all four methods written out: on Android 10 they have no defaults
+            val listener = object : android.location.LocationListener {
+                override fun onLocationChanged(loc: Location) {
+                    try { lm.removeUpdates(this) } catch (e: Exception) { }
+                    if (cont.isActive) cont.resume(loc.toFix())
+                }
+                @Deprecated("Android 10") override fun onStatusChanged(p: String?, status: Int, extras: android.os.Bundle?) { }
+                override fun onProviderEnabled(p: String) { }
+                override fun onProviderDisabled(p: String) {
+                    try { lm.removeUpdates(this) } catch (e: Exception) { }
+                    if (cont.isActive) cont.resume(null)
+                }
+            }
+            cont.invokeOnCancellation { try { lm.removeUpdates(listener) } catch (e: Exception) { } }
+            try {
+                lm.requestSingleUpdate(provider, listener, android.os.Looper.getMainLooper())
+            } catch (e: Exception) { if (cont.isActive) cont.resume(null) }     // SecurityException, provider gone
         }
     }
 
