@@ -165,6 +165,20 @@ class SevenTest {
         assertEquals(asked, gps.asked)
     }
 
+    @Test fun theMoonPictureForTheScreenIsMadeInTheBackground() {
+        val ctx = ApplicationProvider.getApplicationContext<android.app.Application>()
+        io.github.shanebl030glitch.rbsbweather.ui.scene.MoonRender.init(ctx.assets)
+        val mr = io.github.shanebl030glitch.rbsbweather.ui.scene.MoonRender
+        val before = mr.ready.intValue
+        assertNull(mr.renderLater(97, 61.0, 93.0))                       // not made yet: never waits
+        val end = System.currentTimeMillis() + 60_000
+        var got: android.graphics.Bitmap? = null
+        while (got == null && System.currentTimeMillis() < end) { Thread.sleep(50); got = mr.renderLater(97, 61.0, 93.0) }
+        assertNotNull(got); assertEquals(97, got!!.width)
+        assertTrue(mr.ready.intValue > before)                           // screens are told to redraw
+        assertNull(mr.renderLater(1500, 61.0, 93.0))                     // big pictures aren't made this way
+    }
+
     @Test fun theNewestFixWinsThenTheMostAccurate() {
         val old = Fix(-36.8, 174.7, 20f, 1_000_000L, "fused")            // from before you moved
         val newer = Fix(-41.2, 174.7, 1500f, 1_000_000L + 10 * 60_000L, "gps")

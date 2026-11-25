@@ -12,8 +12,39 @@ Created By Shane BlackbuRn
 
 ## What's tested
 
+**Stability audit (0.7.0, for a stable release):**
+
+Shane asked for "a complete crash and bug audit for a stable release". These run in the new `Stability audit` workflow on every push:
+- **Android lint:** release build, all checks; errors fail the build. Result: 0 errors. 39 warnings remain, none of them crash risks: newer library versions available, `SDK_INT` checks that are always true on Android 10+, Kotlin style suggestions, small text in the widget.
+- **On emulators of Android 10, 12, 14 and 15** (Pixel 6, x86_64, Google APIs):
+  - the full walk-through, as in the emulator check;
+  - then 5 rounds of 2,500 random events each: taps, swipes, rotation, back and menu. Each round runs with two places, My location, warnings and the status-bar temperature on.
+  - Android's crash and ANR logs are checked after each round, and an ANR's main-thread trace is printed.
+- **Code review** of crash paths:
+  - null assertions (`!!`, 23 checked);
+  - bitmap decoding and out-of-memory handling;
+  - main-thread work in drawing;
+  - threads and executors;
+  - pending intents (all immutable);
+  - exported components (only the launcher activity);
+  - network timeouts (15 s connect, 20 s read, size-limited);
+  - settings and cache files (atomic writes; a damaged settings file reads as the defaults instead of crashing);
+  - duplicate keys in lists (removed when settings are read).
+- **Results and fixes:** see the 0.7.0 CHANGELOG. In short:
+  - ANRs on Android 12 and 15 (Moon picture on the main thread), fixed;
+  - Android 10 had no position for My location, fixed;
+  - GPS position on Android 12, fixed;
+  - out-of-memory with the Moon picture, guarded;
+  - 4 lint errors, fixed.
+- **Not covered:** real phones from other makers (Samsung, Xiaomi and so on change Android's battery and location rules), and Play Protect.
+
 **New in 0.7 (📍 My location):**
 - **When it moves** (HereTest): a first fix makes My location, rounded to 3 decimals and named; under 1 km changes nothing and doesn't ask for a name; 1.5 km, another city and another country move it; NaN, out-of-range, older than 30 minutes or vaguer than 5 km fixes are ignored; without a name it keeps the old name nearby, else "My location".
+- **Down to the suburb** (after Shane's phone showed only the city):
+  - the phone's suburb is used as is;
+  - a city or region from the phone is replaced by OpenStreetMap's suburb, keeping the phone's spelling of the country;
+  - a city name is replaced by the suburb later, without moving, and the level is saved;
+  - names are remembered for 6 hours (30 minutes when none was found).
 - **Naming from OpenStreetMap** (after Shane's phone showed only "My location"): suburb, town, city, region and country read from Nominatim's reply; only the rounded position and the phone's language are sent; errors, the sea, no internet and junk give no name. An unnamed My location is named later without moving, then small moves change nothing again. The emulator check also asks Nominatim for Auckland, Wellington and Sydney to confirm its live replies have the fields used.
 - **Settings:** saved and read back; first in the list when new, keeps its spot after that; the widget's place with each switch; settings from before 0.7 still read.
 - **Saved forecast:** Auckland's saved weather isn't shown after My location moves to Wellington; its file is kept while it's in use.

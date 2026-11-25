@@ -358,4 +358,23 @@ Created By Shane BlackbuRn
 - The log records where the name came from.
 - The credit is in About; the privacy notes are updated.
 
+**Shane (25 Nov):** "It's not showing the suburb that's a must. Also I need you to do a complete crush and bug audit for a stable release."
+
+**Suburb:**
+- The phone's geocoder named only the city, so OpenStreetMap was never asked.
+- Names now carry how exact they are (suburb, city, region). If the phone doesn't give the suburb, OpenStreetMap is asked, at zoom 17, which includes the suburb.
+- A city name already saved is replaced by the suburb next time the app looks, without having to move.
+
+**Audit:**
+- A new `Stability audit` workflow runs lint and, on Android 10, 12, 14 and 15, the walk-through plus 12,500 random events each.
+- It found:
+  - ANRs from making the Moon picture on the main thread;
+  - My location getting no position on Android 10;
+  - no fresh GPS position on Android 12;
+  - 4 lint errors.
+- All are fixed; see the CHANGELOG and TEST_REPORT.
+- Two things I didn't change, because they're Shane's decision:
+  - **The signing key:** the test signing key is in the public repository, so anyone could sign an APK that installs over RBSB-Weather. A private release key is needed for a stable release. Switching keys means one uninstall and reinstall.
+  - **The version number** for a stable release.
+
 Created By Shane BlackbuRn

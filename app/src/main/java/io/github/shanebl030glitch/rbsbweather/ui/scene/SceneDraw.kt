@@ -49,10 +49,39 @@ private val spriteCache = object : LinkedHashMap<String, ImageBitmap>(32, 0.75f,
     override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, ImageBitmap>?) = size > 96
 }
 
+/** The latest sprite made for each cloud (any size or darkness), shown scaled while the exact one is being made. */
+private val lastBySeed = HashMap<Int, ImageBitmap>()
+private val spritePending = java.util.Collections.synchronizedSet(HashSet<String>())
+private val spriteWorker = java.util.concurrent.Executors.newSingleThreadExecutor { r -> Thread(r, "rbsb-clouds").apply { isDaemon = true; priority = Thread.NORM_PRIORITY - 1 } }
+/** Goes up when a cloud made in the background is ready, so the sky redraws. */
+val sceneAssetsReady = androidx.compose.runtime.mutableIntStateOf(0)
+
+private fun spriteKey(w: Int, h: Int, darkness: Double, seed: Int) = "$w/$h/${Math.round(darkness * 20) / 20.0}/$seed"
+
+/**
+ * For drawing on the main thread: the cloud if it's been made, else the nearest one made for the
+ * same cloud (or null) while it's made in the background. Painting a dozen new clouds in one frame
+ * (after turning the phone, or as dusk darkens them) took long enough for Android to report the app
+ * as not responding (found by the stability audit). Off the main thread (widgets) it just makes it.
+ */
+fun cloudSpriteOrLater(w: Int, h: Int, darkness: Double, seed: Int): ImageBitmap? {
+    if (android.os.Looper.myLooper() != android.os.Looper.getMainLooper()) return cloudSprite(w, h, darkness, seed)
+    val key = spriteKey(w, h, darkness, seed)
+    synchronized(spriteCache) { spriteCache[key]?.let { return it }; }
+    if (spritePending.add(key)) {
+        try {
+            spriteWorker.execute {
+                try { cloudSprite(w, h, darkness, seed) } catch (e: Throwable) { } finally { spritePending.remove(key); sceneAssetsReady.intValue++ }
+            }
+        } catch (e: Exception) { spritePending.remove(key) }
+    }
+    return synchronized(spriteCache) { lastBySeed[seed] }
+}
+
 /** A soft, volumetric cloud: overlapping lit puffs with a shaded underside (scene.cloud_sprite). */
 fun cloudSprite(w: Int, h: Int, darkness: Double, seed: Int): ImageBitmap {
     val dk = Math.round(darkness * 20) / 20.0
-    val key = "$w/$h/$dk/$seed"
+    val key = spriteKey(w, h, darkness, seed)
     synchronized(spriteCache) { spriteCache[key]?.let { return it } }
     val img = ImageBitmap(max(1, w), max(1, h))
     val rng = Random(seed.toLong())
@@ -83,7 +112,11 @@ fun cloudSprite(w: Int, h: Int, darkness: Double, seed: Int): ImageBitmap {
         drawRect(Brush.verticalGradient(0f to shade.copy(alpha = 0f), 1f to shade.a(200), startY = h * 0.35f, endY = h.toFloat()),
             blendMode = BlendMode.SrcAtop)
     }
-    synchronized(spriteCache) { spriteCache[key] = img }
+    synchronized(spriteCache) {
+        spriteCache[key] = img
+        lastBySeed[seed] = img
+        if (lastBySeed.size > 200) lastBySeed.clear()
+    }
     return img
 }
 
@@ -98,6 +131,7 @@ fun DrawScope.drawScene(e: SceneEngine, rounded: Float = 0f, scrim: Boolean = tr
     val w = size.width; val h = size.height
     if (w < 2 || h < 2) return
     val clip = Path().apply { addRoundRect(RoundRect(Rect(0f, 0f, w, h), CornerRadius(rounded))) }
+    sceneAssetsReady.intValue                                     // redraw when a cloud made in the background is ready
     clipPath(clip) {
         val c = e.cond
         val (top, bot) = e.shownSkyColors()
@@ -121,9 +155,11 @@ fun DrawScope.drawScene(e: SceneEngine, rounded: Float = 0f, scrim: Boolean = tr
             for (cl in clouds.sortedBy { it.layer }) {
                 var dk = darkness * (0.75 + 0.12 * cl.layer)
                 if (c.daylight < 0.5) dk = min(1.0, dk + 0.5 * (1 - c.daylight * 2))
-                val spr = cloudSprite(cl.w, cl.h, dk, cl.seed)
-                drawImage(spr, Offset(cl.x.toFloat(), cl.y.toFloat()),
-                    alpha = (cl.opacity * (if (c.daylight > 0.2) 0.9 else 0.8) * alpha).toFloat().coerceIn(0f, 1f))
+                val spr = cloudSpriteOrLater(cl.w, cl.h, dk, cl.seed) ?: continue
+                val al = (cl.opacity * (if (c.daylight > 0.2) 0.9 else 0.8) * alpha).toFloat().coerceIn(0f, 1f)
+                if (spr.width == max(1, cl.w) && spr.height == max(1, cl.h)) drawImage(spr, Offset(cl.x.toFloat(), cl.y.toFloat()), alpha = al)
+                else drawImage(spr, IntOffset.Zero, IntSize(spr.width, spr.height),            // a stand-in, scaled, until the exact one is ready
+                    IntOffset(cl.x.roundToInt(), cl.y.roundToInt()), IntSize(max(1, cl.w), max(1, cl.h)), alpha = al)
             }
         }
         for (old in e.oldWeather) drawWeather(e, old, old.alpha)

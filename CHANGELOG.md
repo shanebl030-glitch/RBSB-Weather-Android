@@ -16,8 +16,23 @@ Shane: "I'd like to add GPS tracking so if I travel to a different suburb or cit
 - **Widgets show my location** (on by default when Use my location is on): the home-screen widgets and the status-bar temperature show 📍 My location instead of the place you last looked at.
 - **While the app is closed:** with Android's **Allow all the time** location access, the background check (about every 15 minutes, when Android allows) moves My location and refreshes the widget. Without it, My location updates when you open the app. Settings shows which, with a button to Android's setting.
 - **Permissions:** approximate or precise location (asked only when you turn it on; approximate is enough), and optional background location. No Google Play services needed.
-- **Naming:** Android's own geocoder first; if the phone can't name the spot (Shane's phone showed just "My location"), OpenStreetMap (Nominatim) is asked with the rounded position. An unnamed My location is named as soon as a name is found, without having to move.
+- **Naming, down to the suburb:**
+  - **First:** the phone's own geocoder.
+  - **If the phone can't give the suburb** (Shane's phone showed "My location", then only the city), OpenStreetMap (Nominatim) is asked with the rounded position.
+  - **A less exact name** (none, a city, a region) is replaced as soon as the suburb is known, without having to move.
+  - **Lookups are remembered** for 6 hours per spot, so OpenStreetMap is asked rarely.
 - **Privacy:** coordinates are rounded to 3 decimals (about 100 m) before they're stored or sent, and go only to your weather providers, the same as any saved place.
+
+### Fixed (stability audit for a stable release)
+The audit ran lint, plus the full walk-through and 12,500 random taps, swipes, rotations and back presses (Android's "monkey") on each of Android 10, 12, 14 and 15. It found:
+- **"App isn't responding" (ANR) under random use on Android 12 and 15:** the forecast sky and the Earth globe made the real Moon picture on the main thread when it wasn't cached. That can take seconds, longer when the Moon tab is saving a 2048-pixel picture at the same time. The picture is now always made in the background; a simple Moon shows for a moment until it's ready.
+- **Android 10: My location never found a position** unless another app had asked recently (Android 10 has no "current location" call). It now asks for one update itself.
+- **GPS position:** now taken by listening for one update; Android 12 gave no fresh GPS position the other way.
+- **Low memory:** the Moon picture can no longer crash the sky, widgets or Earth screens when memory runs out; it's skipped and its memory freed. Its texture files are now closed after reading.
+- **Lint errors:**
+  - location calls are explicitly marked as permission-checked;
+  - a Compose `remember` that returned nothing;
+  - a test reading state the wrong way.
 
 ### Changed
 - **Buy me a coffee** is now NZ$1.47 (About and the PayPal link). This was changed on main without a release on 23 Nov and ships with this version.
