@@ -44,7 +44,7 @@ echo "== 1. Settings survive a restart and Android closing the app"
 GPS=$(adb shell pm list features 2>/dev/null | grep -c "android.hardware.location.gps")
 settings
 if has "Now: "; then ok "My location is on before the restart"
-elif [ "$GPS" = 0 ]; then echo "AUDIT NOTE: this device has no GPS (and the emulator no network location): My location has no position to show, and says so:"; grep -o 'text="\(Finding\|Waiting for your\|Couldn.t find\)[^"]*"' "$OUT/ui.xml" | head -1
+elif [ "$GPS" = 0 ] || grep -q "Couldn.t find where you are\|Waiting for your phone" "$OUT/ui.xml"; then GPS=0; echo "AUDIT NOTE: Android gave no position on this device (an emulator without working GPS) (and the emulator no network location): My location has no position to show, and says so:"; grep -o 'text="\(Finding\|Waiting for your\|Couldn.t find\)[^"]*"' "$OUT/ui.xml" | head -1
 else bad "My location wasn't on to start with"; fi
 before=$(grep -o 'text="Now: [^"]*"' "$OUT/ui.xml" | head -1)
 adb shell am force-stop $PKG; start 6

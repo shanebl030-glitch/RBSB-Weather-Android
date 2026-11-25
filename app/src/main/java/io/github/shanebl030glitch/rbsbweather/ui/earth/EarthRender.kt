@@ -20,8 +20,14 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 object EarthRender {
-    const val W = 2048
-    const val H = 1024
+    /**
+     * The maps' size: 2048×1024, or half that when Android gives the app less than 96 MB to work
+     * with. The two maps take 16 MB at full size, and an emulator that allowed only 16 MB crashed
+     * on the Earth tab (stability audit, Android 10). Real phones allow 192–512 MB.
+     */
+    val SMALL_HEAP: Boolean = try { Runtime.getRuntime().maxMemory() < 96L * 1024 * 1024 } catch (e: Exception) { false }
+    val W = if (SMALL_HEAP) 1024 else 2048
+    val H = W / 2
     private var day: IntArray? = null
     private var night: IntArray? = null
     @Volatile private var assets: AssetManager? = null
