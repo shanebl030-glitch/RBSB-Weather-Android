@@ -131,16 +131,41 @@ class GlobeRenderer(src: Bitmap) {
         grids[size] = g; g
     }
 
-    /** A size × size globe (transparent outside the disc) centred on (cLat, cLon). */
+    /** A size × size globe (transparent outside the disc) centred on (cLat, cLon), as a new picture. */
     fun render(sizeIn: Int, cLat: Double, cLon: Double): Bitmap {
         val size = sizeIn.coerceIn(16, MAX_SIZE)
+        val out = IntArray(size * size)
+        fill(out, size, cLat, cLon)
+        return Bitmap.createBitmap(out, size, size, Bitmap.Config.ARGB_8888)
+    }
+
+    // For the screens, which draw a new globe every frame while it turns: one pixel buffer and three
+    // pictures used in turn (one on screen, one waiting, one being drawn), so turning the globe makes
+    // no garbage. Making a new 4 MB picture each frame caused constant garbage collection, slow
+    // frames and an ANR under random use on Android 12 (stability audit).
+    private var buf: IntArray? = null
+    private val pool = arrayOfNulls<Bitmap>(3)
+    private var next = 0
+
+    /** As [render], but into a reused picture: valid until two more calls. One caller at a time. */
+    @Synchronized fun renderReused(sizeIn: Int, cLat: Double, cLon: Double): Bitmap {
+        val size = sizeIn.coerceIn(16, MAX_SIZE)
+        val out = buf?.takeIf { it.size == size * size } ?: IntArray(size * size).also { buf = it }
+        fill(out, size, cLat, cLon)
+        val b = pool[next]?.takeIf { it.width == size && it.height == size && !it.isRecycled }
+            ?: Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888).also { pool[next] = it }
+        b.setPixels(out, 0, size, 0, 0, size, size)
+        next = (next + 1) % pool.size
+        return b
+    }
+
+    private fun fill(out: IntArray, size: Int, cLat: Double, cLon: Double) {
         val g = grid(size)
         val p0 = Math.toRadians(cLat); val l0 = Math.toRadians(cLon)
         val sp0 = sin(p0); val cp0 = cos(p0)
-        val out = IntArray(size * size)
         for (i in out.indices) {
             val a = g.alpha[i]
-            if (a == 0) continue
+            if (a == 0) { out[i] = 0; continue }
             val x = g.x[i].toDouble(); val y = g.y[i].toDouble(); val rho = g.rho[i].toDouble(); val sc = g.sinc[i].toDouble(); val cc = g.cosc[i].toDouble()
             val lat = asin((cc * sp0 + y * sc * cp0 / rho).coerceIn(-1.0, 1.0))
             val lon = l0 + atan2(x * sc, rho * cc * cp0 - y * sc * sp0)
@@ -152,6 +177,5 @@ class GlobeRenderer(src: Bitmap) {
                 (((p shr 8 and 0xFF) * k / (a / 255f).coerceAtLeast(1e-3f)).toInt().coerceIn(0, 255) shl 8) or
                 ((p and 0xFF) * k / (a / 255f).coerceAtLeast(1e-3f)).toInt().coerceIn(0, 255)
         }
-        return Bitmap.createBitmap(out, size, size, Bitmap.Config.ARGB_8888)
     }
 }

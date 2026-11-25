@@ -433,7 +433,7 @@ private fun GlobeView(img: EarthImage?, ms: List<Marker>, selected: String?, qua
             val full = (min(box.width, box.height) * 0.86f * z).roundToInt().coerceIn(64, GlobeRenderer.MAX_SIZE)
             val px = if (moving) (full * 0.5f).roundToInt() else full
             val made = withContext(Dispatchers.Default) {
-                try { r.render(px, c.first, c.second).asImageBitmap() }
+                try { r.renderReused(px, c.first, c.second).asImageBitmap() }
                 catch (e: OutOfMemoryError) { null } catch (e: Exception) { null }
             }
             if (made != null) { globe = made; renderedAt = c; frames++; renderError = "" }

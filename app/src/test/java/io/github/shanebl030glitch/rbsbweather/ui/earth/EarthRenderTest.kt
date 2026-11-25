@@ -26,6 +26,20 @@ class EarthRenderTest {
         return Bitmap.createBitmap(px, w, h, Bitmap.Config.ARGB_8888)
     }
 
+    @Test fun theTurningGlobeReusesItsPicturesAndDrawsTheSame() {
+        // audit: a new 4 MB picture every frame while the globe turned caused garbage-collection storms
+        val r = GlobeRenderer(halves())
+        val a = r.renderReused(200, 0.0, 90.0); val pa = IntArray(200 * 200).also { a.getPixels(it, 0, 200, 0, 0, 200, 200) }
+        val fresh = r.render(200, 0.0, 90.0); val pf = IntArray(200 * 200).also { fresh.getPixels(it, 0, 200, 0, 0, 200, 200) }
+        assertTrue(pa.contentEquals(pf))                                   // same picture as a new one
+        val b = r.renderReused(200, 0.0, -90.0); val c = r.renderReused(200, 0.0, 0.0)
+        assertTrue(a !== b && b !== c && a !== c)                         // the one on screen isn't drawn over
+        assertTrue(r.renderReused(200, 0.0, 45.0) === a)                  // then reused: nothing new per frame
+        assertTrue(r.renderReused(200, 0.0, 50.0) === b)
+        assertEquals(0, Color.alpha(a.getPixel(2, 2)))                    // outside the disc cleared when reused
+        val big = r.renderReused(300, 0.0, 0.0); assertEquals(300, big.width)   // a new size: a new picture
+    }
+
     @Test fun globeIsFilledAndFacesTheRightWay() {
         val r = GlobeRenderer(halves())
         val east = r.render(200, 0.0, 90.0)     // facing 90°E: all green in the middle
