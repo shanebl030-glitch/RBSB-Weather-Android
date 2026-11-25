@@ -18,7 +18,7 @@ class Watch(dir: File, private val alertClient: AlertClient, private val quakeCl
     @Synchronized
     fun alertsFor(place: Place, s: Settings, fc: Forecast?, now: Double = nowS()): List<Alert> {
         val all = mutableListOf<Alert>()
-        if (s.alerts.official) all += alertStore.alerts[place.key] ?: emptyList()
+        if (s.alerts.official) all += alertStore.alerts[place.alertKey] ?: emptyList()
         if (s.alerts.own && fc != null) all += ownAlerts(fc, s.alerts.limits, s.units, now)
         return shownAlerts(all, s.alerts.minLevel, s.alerts.muted, now)
     }
@@ -27,7 +27,7 @@ class Watch(dir: File, private val alertClient: AlertClient, private val quakeCl
     @Synchronized
     fun allAlertsFor(place: Place, s: Settings, fc: Forecast?, now: Double = nowS()): List<Alert> {
         val all = mutableListOf<Alert>()
-        if (s.alerts.official) all += alertStore.alerts[place.key] ?: emptyList()
+        if (s.alerts.official) all += alertStore.alerts[place.alertKey] ?: emptyList()
         if (s.alerts.own && fc != null) all += ownAlerts(fc, s.alerts.limits, s.units, now)
         return shownAlerts(all, s.alerts.minLevel, emptySet(), now)
     }
@@ -43,7 +43,7 @@ class Watch(dir: File, private val alertClient: AlertClient, private val quakeCl
         if (s.places.isEmpty()) return emptyList()
         if (s.alerts.official && (force || alertsDue(s, now))) {
             val (fresh, errors) = alertClient.fetchAll(s.places)
-            alertStore.update(fresh, s.places.map { it.key }, now)
+            alertStore.update(fresh, s.places.map { it.alertKey }, now)
             alertStore.errors = errors
             alertStore.checked = now
         }
@@ -53,7 +53,7 @@ class Watch(dir: File, private val alertClient: AlertClient, private val quakeCl
             for (p in s.places) {
                 if (s.alerts.selectedOnly && p.key != sel?.key) continue
                 val all = mutableListOf<Alert>()
-                if (s.alerts.official) all += alertStore.alerts[p.key] ?: emptyList()
+                if (s.alerts.official) all += alertStore.alerts[p.alertKey] ?: emptyList()
                 if (s.alerts.own) forecasts[p.key]?.let { all += ownAlerts(it, s.alerts.limits, s.units, now) }
                 for (a in alertsToNotify(all, alertStore.notified, s.alerts.minLevel, s.alerts.muted)) {
                     alertStore.notified[a.id] = a.signature()

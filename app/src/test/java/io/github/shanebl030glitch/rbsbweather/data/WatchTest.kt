@@ -29,6 +29,23 @@ class WatchTest {
         assertEquals(listOf(id), w.allAlertsFor(AUCKLAND, muted, null).map { it.id })
     }
 
+    @Test fun myLocationsWarningsDontFollowItToANewPlace() {
+        // 📍 My location in Auckland gets Auckland's warning; moved (no check yet), it has none
+        // (the audit saw a US freeze warning shown for Gordes, France after moving from Texas)
+        val akl = AUCKLAND.copy(current = true)
+        val s = Settings(places = listOf(akl), alerts = AlertSettings(own = false), followLocation = true)
+        val w = watch()
+        w.checkAlerts(s, emptyMap(), force = true)
+        assertEquals(listOf("orange"), w.alertsFor(akl, s, null).map { it.level })
+        val moved = akl.copy(name = "Gordes", latitude = 43.912, longitude = 5.2, country = "France")
+        assertEquals(akl.key, moved.key)                                      // the same place in the list…
+        assertTrue(akl.alertKey != moved.alertKey)                            // …but its warnings are filed by where it is
+        val s2 = s.copy(places = listOf(moved))
+        assertEquals(emptyList<Alert>(), w.alertsFor(moved, s2, null))
+        assertEquals(emptyList<Alert>(), w.allAlertsFor(moved, s2, null))
+        assertEquals(AUCKLAND.key, AUCKLAND.alertKey)                         // saved places are unchanged
+    }
+
     @Test fun settingsDecideWhatIsNotified() {
         val base = Settings(places = listOf(AUCKLAND, WELLINGTON), selected = WELLINGTON.key, alerts = AlertSettings(own = false))
         assertEquals(emptyList<AlertNotice>(), watch().checkAlerts(base.copy(alerts = base.alerts.copy(notify = false)), emptyMap(), true))

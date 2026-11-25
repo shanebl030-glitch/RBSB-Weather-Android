@@ -23,6 +23,12 @@ data class Place(
     val label: String get() = if (current) "📍 $name" else name
     /** Stable identifier: used to tell places apart and to name cache files. */
     val key: String get() = if (current) HERE_KEY else String.format(Locale.US, "%.4f,%.4f", latitude, longitude)
+    /**
+     * What official warnings are filed under: for My location, its key plus where it is, so a
+     * warning for where you were (a US freeze warning, say) never shows after you've moved
+     * (found by the audit: it did, until the next check).
+     */
+    val alertKey: String get() = if (current) String.format(Locale.US, "here@%.3f,%.3f", latitude, longitude) else key
 
     val displayName: String
         get() = listOf(name, admin1.takeIf { it.isNotBlank() && it != name }, country.takeIf { it.isNotBlank() })

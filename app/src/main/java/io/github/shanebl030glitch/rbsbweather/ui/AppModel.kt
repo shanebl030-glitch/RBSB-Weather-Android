@@ -310,6 +310,7 @@ class AppModel(
         _state.update { it.copy(forecasts = it.forecasts - h.key, errors = it.errors - h.key, loading = it.loading - h.key) }
         failures.remove(h.key)
         if (old != null) say("📍 Now at ${h.name}")
+        recomputeAlerts()                                   // the old spot's warnings go at once
         widgetPlaceChanged()
         scope.launch {
             val cached = withContext(io) { repo.cached(h) }       // the background check may have it already

@@ -49,11 +49,11 @@ object LocationFinder {
 
     /**
      * With the app open, a newest fix older than this is refreshed from GPS too (Android's fused or
-     * network position can be a cached one from before you moved). In the background check, only
-     * after 10 minutes, to spare the battery.
+     * network position can be a cached one from before you moved). In the background check (every
+     * 15 minutes or so), only after an hour, so GPS isn't woken four times an hour (battery audit).
      */
     const val STALE_MS = 60_000L
-    const val STALE_BACKGROUND_MS = 10 * 60_000L
+    const val STALE_BACKGROUND_MS = 60 * 60_000L
 
     // Every caller has checked the permission first (androidSource), and a SecurityException (it
     // was taken away a moment ago) is caught and treated as "no position".
