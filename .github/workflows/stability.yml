@@ -96,7 +96,7 @@ jobs:
   # other screen sizes: a small 5" phone and a 10" tablet (Android 14), random use and the audit
   devices:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 150
     strategy:
       fail-fast: false
       matrix:

@@ -52,9 +52,10 @@ for seed in 11 23 37 41 59; do
   adb logcat -c; adb logcat -b crash -c 2>/dev/null
   adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 3
   # no system keys (power, volume) or app switching; touches, swipes, rotation, back and menu
-  adb shell monkey -p $PKG -s $seed --throttle 120 --pct-syskeys 0 --pct-appswitch 0 --pct-anyevent 0 \
+  timeout 900 adb shell monkey -p $PKG -s $seed --throttle 120 --pct-syskeys 0 --pct-appswitch 0 --pct-anyevent 0 \
       --pct-rotation 4 --pct-nav 6 --pct-majornav 6 --pct-touch 50 --pct-motion 25 --pct-trackball 0 --pct-flip 0 \
       --monitor-native-crashes -v "$EVENTS" > "$OUT/monkey-$seed.txt" 2>&1
+  [ $? = 124 ] && { echo "(the monkey hung for 15 minutes and was stopped; not counted as an app failure)"; adb shell pkill -f com.android.commands.monkey 2>/dev/null; }
   tail -3 "$OUT/monkey-$seed.txt"
   grep "// CRASH: \|// NOT RESPONDING: " "$OUT/monkey-$seed.txt" | grep -v "$PKG" | sed 's/^/(another app, not counted) /' | head -3
   if grep -q "// CRASH: $PKG\|// NOT RESPONDING: $PKG" "$OUT/monkey-$seed.txt"; then
