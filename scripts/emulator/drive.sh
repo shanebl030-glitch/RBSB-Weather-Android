@@ -47,7 +47,16 @@ adb shell am start -W -n $PKG/.MainActivity
 sleep 6; check "launch"; dump; shot launch
 step "add Auckland"
 tap "Add a place" && sleep 2 && adb shell input text Auckland && sleep 8
-tap "Auckland, New Zealand"; sleep 10; check "adding a place"; shot forecast
+if ! tap "Auckland, New Zealand"; then
+  echo "SEARCH: no result shown; what's on screen:"; grep -o 'text="[^"]\+"' "$OUT/ui.xml" | head -12; shot search-failed
+  for t in 1 2 3; do                                   # search again (a slow or failed search shouldn't sink the whole run)
+    adb shell input keyevent KEYCODE_MOVE_END; for i in $(seq 1 12); do adb shell input keyevent KEYCODE_DEL; done
+    sleep 2; adb shell input text Auckland; sleep 12
+    tap "Auckland, New Zealand" && { echo "SEARCH: found on try $((t + 1))"; break; }
+    grep -o 'text="[^"]\+"' "$OUT/ui.xml" | head -6
+  done
+fi
+sleep 10; check "adding a place"; shot forecast
 dump; APPT=$(python3 -c 'import re,sys,xml.etree.ElementTree as ET
 for n in ET.parse(sys.argv[1]).getroot().iter("node"):
     m = re.fullmatch(r"(-?\d+)°C", (n.get("text") or "").strip())

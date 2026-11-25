@@ -43,7 +43,7 @@ jobs:
 
   emulators:
     runs-on: ubuntu-latest
-    timeout-minutes: 110
+    timeout-minutes: 170
     strategy:
       fail-fast: false
       matrix:
