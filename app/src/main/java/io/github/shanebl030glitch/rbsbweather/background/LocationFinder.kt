@@ -47,8 +47,13 @@ object LocationFinder {
 
     private fun Location.toFix() = Fix(latitude, longitude, if (hasAccuracy()) accuracy else 0f, time, provider ?: "")
 
-    /** Fixes this old are refreshed from GPS too (a cached network or fused position may be from before you moved). */
-    const val STALE_MS = 2 * 60_000L
+    /**
+     * With the app open, a newest fix older than this is refreshed from GPS too (Android's fused or
+     * network position can be a cached one from before you moved). In the background check, only
+     * after 10 minutes, to spare the battery.
+     */
+    const val STALE_MS = 60_000L
+    const val STALE_BACKGROUND_MS = 10 * 60_000L
 
     private suspend fun fresh(lm: LocationManager, provider: String): Fix? {
         if (Build.VERSION.SDK_INT < 30) return null
@@ -69,10 +74,10 @@ object LocationFinder {
 
     /**
      * Android's location service: a fresh position (fused or network, up to 20 s), compared with the
-     * last position each provider already has; if the newest is more than 2 minutes old, GPS is
+     * last position each provider already has; if the newest is older than `staleMs`, GPS is
      * asked as well. Logs which provider answered (no coordinates).
      */
-    fun androidSource(ctx: Context) = LocationSource {
+    fun androidSource(ctx: Context, staleMs: Long = STALE_MS) = LocationSource {
         val app = ctx.applicationContext
         if (!hasPermission(app)) return@LocationSource null
         val lm = app.getSystemService(LocationManager::class.java) ?: return@LocationSource null
@@ -84,7 +89,7 @@ object LocationFinder {
         got += enabled.mapNotNull { p -> try { lm.getLastKnownLocation(p)?.toFix() } catch (e: Exception) { null } }
         var pick = best(got)
         val now = System.currentTimeMillis()
-        if ((pick == null || now - pick.timeMs > STALE_MS) && LocationManager.GPS_PROVIDER in enabled && hasPrecise(app)) {
+        if ((pick == null || now - pick.timeMs > staleMs) && LocationManager.GPS_PROVIDER in enabled && hasPrecise(app)) {
             fresh(lm, LocationManager.GPS_PROVIDER)?.let { got += it; pick = best(got) }
         }
         android.util.Log.i("RBSB-Weather", "My location: ${got.size} fixes from ${enabled.joinToString(",")}; using " +

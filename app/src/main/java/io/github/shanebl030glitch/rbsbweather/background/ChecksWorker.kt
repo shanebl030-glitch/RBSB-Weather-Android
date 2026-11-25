@@ -66,7 +66,7 @@ class ChecksWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx
          * (My location then updates whenever you open the app). Returns the new place, if it moved.
          */
         suspend fun followHere(ctx: Context, g: AppGraph,
-                               source: LocationSource = LocationFinder.androidSource(ctx),
+                               source: LocationSource = LocationFinder.androidSource(ctx, LocationFinder.STALE_BACKGROUND_MS),
                                namer: io.github.shanebl030glitch.rbsbweather.data.PlaceNamer = LocationFinder.androidNamer(ctx),
                                allowed: Boolean = LocationFinder.hasPermission(ctx) && LocationFinder.hasBackground(ctx),
                                fetch: (io.github.shanebl030glitch.rbsbweather.data.Place) -> Unit = { g.repo.fetch(it) }): io.github.shanebl030glitch.rbsbweather.data.Place? {
