@@ -33,6 +33,8 @@ The scripts: `scripts/emulator/drive.sh` (walk-through), `stress.sh` (random use
 - **Found:** an out-of-memory error while making the Moon picture could crash the sky, widgets or Earth screens.
 - **Fixed:** it's caught, its memory is freed and the picture is skipped. The texture files are now closed after reading.
 - **Result:** no crash and no ANR from RBSB-Weather in 65,000 random events on four Android versions and two other screen sizes. Android 15's own launcher crashed once when the random taps left the app; that isn't RBSB-Weather.
+- **Found:** out of memory on the Earth tab, and again under random use, on one Android 10 run whose emulator allowed only a 16 MB Java heap (earlier Android 10 runs allowed more). The Earth maps alone take 16 MB.
+- **Fixed:** the app already asks for Android's larger memory allowance ("large heap"), and that emulator still gave it 16 MB. So the app now keeps the Earth maps at half size when it's given less than 96 MB. Real phones allow 192–512 MB, so they keep full detail.
 - **Code review:**
   - 23 `!!` null assertions checked; each is guarded or on data the app made itself.
   - All bitmap decoding is guarded for out-of-memory.
@@ -142,6 +144,7 @@ The scripts: `scripts/emulator/drive.sh` (walk-through), `stress.sh` (random use
 | 8 | Stale cached position used after moving | Emulator, Auckland → Wellington | ✅ Newest fix wins, GPS when stale |
 | 9 | Warnings from the previous place shown after moving | Audit, Marfa → Gordes | ✅ Filed by where it is |
 | 10 | Out of memory in the Moon picture could crash | Code review | ✅ Caught and skipped |
+| 10b | Out of memory on the Earth tab with a 16 MB heap | Android 10 emulator | ✅ Smaller maps when under 96 MB |
 | 11 | 4 lint errors | Lint | ✅ |
 | 12 | GPS woken by the background check every 10 min when stale | Battery review | ✅ At most hourly |
 | 13 | Test key in the public repository | Review | ⏳ Shane's decision |
