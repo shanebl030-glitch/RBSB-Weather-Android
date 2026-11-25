@@ -33,7 +33,8 @@ for p in POST_NOTIFICATIONS ACCESS_COARSE_LOCATION ACCESS_FINE_LOCATION ACCESS_B
 adb emu geo fix 174.8960 -36.9460 >/dev/null     # East Tamaki
 echo "== 0. A clean start: network on (random taps can reach Android's quick settings), Auckland, and My location on"
 adb shell cmd connectivity airplane-mode disable >/dev/null 2>&1; adb shell svc wifi enable; adb shell svc data enable
-adb shell settings put system font_scale 1.0; adb shell cmd uimode night no >/dev/null 2>&1; adb shell settings put system user_rotation 0; sleep 8
+adb shell settings put system font_scale 1.0; adb shell cmd uimode night no >/dev/null 2>&1; adb shell settings put system user_rotation 0
+for i in $(seq 1 30); do timeout 8 adb shell "ping -c 1 -W 3 geocoding-api.open-meteo.com" >/dev/null 2>&1 && { echo "(network back after $((i * 3)) s)"; break; }; sleep 3; done
 adb shell pm clear $PKG >/dev/null
 for p in POST_NOTIFICATIONS ACCESS_COARSE_LOCATION ACCESS_FINE_LOCATION ACCESS_BACKGROUND_LOCATION; do adb shell pm grant $PKG android.permission.$p 2>/dev/null; done
 start 6
@@ -76,7 +77,8 @@ shot offline-wind
 settings; tap "Update my location now" >/dev/null; sleep 10; crashcheck "My location offline"; dump; grep -o 'text="Now: [^"]*"' "$OUT/ui.xml" | head -1
 home; tap "Menu" && tap "Test connection"; sleep 2; tap "Run the test" >/dev/null; for i in $(seq 1 25); do sleep 3; has "Summary:" && break; done
 crashcheck "Test connection offline"; has "Summary:" && ok "Test connection finishes offline with a report" || bad "Test connection didn't finish offline"
-adb shell cmd connectivity airplane-mode disable >/dev/null 2>&1; adb shell svc wifi enable; adb shell svc data enable; sleep 10
+adb shell cmd connectivity airplane-mode disable >/dev/null 2>&1; adb shell svc wifi enable; adb shell svc data enable
+for i in $(seq 1 30); do timeout 8 adb shell "ping -c 1 -W 3 api.open-meteo.com" >/dev/null 2>&1 && break; sleep 3; done
 home; tap "Refresh" >/dev/null; sleep 15; crashcheck "refresh back online"; dump
 grep -q 'text="↻\|Updated\|just now' "$OUT/ui.xml"; has "°C" && ok "back online: forecast shows" || bad "back online: nothing shown"
 shot back-online
