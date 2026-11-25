@@ -64,6 +64,8 @@ for seed in 11 23 37 41 59; do
   C="$(crashes)"; [ -n "$C" ] && { echo "CRASH LOG (seed $seed):"; echo "$C"; FAIL=1; echo "$C" | grep -q "ANR in" && ! grep -q "NOT RESPONDING: $PKG" "$OUT/monkey-$seed.txt" && anr_trace; }
   adb exec-out screencap -p > "$OUT/after-$seed.png"
   adb shell settings put system user_rotation 0 2>/dev/null
+  # the monkey can pull down quick settings and switch things off: put them back for the next round
+  adb shell cmd connectivity airplane-mode disable >/dev/null 2>&1; adb shell svc wifi enable 2>/dev/null; adb shell svc data enable 2>/dev/null
 done
 
 echo "== memory after the run"

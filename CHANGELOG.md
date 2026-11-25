@@ -16,14 +16,23 @@ Shane: "I'd like to add GPS tracking so if I travel to a different suburb or cit
 - **Widgets show my location** (on by default when Use my location is on): the home-screen widgets and the status-bar temperature show 📍 My location instead of the place you last looked at.
 - **While the app is closed:** with Android's **Allow all the time** location access, the background check (about every 15 minutes, when Android allows) moves My location and refreshes the widget. Without it, My location updates when you open the app. Settings shows which, with a button to Android's setting.
 - **Permissions:** approximate or precise location (asked only when you turn it on; approximate is enough), and optional background location. No Google Play services needed.
-- **Naming, down to the suburb:**
+- **Naming worldwide** (Shane: "suburb identification must work worldwide, not just in New Zealand"):
+  - **The most specific meaningful local area,** whatever the country calls it, in this order: suburb, neighbourhood, quarter, city district, district, borough. If none is named: the village or hamlet, then a municipality, and last the town or city.
+  - **Never a city or town passed off as a local area:**
+    - a "local area" that is just the city's own name again (Paris files Paris as its own district) is skipped;
+    - so are administrative units such as "Cape Town Ward 54" or "Municipio Roma I".
+  - **What comes after the name:** for a local area, its town or city and state ("Bondi Beach, Sydney, New South Wales"); for a town, its wider area and state ("Marfa, Presidio County, Texas").
+  - **Tested** on real OpenStreetMap replies from 29 places in 21 countries, and in the app on emulators at Tokyo, Berlin, Paris, Rome, New York, Sydney, Marfa and Gordes, as well as Waiuku, East Tāmaki and Clarks Beach.
+- **How the name is found:**
   - **First:** the phone's own geocoder.
   - **If the phone can't give the suburb** (Shane's phone showed "My location", then only the city), OpenStreetMap (Nominatim) is asked with the rounded position.
   - **A less exact name** (none, a city, a region) is replaced as soon as the suburb is known, without having to move.
   - **Lookups are remembered** for 6 hours per spot, so OpenStreetMap is asked rarely.
-- **Privacy:** coordinates are rounded to 3 decimals (about 100 m) before they're stored or sent, and go only to your weather providers, the same as any saved place.
+- **Privacy:** coordinates are rounded to 3 decimals (about 100 m) before they're stored or sent. They go to your weather providers, the same as any saved place, and to OpenStreetMap only when the phone can't name the local area.
 
 ### Fixed (stability audit for a stable release)
+- **Warnings from where you were showed at the new place:** after My location moved from Marfa, Texas to Gordes, France, its page still showed a US Freeze Warning until the next check. Official warnings for My location are now filed by where it is, so they go at once when it moves.
+- **Battery:** in the background check (about every 15 minutes), GPS is now asked at most once an hour; the rest of the time the phone's network or fused position is used.
 The audit ran lint, plus the full walk-through and 12,500 random taps, swipes, rotations and back presses (Android's "monkey") on each of Android 10, 12, 14 and 15. It found:
 - **"App isn't responding" (ANR) under random use on Android 12 and 15:** the forecast sky and the Earth globe made the real Moon picture on the main thread when it wasn't cached. That can take seconds, longer when the Moon tab is saving a 2048-pixel picture at the same time. The picture is now always made in the background; a simple Moon shows for a moment until it's ready.
 - **Android 10: My location never found a position** unless another app had asked recently (Android 10 has no "current location" call). It now asks for one update itself.

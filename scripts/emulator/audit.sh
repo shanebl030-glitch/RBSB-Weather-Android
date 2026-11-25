@@ -30,7 +30,9 @@ pss() {   # total PSS in kB ("TOTAL PSS:" on Android 11+, the "TOTAL" row on And
 adb logcat -c; adb logcat -b crash -c 2>/dev/null
 for p in POST_NOTIFICATIONS ACCESS_COARSE_LOCATION ACCESS_FINE_LOCATION ACCESS_BACKGROUND_LOCATION; do adb shell pm grant $PKG android.permission.$p 2>/dev/null; done
 adb emu geo fix 174.8960 -36.9460 >/dev/null     # East Tamaki
-echo "== 0. A clean start: Auckland, and My location on"
+echo "== 0. A clean start: network on (random taps can reach Android's quick settings), Auckland, and My location on"
+adb shell cmd connectivity airplane-mode disable >/dev/null 2>&1; adb shell svc wifi enable; adb shell svc data enable
+adb shell settings put system font_scale 1.0; adb shell cmd uimode night no >/dev/null 2>&1; adb shell settings put system user_rotation 0; sleep 8
 adb shell pm clear $PKG >/dev/null
 for p in POST_NOTIFICATIONS ACCESS_COARSE_LOCATION ACCESS_FINE_LOCATION ACCESS_BACKGROUND_LOCATION; do adb shell pm grant $PKG android.permission.$p 2>/dev/null; done
 start 6
