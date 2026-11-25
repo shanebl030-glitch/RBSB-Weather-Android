@@ -41,11 +41,15 @@ settings; tap "📍 Use my location"; for i in $(seq 1 10); do sleep 3; has "Now
 crashcheck "setting up"; home
 
 echo "== 1. Settings survive a restart and Android closing the app"
-settings; has "Now: " && ok "My location is on before the restart" || bad "My location wasn't on to start with"
+GPS=$(adb shell pm list features 2>/dev/null | grep -c "android.hardware.location.gps")
+settings
+if has "Now: "; then ok "My location is on before the restart"
+elif [ "$GPS" = 0 ]; then echo "AUDIT NOTE: this device has no GPS (and the emulator no network location): My location has no position to show, and says so:"; grep -o 'text="\(Finding\|Waiting for your\|Couldn.t find\)[^"]*"' "$OUT/ui.xml" | head -1
+else bad "My location wasn't on to start with"; fi
 before=$(grep -o 'text="Now: [^"]*"' "$OUT/ui.xml" | head -1)
 adb shell am force-stop $PKG; start 6
 settings; after=$(grep -o 'text="Now: [^"]*"' "$OUT/ui.xml" | head -1); [ -z "$after" ] && { dump; after=$(grep -o 'text="Now: [^"]*"' "$OUT/ui.xml" | head -1); }
-[ -n "$after" ] && ok "after force-stop: $after (before: $before)" || bad "My location lost after a restart"
+if [ -n "$after" ]; then ok "after force-stop: $after (before: $before)"; elif [ "$GPS" = 0 ]; then echo "AUDIT NOTE: no GPS, so no My location to keep"; else bad "My location lost after a restart"; fi
 home; has "Auckland" && ok "saved places kept after a restart" || bad "saved places lost after a restart"
 adb shell input keyevent KEYCODE_HOME; sleep 2; adb shell am kill $PKG; sleep 2      # Android closing it in the background
 start 6; crashcheck "being closed in the background"; has "°" && ok "reopens after Android closed it in the background" || bad "blank after process death"
