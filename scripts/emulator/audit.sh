@@ -36,7 +36,17 @@ adb shell settings put system font_scale 1.0; adb shell cmd uimode night no >/de
 adb shell pm clear $PKG >/dev/null
 for p in POST_NOTIFICATIONS ACCESS_COARSE_LOCATION ACCESS_FINE_LOCATION ACCESS_BACKGROUND_LOCATION; do adb shell pm grant $PKG android.permission.$p 2>/dev/null; done
 start 6
-tap "Add a place" && sleep 2 && adb shell input text Auckland && sleep 8 && tap "Auckland, New Zealand"; sleep 8
+added=no
+for t in 1 2 3 4; do                         # Android's own "isn't responding" dialogs can swallow the typing: try again
+  home; tap "Add a place" >/dev/null || tap "Add a place" >/dev/null; sleep 2
+  adb shell input keyevent KEYCODE_MOVE_END; for i in $(seq 1 12); do adb shell input keyevent KEYCODE_DEL; done
+  adb shell input text Auckland; sleep 10
+  if tap "Auckland, New Zealand"; then added=yes; break; fi
+  echo "(search try $t: no result; on screen:)"; grep -o 'text="[^"]\+"' "$OUT/ui.xml" | head -6; shot "search-try-$t"
+  adb shell input keyevent KEYCODE_BACK; sleep 1; adb shell input keyevent KEYCODE_BACK; sleep 2
+done
+[ $added = yes ] && ok "set up: Auckland added" || bad "set up: couldn't add Auckland (see search-try screenshots)"
+sleep 8
 settings; tap "📍 Use my location"; for i in $(seq 1 10); do sleep 3; has "Now: " && break; done
 crashcheck "setting up"; home
 
