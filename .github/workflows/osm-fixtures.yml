@@ -1,0 +1,13 @@
+# Collects real OpenStreetMap replies from around the world for RBSB-Weather's naming tests.
+# Created By Shane BlackbuRn
+name: OSM fixtures
+on:
+  push:
+    branches: ["repro/osm-*"]
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/osm/fetch_world.py
