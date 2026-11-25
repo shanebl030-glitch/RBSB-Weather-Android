@@ -152,15 +152,15 @@ check "moving to Wellington"; shot here-wellington
 echo "HERE (Wellington fix): $W"
 [ -n "$AKL" ] && [ -n "$W" ] && [ "$W" != "$AKL" ] && echo "HERE MOVED: yes" || { echo "HERE MOVED: no"; HERE_FAILED=1; }
 # Shane's examples: My location must show the suburb or town, not just "Auckland"
-for spot in "Waiuku|174.7310|-37.2490" "East Tamaki|174.8960|-36.9460" "Clarks Beach|174.7000|-37.1330"; do
-  IFS='|' read -r want lon lat <<< "$spot"
+for spot in "Waiuku|174.7310|-37.2490|Waiuku" "East Tamaki|174.8960|-36.9460|East T.*maki" "Clarks Beach|174.7000|-37.1330|Clarks Beach"; do
+  IFS='|' read -r want lon lat pattern <<< "$spot"
   prev="$(here_now | grep 'Now:')"; got=""
   for t in 1 2 3; do
     tap "Update my location now" >/dev/null
     for i in $(seq 1 8); do adb emu geo fix $lon $lat >/dev/null; sleep 3; got="$(here_now | grep 'Now:')"; [ -n "$got" ] && [ "$got" != "$prev" ] && break 2; done
   done
   echo "SUBURB ($want): $got"
-  echo "$got" | grep -qi "$want" && echo "SUBURB OK: $want" || { echo "SUBURB WRONG: wanted $want"; HERE_FAILED=1; }
+  echo "$got" | grep -qi "$pattern" && echo "SUBURB OK: $want" || { echo "SUBURB WRONG: wanted $want"; HERE_FAILED=1; }
   shot "here-${want// /-}"
 done
 adb logcat -d -s RBSB-Weather | grep "My location name" | tail -4
