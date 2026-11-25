@@ -30,6 +30,10 @@ Shane asked for "a complete crash and bug audit for a stable release". These run
   - network timeouts (15 s connect, 20 s read, size-limited);
   - settings and cache files (atomic writes; a damaged settings file reads as the defaults instead of crashing);
   - duplicate keys in lists (removed when settings are read).
+- **The suburb, with Shane's examples** (all four Android versions):
+  - the emulator was moved to Waiuku, East Tāmaki and Clarks Beach;
+  - My location showed "Waiuku, Franklin, New Zealand", "East Tāmaki, Auckland, New Zealand" and "Clarks Beach, Franklin, New Zealand";
+  - for Waiuku and Clarks Beach the phone's geocoder gave only the wider area, and OpenStreetMap gave the town (the app's log says which was used).
 - **Results and fixes:** see the 0.7.0 CHANGELOG. In short:
   - ANRs on Android 12 and 15 (Moon picture on the main thread), fixed;
   - Android 10 had no position for My location, fixed;

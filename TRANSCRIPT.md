@@ -377,4 +377,8 @@ Created By Shane BlackbuRn
   - **The signing key:** the test signing key is in the public repository, so anyone could sign an APK that installs over RBSB-Weather. A private release key is needed for a stable release. Switching keys means one uninstall and reinstall.
   - **The version number** for a stable release.
 
+**Shane (25 Nov):** "The images you just posted only show Auckland city and country New Zealand. not the suburb like Waiuku, Auckland or East Tamaki, Auckland or clarks beach auckland etc..."
+
+**My reply:** those pictures were of the "Auckland" place the test adds by searching, not 📍 My location. The emulator check now moves the phone to his three examples. On Android 10, 12, 14 and 15, My location showed Waiuku, East Tāmaki and Clarks Beach. For Waiuku and Clarks Beach, OpenStreetMap supplied the town name because the phone only gave the wider area. The check also screenshots the My location forecast page.
+
 Created By Shane BlackbuRn
