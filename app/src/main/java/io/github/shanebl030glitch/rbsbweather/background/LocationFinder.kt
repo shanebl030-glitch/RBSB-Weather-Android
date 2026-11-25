@@ -97,14 +97,20 @@ object LocationFinder {
         pick
     }
 
-    /** Android's geocoder, then OpenStreetMap if the phone can't name the spot. */
+    /** OpenStreetMap, remembered by spot for the whole app, so it's asked rarely. */
+    private val osm by lazy { io.github.shanebl030glitch.rbsbweather.data.CachedNamer(io.github.shanebl030glitch.rbsbweather.data.OsmNamer()) }
+
+    /** Android's geocoder; OpenStreetMap when the phone can't name the suburb. */
     fun androidNamer(ctx: Context): PlaceNamer {
         val phone = phoneNamer(ctx)
-        val osm = io.github.shanebl030glitch.rbsbweather.data.OsmNamer()
         return PlaceNamer { lat, lon ->
-            val n = phone.name(lat, lon)
-            val used = n ?: osm.name(lat, lon)
-            android.util.Log.i("RBSB-Weather", "My location name: " + when { n != null -> "from the phone"; used != null -> "from OpenStreetMap"; else -> "none found" })
+            val p = phone.name(lat, lon)
+            val used = io.github.shanebl030glitch.rbsbweather.data.bestNaming(p) { osm.name(lat, lon) }
+            android.util.Log.i("RBSB-Weather", "My location name: " + when {
+                used == null -> "none found"
+                used === p -> "from the phone (level ${p.level})"
+                else -> "from OpenStreetMap (level ${used.level}; phone gave ${p?.level ?: "none"})"
+            })
             used
         }
     }
@@ -128,9 +134,10 @@ object LocationFinder {
                 g.getFromLocation(lat, lon, 1)?.firstOrNull()
             }
             a ?: return@PlaceNamer null
-            val name = listOf(a.subLocality, a.locality, a.subAdminArea, a.adminArea).firstOrNull { !it.isNullOrBlank() } ?: return@PlaceNamer null
-            val region = listOf(a.locality, a.subAdminArea, a.adminArea).firstOrNull { !it.isNullOrBlank() && it != name } ?: ""
-            Naming(name, region, a.countryName ?: "")
+            val levels = listOf(a.subLocality to Naming.SUBURB, a.locality to Naming.TOWN, a.subAdminArea to Naming.REGION, a.adminArea to Naming.REGION)
+            val (name, level) = levels.firstOrNull { !it.first.isNullOrBlank() }?.let { it.first!!.trim() to it.second } ?: return@PlaceNamer null
+            val region = listOf(a.locality, a.subAdminArea, a.adminArea).firstOrNull { !it.isNullOrBlank() && it.trim() != name }?.trim() ?: ""
+            Naming(name, region, a.countryName?.trim() ?: "", level)
         } catch (e: Exception) { null }
     }
 }

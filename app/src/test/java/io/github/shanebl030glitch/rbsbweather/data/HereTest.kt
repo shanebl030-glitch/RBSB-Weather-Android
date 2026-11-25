@@ -73,6 +73,48 @@ class HereTest {
         assertNull(Here.next(named, Fix(-36.8490, 174.7635), NOW, NAMES))                      // named: small moves change nothing again
     }
 
+    @Test fun aCityNameIsReplacedByTheSuburbOnceItsKnown() {
+        // Shane's phone: the phone named only the city
+        val city = Here.next(null, Fix(-36.8580, 174.7460), NOW) { _, _ -> Naming("Auckland", "Auckland", "New Zealand", Naming.TOWN) }!!
+        assertEquals("Auckland", city.name); assertEquals(Naming.TOWN, city.detail)
+        assertNull(Here.next(city, Fix(-36.8582, 174.7460), NOW) { _, _ -> Naming("Auckland", "Auckland", "New Zealand", Naming.TOWN) })  // nothing better
+        val sub = Here.next(city, Fix(-36.8582, 174.7460), NOW) { _, _ -> Naming("Grey Lynn", "Auckland", "New Zealand") }!!
+        assertEquals("Grey Lynn", sub.name); assertEquals(Naming.SUBURB, sub.detail)
+        assertEquals(city.latitude, sub.latitude, 0.0)
+        val back = Place.fromJson(sub.toJson())!!
+        assertEquals(sub, back)                                                    // the level is saved
+        assertEquals(0, Place.fromJson(sub.toJson().apply { remove("detail") })!!.detail)   // from an earlier 0.7 build: asked again
+    }
+
+    @Test fun thePhonesSuburbWinsElseOpenStreetMapsWhenMoreExact() {
+        var osmAsked = 0
+        val osm = { osmAsked++; Naming("Grey Lynn", "Auckland", "New Zealand / Aotearoa") }
+        assertEquals("Ponsonby", bestNaming(Naming("Ponsonby", "Auckland", "New Zealand"), osm)!!.name)
+        assertEquals(0, osmAsked)                                                  // not asked when the phone has the suburb
+        val fromOsm = bestNaming(Naming("Auckland", "", "New Zealand", Naming.TOWN), osm)!!
+        assertEquals("Grey Lynn", fromOsm.name); assertEquals("New Zealand", fromOsm.country)   // the phone's spelling of the country
+        assertEquals("Grey Lynn", bestNaming(null, osm)!!.name)
+        assertEquals("Auckland", bestNaming(Naming("Auckland", "", "NZ", Naming.TOWN)) { null }!!.name)
+        assertEquals("Auckland", bestNaming(Naming("Auckland", "", "NZ", Naming.TOWN)) { Naming("Auckland", "", "", Naming.TOWN) }!!.name)
+        assertEquals("Auckland", bestNaming(Naming("Auckland", "", "NZ", Naming.TOWN)) { throw RuntimeException() }!!.name)
+        assertNull(bestNaming(null) { null })
+    }
+
+    @Test fun namesAreRememberedSoTheNetworkIsAskedRarely() {
+        var now = NOW; var calls = 0; var answer: Naming? = null
+        val c = CachedNamer({ _, _ -> calls++; answer }, { now })
+        assertNull(c.name(-36.8581, 174.7461)); assertNull(c.name(-36.8584, 174.7459))   // same ~100 m spot
+        assertEquals(1, calls)
+        answer = Naming("Grey Lynn")
+        now += 31 * 60_000L                                                        // nothing found: asked again after 30 min
+        assertEquals("Grey Lynn", c.name(-36.858, 174.746)!!.name); assertEquals(2, calls)
+        now += 5 * 3_600_000L
+        c.name(-36.858, 174.746); assertEquals(2, calls)                          // a name: kept 6 hours
+        now += 2 * 3_600_000L
+        c.name(-36.858, 174.746); assertEquals(3, calls)
+        c.name(-41.287, 174.776); assertEquals(4, calls)                          // another spot
+    }
+
     @Test fun openStreetMapNamesTheSuburbCityAndCountry() {
         var asked = ""
         val body = """{"place_id":1,"lat":"-36.858","lon":"174.746","display_name":"Ponsonby, Auckland, New Zealand",
@@ -80,11 +122,15 @@ class HereTest {
         val n = OsmNamer(HttpClient { url, h -> asked = url + " " + h["Accept-Language"]; body }, language = { "en-NZ" }).name(-36.85812, 174.74633)!!
         assertEquals(Naming("Ponsonby", "Auckland", "New Zealand"), n)
         assertTrue(asked.startsWith("https://nominatim.openstreetmap.org/reverse?"))
-        assertTrue("lat=-36.858" in asked && "lon=174.746" in asked && "zoom=14" in asked && asked.endsWith("en-NZ"))   // only the rounded spot
+        assertTrue("lat=-36.858" in asked && "lon=174.746" in asked && "zoom=17" in asked && asked.endsWith("en-NZ"))   // only the rounded spot
         // a country town: no suburb
         assertEquals(Naming("Taupō", "Waikato", "New Zealand"), OsmNamer.parse("""{"address":{"town":"Taupō","state":"Waikato","country":"New Zealand"}}"""))
         // a city with no suburb: the city, and its region
-        assertEquals(Naming("Wellington", "Wellington", "New Zealand").copy(admin1 = ""), OsmNamer.parse("""{"address":{"city":"Wellington","country":"New Zealand"}}"""))
+        assertEquals(Naming("Wellington", "", "New Zealand", Naming.TOWN), OsmNamer.parse("""{"address":{"city":"Wellington","country":"New Zealand"}}"""))
+        // as Nominatim really answered for Grey Lynn (the emulator check): the suburb, not the smaller quarter
+        assertEquals(Naming("Grey Lynn", "Auckland", "New Zealand / Aotearoa"), OsmNamer.parse(
+            """{"address":{"quarter":"Arch Hill","suburb":"Grey Lynn","city":"Auckland","state":"Auckland","country":"New Zealand / Aotearoa"}}"""))
+        assertEquals(Naming("Waikato", "", "New Zealand", Naming.REGION), OsmNamer.parse("""{"address":{"state":"Waikato","country":"New Zealand"}}"""))
         // the sea, errors and junk: no name
         assertNull(OsmNamer.parse("""{"error":"Unable to geocode"}"""))
         assertNull(OsmNamer.parse("""{"address":{"country":""}}"""))

@@ -16,6 +16,8 @@ data class Place(
     val timezone: String = "auto",
     /** The phone's own location (0.7): follows you, and keeps the same key wherever you are. */
     val current: Boolean = false,
+    /** My location only: how exact its name is (Naming.SUBURB, TOWN or REGION; 0 = not known). */
+    val detail: Int = 0,
 ) {
     /** The name as shown: 📍 in front of My location. */
     val label: String get() = if (current) "📍 $name" else name
@@ -29,7 +31,7 @@ data class Place(
     fun toJson(): JSONObject = JSONObject()
         .put("name", name).put("latitude", latitude).put("longitude", longitude)
         .put("country", country).put("admin1", admin1).put("timezone", timezone)
-        .also { if (current) it.put("current", true) }
+        .also { if (current) it.put("current", true).put("detail", detail) }
 
     companion object {
         fun fromJson(o: JSONObject): Place? {
@@ -39,7 +41,7 @@ data class Place(
             if (name.isBlank() || lat.isNaN() || lon.isNaN() || lat !in -90.0..90.0 || lon !in -180.0..180.0) return null
             return Place(name.take(100), lat, lon, o.optString("country", "").take(100),
                 o.optString("admin1", "").take(100), o.optString("timezone", "auto").ifBlank { "auto" }.take(64),
-                o.optBoolean("current", false))
+                o.optBoolean("current", false), o.optInt("detail", 0).coerceIn(0, 3))
         }
 
         /** The key of the phone's own location, wherever it is. */

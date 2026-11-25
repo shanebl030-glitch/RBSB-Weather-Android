@@ -302,7 +302,7 @@ class AppModel(
         val old = s.here()
         val h = place.copy(current = true)
         if (old != null && old.latitude == h.latitude && old.longitude == h.longitude) {
-            if (old.name != h.name) saveSettings(s.withHere(h))
+            if (old != h) { saveSettings(s.withHere(h)); widgetPlaceChanged() }    // a better name for the same spot
             return
         }
         saveSettings(s.withHere(h))
