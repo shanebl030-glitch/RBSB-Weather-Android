@@ -16,6 +16,13 @@ crashes() {   # print any crash or ANR of the app since the last clear
   adb logcat -d 2>/dev/null | grep -E "ANR in $PKG|FATAL EXCEPTION.*|OutOfMemoryError" | grep -v "^--" | head -10
 }
 
+adb root >/dev/null 2>&1; sleep 4; adb wait-for-device      # to read Android's ANR traces (allowed on test images)
+anr_trace() {   # the app's main thread from the newest ANR trace
+  f=$(adb shell 'ls -t /data/anr/ 2>/dev/null' | tr -d '\r' | head -1)
+  [ -n "$f" ] || { echo "(no ANR trace file readable)"; return; }
+  echo "----- main thread in /data/anr/$f -----"
+  adb shell cat "/data/anr/$f" 2>/dev/null | tr -d '\r' | awk '/^----- pid .* -----/{p=0} /Cmd line: io.github.shanebl030glitch.rbsbweather/{p=1} p&&/^"main"/{m=1} m{print; n++} m&&/^$/{exit} n>60{exit}'
+}
 echo "Android $(adb shell getprop ro.build.version.release) (API $(adb shell getprop ro.build.version.sdk))"
 adb install -r "$APK" || exit 1
 for p in POST_NOTIFICATIONS ACCESS_COARSE_LOCATION ACCESS_FINE_LOCATION ACCESS_BACKGROUND_LOCATION; do adb shell pm grant $PKG android.permission.$p 2>/dev/null; done
@@ -51,8 +58,9 @@ for seed in 11 23 37 41 59; do
   tail -3 "$OUT/monkey-$seed.txt"
   if grep -q "// CRASH\|// NOT RESPONDING\|Monkey aborted" "$OUT/monkey-$seed.txt"; then
     echo "MONKEY FOUND A PROBLEM (seed $seed):"; grep -A30 "// CRASH\|// NOT RESPONDING" "$OUT/monkey-$seed.txt" | head -50; FAIL=1
+    grep -q "NOT RESPONDING" "$OUT/monkey-$seed.txt" && anr_trace
   fi
-  C="$(crashes)"; [ -n "$C" ] && { echo "CRASH LOG (seed $seed):"; echo "$C"; FAIL=1; }
+  C="$(crashes)"; [ -n "$C" ] && { echo "CRASH LOG (seed $seed):"; echo "$C"; FAIL=1; echo "$C" | grep -q "ANR in" && ! grep -q "NOT RESPONDING" "$OUT/monkey-$seed.txt" && anr_trace; }
   adb exec-out screencap -p > "$OUT/after-$seed.png"
   adb shell settings put system user_rotation 0 2>/dev/null
 done

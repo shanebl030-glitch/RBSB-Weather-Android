@@ -91,10 +91,41 @@ object MoonRender {
         null
     } catch (e: Exception) { null }
 
+    private fun keyOf(sizeIn: Int, phaseAngle: Double, brightLimb: Double, southern: Boolean, rotation: Double?): String {
+        val size = sizeIn.coerceIn(8, MAX_SIZE)
+        val rot = (((rotation ?: if (southern) 180.0 else 0.0) % 360 + 360) % 360).let { Math.round(it).toInt() % 360 }
+        return "$size/${Math.round(phaseAngle * 10)}/${Math.round(brightLimb) % 360}/$rot"
+    }
+
+    /** Goes up each time a picture asked for with [renderLater] is ready, so a screen reading it redraws. */
+    val ready = androidx.compose.runtime.mutableIntStateOf(0)
+    private val pending = java.util.Collections.synchronizedSet(HashSet<String>())
+    private val worker = java.util.concurrent.Executors.newSingleThreadExecutor { r -> Thread(r, "rbsb-moon").apply { isDaemon = true; priority = Thread.NORM_PRIORITY - 1 } }
+
+    /**
+     * For drawing on the main thread: the picture if it's ready, else null (draw a simple Moon) while
+     * it's made in the background. Making it can take a second or more, and waiting for it on the
+     * main thread made Android report the app as not responding (found by the stability audit).
+     */
+    fun renderLater(sizeIn: Int, phaseAngle: Double, brightLimb: Double, southern: Boolean = false, rotation: Double? = null): Bitmap? {
+        if (assets == null) return null
+        val key = keyOf(sizeIn, phaseAngle, brightLimb, southern, rotation)
+        synchronized(imgCache) { imgCache[key]?.let { return it } }
+        if (sizeIn.coerceIn(8, MAX_SIZE) > CACHE_MAX_SIZE) return null          // only small, cached sizes this way
+        if (pending.add(key)) {
+            try {
+                worker.execute {
+                    try { render(sizeIn, phaseAngle, brightLimb, southern, rotation) } finally { pending.remove(key); ready.intValue++ }
+                }
+            } catch (e: Exception) { pending.remove(key) }
+        }
+        return null
+    }
+
     private fun renderOrThrow(sizeIn: Int, phaseAngle: Double, brightLimb: Double, southern: Boolean, rotation: Double?): Bitmap? {
         val size = sizeIn.coerceIn(8, MAX_SIZE)
         val rot = (((rotation ?: if (southern) 180.0 else 0.0) % 360 + 360) % 360).let { Math.round(it).toInt() % 360 }
-        val key = "$size/${Math.round(phaseAngle * 10)}/${Math.round(brightLimb) % 360}/$rot"
+        val key = keyOf(sizeIn, phaseAngle, brightLimb, southern, rotation)
         synchronized(imgCache) { imgCache[key]?.let { return it } }
         val (alb, hgt) = textures(size) ?: return null
         val s = sunVector(phaseAngle, brightLimb)

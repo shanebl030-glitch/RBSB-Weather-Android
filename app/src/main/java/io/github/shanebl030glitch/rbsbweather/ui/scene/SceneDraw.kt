@@ -217,6 +217,11 @@ private fun DrawScope.drawSun(e: SceneEngine, alpha: Double, drawn: Drawn?) {
 
 fun defaultMoonImage(px: Int, c: Conditions): ImageBitmap? {
     if (!MoonRender.available || c.moonPhaseAngle == null) return null
+    // on the main thread never wait for it (see MoonRender.renderLater); widgets draw on their own thread and can wait
+    if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) {
+        MoonRender.ready.intValue                                   // redraw when it's ready
+        return MoonRender.renderLater(px, c.moonPhaseAngle, c.moonLimb, c.southern, c.moonRotation)?.asImageBitmap()
+    }
     return MoonRender.render(px, c.moonPhaseAngle, c.moonLimb, c.southern, c.moonRotation)?.asImageBitmap()
 }
 

@@ -557,7 +557,7 @@ private fun DrawScope.paintSky(t: Instant, c: Offset, rad: Float, cLat: Double, 
                 val ph = Moon.phase(t)
                 val pxSize = GLOBE_MOON_PX                                         // one size, scaled on screen: quick, and loaded ahead
                 val key = "$pxSize/${ph.phaseAngle.roundToInt()}/${(limb / 2).roundToInt() * 2}"
-                val im = synchronized(moonCache) { moonCache[key] } ?: MoonRender.render(pxSize, ph.phaseAngle, (limb / 2).roundToInt() * 2.0, rotation = 0.0)?.asImageBitmap()?.also { synchronized(moonCache) { moonCache[key] = it } }
+                val im = synchronized(moonCache) { moonCache[key] } ?: MoonRender.ready.intValue.let { MoonRender.renderLater(pxSize, ph.phaseAngle, (limb / 2).roundToInt() * 2.0, rotation = 0.0) }?.asImageBitmap()?.also { synchronized(moonCache) { moonCache[key] = it } }
                 if (im != null) rotate(north.toFloat(), p) {
                     drawImage(im, IntOffset.Zero, IntSize(im.width, im.height), IntOffset((p.x - sz / 2).roundToInt(), (p.y - sz / 2).roundToInt()), IntSize(sz.roundToInt(), sz.roundToInt()))
                 } else drawCircle(Color(200, 205, 215), sz / 2, p)
