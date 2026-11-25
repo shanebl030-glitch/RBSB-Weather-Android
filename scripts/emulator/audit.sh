@@ -24,11 +24,19 @@ crashcheck() {   # $1 = what just happened
   C="$(adb logcat -d -b crash 2>/dev/null | grep -A25 "Process: $PKG" | head -40)$(adb logcat -d 2>/dev/null | grep "ANR in $PKG" | head -3)"
   if [ -n "$C" ]; then bad "crash or ANR after $1"; echo "$C"; adb logcat -b crash -c 2>/dev/null; adb logcat -c; fi
 }
-pss() { adb shell dumpsys meminfo $PKG 2>/dev/null | grep -m1 "TOTAL PSS:" | awk '{print $3}'; }
+pss() {   # total PSS in kB ("TOTAL PSS:" on Android 11+, the "TOTAL" row on Android 10)
+  m=$(adb shell dumpsys meminfo $PKG 2>/dev/null | tr -d '\r')
+  v=$(echo "$m" | grep -m1 "TOTAL PSS:" | awk '{print $3}'); [ -n "$v" ] || v=$(echo "$m" | grep -m1 -E "^ *TOTAL +[0-9]" | awk '{print $2}'); echo "$v"; }
 adb logcat -c; adb logcat -b crash -c 2>/dev/null
 for p in POST_NOTIFICATIONS ACCESS_COARSE_LOCATION ACCESS_FINE_LOCATION ACCESS_BACKGROUND_LOCATION; do adb shell pm grant $PKG android.permission.$p 2>/dev/null; done
 adb emu geo fix 174.8960 -36.9460 >/dev/null     # East Tamaki
-start 6; home
+echo "== 0. A clean start: Auckland, and My location on"
+adb shell pm clear $PKG >/dev/null
+for p in POST_NOTIFICATIONS ACCESS_COARSE_LOCATION ACCESS_FINE_LOCATION ACCESS_BACKGROUND_LOCATION; do adb shell pm grant $PKG android.permission.$p 2>/dev/null; done
+start 6
+tap "Add a place" && sleep 2 && adb shell input text Auckland && sleep 8 && tap "Auckland, New Zealand"; sleep 8
+settings; tap "📍 Use my location"; for i in $(seq 1 10); do sleep 3; has "Now: " && break; done
+crashcheck "setting up"; home
 
 echo "== 1. Settings survive a restart and Android closing the app"
 settings; has "Now: " && ok "My location is on before the restart" || bad "My location wasn't on to start with"
@@ -100,14 +108,24 @@ adb shell dumpsys gfxinfo $PKG | grep -E "Total frames rendered|Janky frames|90t
 
 echo "== 7. What's left running in the background"
 adb shell input keyevent KEYCODE_HOME; sleep 30
-L=$(adb shell dumpsys location 2>/dev/null | grep -i "$PKG" | grep -iv "last\|historical\|appop\|history" | head -5)
-[ -z "$L" ] && ok "no location requests left running after leaving the app" || { echo "$L"; bad "a location request was left running"; }
+open_requests() {   # location requests the app opened (+registration) and hasn't closed (-registration)
+  adb shell dumpsys location 2>/dev/null | tr -d '\r' | grep -o "[+-]registration [0-9]*/$PKG/[A-Za-z0-9]*" | awk '{print substr($1,1,1), $2}' \
+    | python3 -c 'import sys
+o = {}
+for line in sys.stdin:
+    s, k = line.split()
+    o[k] = o.get(k, 0) + (1 if s == "+" else -1)
+print(sum(1 for v in o.values() if v > 0))'
+}
+L=$(open_requests)
+[ "${L:-0}" = 0 ] && ok "no location requests left open after leaving the app (every request Android logged was closed)" || bad "$L location request(s) left open"
 W=$(adb shell dumpsys power 2>/dev/null | grep -i "$PKG" | grep -i "wake" | head -3)
 [ -z "$W" ] && ok "no wake locks held" || { echo "$W"; bad "wake lock held"; }
 adb shell dumpsys jobscheduler 2>/dev/null | grep -A4 "$PKG/androidx.work" | grep -E "Required constraints|Minimum latency|period|PERIODIC|interval" | head -4
 adb shell dumpsys alarm 2>/dev/null | grep -c "$PKG" | sed 's/^/AUDIT ALARMS for the app: /'
 adb shell cmd jobscheduler run -f $PKG 0 >/dev/null 2>&1; sleep 25; crashcheck "background check"
-adb shell dumpsys location 2>/dev/null | grep -i "$PKG" | grep -iv "last\|historical\|history" | head -3 | sed 's/^/(during or after the background check) /'
+sleep 25; L=$(open_requests); [ "${L:-0}" = 0 ] && ok "the background check closed its location requests" || bad "$L location request(s) left open after the background check"
+adb shell dumpsys location 2>/dev/null | grep "$PKG: min/max" | head -3 | sed 's/^ */AUDIT LOCATION USE (since boot): /'
 adb shell dumpsys notification --noredact 2>/dev/null | grep -A2 "pkg=$PKG" | grep -m2 "android.title" | sed 's/^/AUDIT NOTIFICATION /'
 
 crashcheck "the end of the audit"
