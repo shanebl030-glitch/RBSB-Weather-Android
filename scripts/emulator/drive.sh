@@ -48,7 +48,10 @@ sleep 6; check "launch"; dump; shot launch
 step "add Auckland"
 tap "Add a place" && sleep 2 && adb shell input text Auckland && sleep 8
 tap "Auckland, New Zealand"; sleep 10; check "adding a place"; shot forecast
-dump; APPT=$(grep -o 'text="-\?[0-9]\+°C"' "$OUT/ui.xml" | head -1 | grep -o -- '-\?[0-9]\+')
+dump; APPT=$(python3 -c 'import re,sys,xml.etree.ElementTree as ET
+for n in ET.parse(sys.argv[1]).getroot().iter("node"):
+    m = re.fullmatch(r"(-?\d+)°C", (n.get("text") or "").strip())
+    if m: print(m.group(1)); break' "$OUT/ui.xml" 2>/dev/null)
 OMT=$(curl -s -m 20 "https://api.open-meteo.com/v1/forecast?latitude=-36.8485&longitude=174.7635&current=temperature_2m" | python3 -c 'import json,sys; print(round(json.load(sys.stdin)["current"]["temperature_2m"]))' 2>/dev/null)
 echo "ACCURACY: the app shows ${APPT:-?}°C for Auckland; Open-Meteo says ${OMT:-?}°C right now"
 [ -n "$APPT" ] && [ -n "$OMT" ] && [ $(( APPT > OMT ? APPT - OMT : OMT - APPT )) -le 1 ] && echo "ACCURACY OK" || echo "ACCURACY CHECK: differs or unavailable"
