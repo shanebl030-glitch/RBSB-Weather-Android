@@ -48,6 +48,10 @@ sleep 6; check "launch"; dump; shot launch
 step "add Auckland"
 tap "Add a place" && sleep 2 && adb shell input text Auckland && sleep 8
 tap "Auckland, New Zealand"; sleep 10; check "adding a place"; shot forecast
+dump; APPT=$(grep -o 'text="-\?[0-9]\+°C"' "$OUT/ui.xml" | head -1 | grep -o -- '-\?[0-9]\+')
+OMT=$(curl -s -m 20 "https://api.open-meteo.com/v1/forecast?latitude=-36.8485&longitude=174.7635&current=temperature_2m" | python3 -c 'import json,sys; print(round(json.load(sys.stdin)["current"]["temperature_2m"]))' 2>/dev/null)
+echo "ACCURACY: the app shows ${APPT:-?}°C for Auckland; Open-Meteo says ${OMT:-?}°C right now"
+[ -n "$APPT" ] && [ -n "$OMT" ] && [ $(( APPT > OMT ? APPT - OMT : OMT - APPT )) -le 1 ] && echo "ACCURACY OK" || echo "ACCURACY CHECK: differs or unavailable"
 step "Moon tab"; tap "Moon"; sleep 8; check "Moon tab"; shot moon
 step "Earth tab"; tap "Earth"; sleep 15; check "Earth tab"; shot earth-flat
 step "Earth Globe (what crashed)"; tap "Earth Globe"; sleep 3; check "tapping Earth Globe (3 s)"; sleep 12; check "Earth Globe (15 s)"; shot earth-globe
@@ -164,6 +168,28 @@ for spot in "Waiuku|174.7310|-37.2490|Waiuku" "East Tamaki|174.8960|-36.9460|Eas
   shot "here-${want// /-}"
 done
 adb logcat -d -s RBSB-Weather | grep "My location name" | tail -4
+
+step "📍 My location around the world (names in the app itself)"
+# "!X": the local area must not be just the city X; "=X": a town with nothing smaller named, so X itself
+for spot in "Tokyo, Shibuya|139.7000|35.6600|!Tokyo" "Berlin, Kreuzberg|13.4030|52.4990|!Berlin" "Paris 11e|2.3800|48.8590|!Paris" \
+            "Rome, Trastevere|12.4690|41.8890|!Rome" "New York, Williamsburg|-73.9570|40.7080|!New York" "Sydney, Bondi|151.2770|-33.8920|!Sydney" \
+            "Marfa, Texas|-104.0210|30.3090|=Marfa" "Gordes, France|5.2000|43.9120|=Gordes"; do
+  IFS='|' read -r label lon lat rule <<< "$spot"
+  prev="$(here_now | grep 'Now:')"; got=""
+  for t in 1 2 3; do
+    tap "Update my location now" >/dev/null
+    for i in $(seq 1 8); do adb emu geo fix $lon $lat >/dev/null; sleep 3; got="$(here_now | grep 'Now:')"; [ -n "$got" ] && [ "$got" != "$prev" ] && break 2; done
+  done
+  first="$(echo "$got" | sed -E 's/.*Now: ([^,"(]*).*/\1/' | sed 's/ *$//')"
+  src="$(adb logcat -d -s RBSB-Weather | grep 'My location name' | tail -1 | sed 's/.*name: //')"
+  case "$rule" in
+    !*) [ -n "$first" ] && [ "$first" != "${rule#!}" ] && [ "$got" != "$prev" ] && ok=yes || ok=no ;;
+    =*) [ "$first" = "${rule#=}" ] && ok=yes || ok=no ;;
+  esac
+  echo "WORLD ($label): $got  [$src]  ok=$ok"
+  [ $ok = yes ] || HERE_FAILED=1
+done
+shot here-world
 back_to_forecast; check "forecast with My location"
 for i in 1 2 3; do adb shell input swipe 150 1200 950 1200 300; sleep 1; done     # the first page: 📍 My location
 sleep 3; shot here-forecast
