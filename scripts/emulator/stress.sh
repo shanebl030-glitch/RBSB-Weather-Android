@@ -12,8 +12,8 @@ dump() { adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; adb shell ca
   if grep -q "isn.t responding" "$OUT/ui.xml" 2>/dev/null; then xy=$(python3 "$HERE/find.py" "$OUT/ui.xml" "Wait") && adb shell input tap $xy; sleep 2; fi; }
 tap() { for i in 1 2 3 4 5 6 7 8; do dump; if xy=$(python3 "$HERE/find.py" "$OUT/ui.xml" "$1" "${2:-exact}"); then adb shell input tap $xy; echo "tapped '$1'"; return 0; fi; sleep 2; done; echo "not found: '$1'"; return 1; }
 crashes() {   # print any crash or ANR of the app since the last clear
-  adb logcat -d -b crash 2>/dev/null | grep -A40 "Process: $PKG" | head -60
-  adb logcat -d 2>/dev/null | grep -E "ANR in $PKG" | grep -v "^--" | head -10      # other apps' crashes (the launcher, say) aren't ours
+  timeout 30 adb logcat -d -b crash 2>/dev/null | grep -A40 "Process: $PKG" | head -60
+  timeout 30 adb logcat -d 2>/dev/null | grep -E "ANR in $PKG" | grep -v "^--" | head -10      # other apps' crashes (the launcher, say) aren't ours
 }
 
 adb root >/dev/null 2>&1; sleep 4; adb wait-for-device      # to read Android's ANR traces (allowed on test images)
@@ -52,10 +52,19 @@ for seed in 11 23 37 41 59; do
   adb logcat -c; adb logcat -b crash -c 2>/dev/null
   adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 3
   # no system keys (power, volume) or app switching; touches, swipes, rotation, back and menu
-  timeout 900 adb shell monkey -p $PKG -s $seed --throttle 120 --pct-syskeys 0 --pct-appswitch 0 --pct-anyevent 0 \
+  ( timeout -k 20 1200 adb logcat -v time > "$OUT/logcat-$seed.txt" 2>&1 & )      # Android's log during the round, for a hang
+  timeout -k 30 900 adb shell monkey -p $PKG -s $seed --throttle 120 --pct-syskeys 0 --pct-appswitch 0 --pct-anyevent 0 \
       --pct-rotation 4 --pct-nav 6 --pct-majornav 6 --pct-touch 50 --pct-motion 25 --pct-trackball 0 --pct-flip 0 \
       --monitor-native-crashes -v "$EVENTS" > "$OUT/monkey-$seed.txt" 2>&1
-  [ $? = 124 ] && { echo "(the monkey hung for 15 minutes and was stopped; not counted as an app failure)"; adb shell pkill -f com.android.commands.monkey 2>/dev/null; }
+  rc=$?
+  if [ $rc = 124 ] || [ $rc = 137 ]; then
+    echo "MONKEY HUNG (seed $seed): stopped after 15 minutes. Last events:"; tail -5 "$OUT/monkey-$seed.txt"
+    timeout 20 adb shell pkill -f com.android.commands.monkey 2>/dev/null
+    echo "app running: $(timeout 10 adb shell pidof $PKG || echo no)"; echo "top activity: $(timeout 10 adb shell dumpsys activity activities 2>/dev/null | grep -m1 -E 'mResumedActivity|topResumedActivity')"
+    echo "--- Android's log, last 40 lines ---"; tail -40 "$OUT/logcat-$seed.txt" | cut -c1-220
+    grep -E "ANR in|FATAL|Watchdog|lowmemorykiller|Killing.*$PKG" "$OUT/logcat-$seed.txt" | tail -8
+  fi
+  pkill -f "adb logcat -v time" 2>/dev/null
   tail -3 "$OUT/monkey-$seed.txt"
   grep "// CRASH: \|// NOT RESPONDING: " "$OUT/monkey-$seed.txt" | grep -v "$PKG" | sed 's/^/(another app, not counted) /' | head -3
   if grep -q "// CRASH: $PKG\|// NOT RESPONDING: $PKG" "$OUT/monkey-$seed.txt"; then
@@ -63,7 +72,7 @@ for seed in 11 23 37 41 59; do
     grep -q "NOT RESPONDING: $PKG" "$OUT/monkey-$seed.txt" && anr_trace
   fi
   C="$(crashes)"; [ -n "$C" ] && { echo "CRASH LOG (seed $seed):"; echo "$C"; FAIL=1; echo "$C" | grep -q "ANR in" && ! grep -q "NOT RESPONDING: $PKG" "$OUT/monkey-$seed.txt" && anr_trace; }
-  adb exec-out screencap -p > "$OUT/after-$seed.png"
+  timeout 30 adb exec-out screencap -p > "$OUT/after-$seed.png"
   adb shell settings put system user_rotation 0 2>/dev/null
   # the monkey can pull down quick settings and switch things off: put them back for the next round
   adb shell cmd connectivity airplane-mode disable >/dev/null 2>&1; adb shell svc wifi enable 2>/dev/null; adb shell svc data enable 2>/dev/null
