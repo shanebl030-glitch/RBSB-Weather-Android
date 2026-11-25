@@ -27,6 +27,7 @@ crashcheck() {   # $1 = what just happened
 pss() {   # total PSS in kB ("TOTAL PSS:" on Android 11+, the "TOTAL" row on Android 10)
   m=$(adb shell dumpsys meminfo $PKG 2>/dev/null | tr -d '\r')
   v=$(echo "$m" | grep -m1 "TOTAL PSS:" | awk '{print $3}'); [ -n "$v" ] || v=$(echo "$m" | grep -m1 -E "^ *TOTAL +[0-9]" | awk '{print $2}'); echo "$v"; }
+if [ "$(timeout 25 adb shell echo ok 2>/dev/null | tr -d '\r')" != ok ]; then echo "AUDIT: INCONCLUSIVE (the emulator isn't responding to adb)"; exit 3; fi
 adb logcat -c; adb logcat -b crash -c 2>/dev/null
 for p in POST_NOTIFICATIONS ACCESS_COARSE_LOCATION ACCESS_FINE_LOCATION ACCESS_BACKGROUND_LOCATION; do adb shell pm grant $PKG android.permission.$p 2>/dev/null; done
 adb emu geo fix 174.8960 -36.9460 >/dev/null     # East Tamaki

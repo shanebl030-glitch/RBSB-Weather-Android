@@ -47,10 +47,13 @@ adb shell am broadcast -a android.appwidget.action.APPWIDGET_UPDATE -p $PKG >/de
 
 C="$(crashes)"; [ -n "$C" ] && { echo "CRASH DURING SET-UP:"; echo "$C"; FAIL=1; }
 
+responsive() { [ "$(timeout 25 adb shell echo ok 2>/dev/null | tr -d '\r')" = ok ]; }
 for seed in 11 23 37 41 59; do
   echo "== monkey, seed $seed, $EVENTS events"
-  adb logcat -c; adb logcat -b crash -c 2>/dev/null
-  adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 3
+  if ! responsive; then echo "EMULATOR STOPPED RESPONDING before seed $seed (adb gets no answer): the rest of the random use can't run"; HUNG=1; break; fi
+  echo "memory: device free $(timeout 15 adb shell cat /proc/meminfo 2>/dev/null | grep -E 'MemAvailable' | awk '{print int($2/1024) " MB"}'), app $(timeout 20 adb shell dumpsys meminfo $PKG 2>/dev/null | grep -m1 'TOTAL PSS:' | awk '{print int($3/1024) " MB"}')"
+  timeout 20 adb logcat -c; timeout 20 adb logcat -b crash -c 2>/dev/null
+  timeout 20 adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 3
   # no system keys (power, volume) or app switching; touches, swipes, rotation, back and menu
   ( timeout -k 20 1200 adb logcat -v time > "$OUT/logcat-$seed.txt" 2>&1 & )      # Android's log during the round, for a hang
   timeout -k 30 900 adb shell monkey -p $PKG -s $seed --throttle 120 --pct-syskeys 0 --pct-appswitch 0 --pct-anyevent 0 \
@@ -73,11 +76,17 @@ for seed in 11 23 37 41 59; do
   fi
   C="$(crashes)"; [ -n "$C" ] && { echo "CRASH LOG (seed $seed):"; echo "$C"; FAIL=1; echo "$C" | grep -q "ANR in" && ! grep -q "NOT RESPONDING: $PKG" "$OUT/monkey-$seed.txt" && anr_trace; }
   timeout 30 adb exec-out screencap -p > "$OUT/after-$seed.png"
-  adb shell settings put system user_rotation 0 2>/dev/null
+  timeout 20 adb shell settings put system user_rotation 0 2>/dev/null
   # the monkey can pull down quick settings and switch things off: put them back for the next round
-  adb shell cmd connectivity airplane-mode disable >/dev/null 2>&1; adb shell svc wifi enable 2>/dev/null; adb shell svc data enable 2>/dev/null
+  timeout 20 adb shell cmd connectivity airplane-mode disable >/dev/null 2>&1; timeout 20 adb shell svc wifi enable 2>/dev/null; timeout 20 adb shell svc data enable 2>/dev/null
 done
 
+if [ "${HUNG:-0}" = 1 ]; then
+  echo "--- last Android log before it stopped ---"; ls -t "$OUT"/logcat-*.txt 2>/dev/null | head -1 | xargs -r tail -30 | cut -c1-200
+  ls -t "$OUT"/logcat-*.txt 2>/dev/null | head -1 | xargs -r grep -E "lowmemorykiller|Killing|ANR in|FATAL|Watchdog|kswapd" | tail -10
+  echo "STRESS: INCONCLUSIVE (the emulator stopped responding; no crash or ANR of the app was recorded before that)"
+  [ $FAIL = 0 ] && exit 3 || exit 1
+fi
 echo "== memory after the run"
 adb shell dumpsys meminfo $PKG | grep -E "TOTAL PSS|TOTAL:|Java Heap|Native Heap|Graphics" | head -6
 adb shell pidof $PKG >/dev/null && echo "app still running" || echo "app not running (may have been closed by the monkey's back presses)"

@@ -32,6 +32,7 @@ Shane: "I'd like to add GPS tracking so if I travel to a different suburb or cit
 
 ### Fixed (stability audit for a stable release)
 - **Warnings from where you were showed at the new place:** after My location moved from Marfa, Texas to Gordes, France, its page still showed a US Freeze Warning until the next check. Official warnings for My location are now filed by where it is, so they go at once when it moves.
+- **The turning globes made a new 4 MB picture every frame** (Earth and Wind, while rotating or dragged), causing constant garbage collection, slow frames and an ANR under random use on Android 12. They now reuse three pictures in turn and allocate nothing per frame.
 - **Out of memory on the Earth tab** (Android 10 emulator that allowed the app only 16 MB): even with the app's large-memory setting, so the app now keeps the Earth maps at half size when Android gives it less than 96 MB (real phones allow 192–512 MB and keep full detail).
 - **Battery:** in the background check (about every 15 minutes), GPS is now asked at most once an hour; the rest of the time the phone's network or fused position is used.
 The audit ran lint, plus the full walk-through and 12,500 random taps, swipes, rotations and back presses (Android's "monkey") on each of Android 10, 12, 14 and 15. It found:

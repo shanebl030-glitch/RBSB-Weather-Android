@@ -33,6 +33,8 @@ The scripts: `scripts/emulator/drive.sh` (walk-through), `stress.sh` (random use
 - **Found:** an out-of-memory error while making the Moon picture could crash the sky, widgets or Earth screens.
 - **Fixed:** it's caught, its memory is freed and the picture is skipped. The texture files are now closed after reading.
 - **Result:** no crash and no ANR from RBSB-Weather in 65,000 random events on four Android versions and two other screen sizes. Android 15's own launcher crashed once when the random taps left the app; that isn't RBSB-Weather.
+- **Found:** an ANR under random use on Android 12, with the app using 65% CPU and touching about 1 GB of fresh memory a minute. The Earth and Wind globes made a new picture of up to 4 MB for every frame while turning.
+- **Fixed:** they reuse three pictures in turn, so turning makes no garbage (new test).
 - **Found:** out of memory on the Earth tab, and again under random use, on one Android 10 run whose emulator allowed only a 16 MB Java heap (earlier Android 10 runs allowed more). The Earth maps alone take 16 MB.
 - **Fixed:** the app already asks for Android's larger memory allowance ("large heap"), and that emulator still gave it 16 MB. So the app now keeps the Earth maps at half size when it's given less than 96 MB. Real phones allow 192–512 MB, so they keep full detail.
 - **Code review:**
@@ -144,6 +146,7 @@ The scripts: `scripts/emulator/drive.sh` (walk-through), `stress.sh` (random use
 | 8 | Stale cached position used after moving | Emulator, Auckland → Wellington | ✅ Newest fix wins, GPS when stale |
 | 9 | Warnings from the previous place shown after moving | Audit, Marfa → Gordes | ✅ Filed by where it is |
 | 10 | Out of memory in the Moon picture could crash | Code review | ✅ Caught and skipped |
+| 10a | Globes made a new 4 MB picture every frame (GC storms, ANR) | Random use, Android 12 | ✅ Pictures reused |
 | 10b | Out of memory on the Earth tab with a 16 MB heap | Android 10 emulator | ✅ Smaller maps when under 96 MB |
 | 11 | 4 lint errors | Lint | ✅ |
 | 12 | GPS woken by the background check every 10 min when stale | Battery review | ✅ At most hourly |
