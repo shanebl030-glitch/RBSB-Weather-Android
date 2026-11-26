@@ -110,7 +110,9 @@ fun SkyCard(
     LaunchedEffect(maxS, fc) { android.util.Log.i("RBSB-DBG", "fc=${fc != null} maxS=$maxS steps=${playbackSteps(maxS)}") }
     LaunchedEffect(playing, offset > 0) { android.util.Log.i("RBSB-DBG", "playing=$playing offset=$offset maxS=$maxS fc=${fc != null}") }
 
+    androidx.compose.runtime.SideEffect { if (playing || offset > 0) android.util.Log.i("RBSB-DBG", "compose playing=$playing offset=$offset") }
     LaunchedEffect(animate, playing) {
+        android.util.Log.i("RBSB-DBG", "effect start animate=$animate playing=$playing")
         var last = withFrameNanos { it }
         while (true) {
             withFrameNanos { now ->
@@ -120,7 +122,7 @@ fun SkyCard(
                     if (frame % 15 == 0L) android.util.Log.i("RBSB-DBG", "tick offset=$offset dt=$dt maxS=$maxS")
                     val (nxt, end) = playTick(offset, dt, maxS)
                     offset = nxt
-                    if (end) playing = false
+                    if (end) { playing = false; android.util.Log.i("RBSB-DBG", "end at $nxt") }
                     updateConditions(false)
                 }
                 if (animate) engine.advance(dt)
@@ -194,7 +196,7 @@ fun SkyCard(
                 IconButton(onClick = {
                     android.util.Log.i("RBSB-DBG", "Play clicked: playing=$playing offset=$offset maxS=$maxS steps=$steps")
                     if (playing) playing = false
-                    else if (maxS > 0) { if (offset >= maxS - 1) offset = 0.0; playing = true }
+                    else if (maxS > 0) { if (offset >= maxS - 1) offset = 0.0; playing = true; android.util.Log.i("RBSB-DBG", "set playing=$playing") }
                 }, enabled = steps > 0, modifier = Modifier.testTag("play")) {
                     if (playing) PauseIcon("Pause")
                     else Icon(Icons.Filled.PlayArrow, contentDescription = "Play the coming hours in the sky (an hour a second)")
@@ -208,7 +210,7 @@ fun SkyCard(
                     offset <= 0 -> "Now"
                     else -> stamp
                 }, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 4.dp).widthIn(max = 150.dp).testTag("playbackLabel"))
-                TextButton(onClick = { playing = false; offset = 0.0; updateConditions(true) }, enabled = offset > 0 || playing,
+                TextButton(onClick = { android.util.Log.i("RBSB-DBG", "Now clicked"); playing = false; offset = 0.0; updateConditions(true) }, enabled = offset > 0 || playing,
                     modifier = Modifier.testTag("playbackNow")) { Text("Now") }
             }
             if (offset > 0) Text(WIND_NOTE, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
