@@ -120,7 +120,15 @@ for n in ET.parse(sys.argv[1]).getroot().iter("node"):
 PY
 )
   [ -n "$sky" ] || sky="27 320 1053 1170"
-  tap "Play the coming hours in the sky (an hour a second)" >/dev/null || { echo "PLAYBACK ($label): no play button"; return; }
+  # tap Play until the button turns into Pause (a tap while the forecast is still settling can be lost)
+  local playing=no
+  for i in 1 2 3 4; do
+    tap "Play the coming hours in the sky (an hour a second)" >/dev/null || { sleep 3; continue; }
+    sleep 1; dump; grep -q 'content-desc="Pause"' "$OUT/ui.xml" && { playing=yes; break; }
+    sleep 2
+  done
+  echo "PLAYBACK ($label): playing = $playing"
+  [ $playing = yes ] || return
   timeout $((secs + 20)) adb shell screenrecord --time-limit "$secs" --bit-rate 8000000 /sdcard/p.mp4 2>/dev/null &
   local rec=$!
   # proof the playback is running: the hour shown beside the slider, twice, and a full screenshot
