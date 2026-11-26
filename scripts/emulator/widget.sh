@@ -31,14 +31,20 @@ add_auckland() {
 # the widget's rectangle on the home screen (the launcher's nodes for it carry our package name)
 widget_rect() { dump; python3 - "$OUT/ui.xml" "$PKG" <<'PY'
 import re, sys, xml.etree.ElementTree as ET
-root = ET.parse(sys.argv[1]).getroot(); best = None
-for n in root.iter("node"):
-    if n.get("package") == sys.argv[2]:
-        x1, y1, x2, y2 = map(int, re.findall(r"\d+", n.get("bounds")))
-        a = (x2 - x1) * (y2 - y1)
-        if best is None or a > best[0]: best = (a, x1, y1, x2, y2)
-if best: print(*best[1:])
-else: sys.exit(1)
+root = ET.parse(sys.argv[1]).getroot()
+for n in root.iter("node"):     # the widget's own layout (RemoteViews keep their ids)
+    if n.get("resource-id") == sys.argv[2] + ":id/widget_root":
+        print(*map(int, re.findall(r"\d+", n.get("bounds")))); sys.exit(0)
+sys.exit(1)
+PY
+}
+# where to tap: the widget's temperature (a big target, and plainly part of the widget)
+widget_tap_xy() { dump; python3 - "$OUT/ui.xml" "$PKG" <<'PY'
+import re, sys, xml.etree.ElementTree as ET
+for n in ET.parse(sys.argv[1]).getroot().iter("node"):
+    if n.get("resource-id") == sys.argv[2] + ":id/w_temp":
+        x1, y1, x2, y2 = map(int, re.findall(r"\d+", n.get("bounds"))); print((x1 + x2) // 2, (y1 + y2) // 2); sys.exit(0)
+sys.exit(1)
 PY
 }
 
@@ -76,8 +82,8 @@ film_widget() {   # $1 = label, $2 = seconds: records the home screen and measur
 }
 
 tap_widget() {   # $1 = how the app was before the tap
-  local how="$1" r; r=$(widget_rect) || { echo "TAP ($how): widget not found"; FAIL=1; return; }
-  set -- $r; cx=$(( ($1 + $3) / 2 )); cy=$(( ($2 + $4) / 2 ))
+  local how="$1" xy; xy=$(widget_tap_xy) || { echo "TAP ($how): widget not found"; FAIL=1; return; }
+  set -- $xy; cx=$1; cy=$2; echo "tapping the widget's temperature at $cx,$cy"
   clearlogs
   adb shell input tap $cx $cy
   local ok=yes
@@ -127,7 +133,7 @@ for how in closed background; do
   tap_widget "0.6.2-$how"; adb shell input keyevent KEYCODE_HOME; sleep 2
 done
 FAIL_BASE=$FAIL; FAIL=0
-playback "0.6.2" 12
+playback "0.6.2" 26
 
 echo "== 2. The new build installed over it (as Shane did)"
 adb install -r "$NEW" || exit 1
@@ -145,6 +151,6 @@ for how in closed background backed-out closed background; do
   esac
   tap_widget "new-$how"; adb shell input keyevent KEYCODE_HOME; sleep 3
 done
-playback "new" 12
+playback "new" 26
 echo "WIDGET CHECK: 0.6.2 taps failed=$FAIL_BASE, new taps failed=$FAIL"
 exit $FAIL
