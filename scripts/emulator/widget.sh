@@ -22,7 +22,16 @@ crashes() {   # Java crashes, and native ones with their backtrace (from the cra
   if echo "$c" | grep -q ">>> $PKG <<<"; then
     echo "$c" | grep -A60 ">>> $PKG <<<" | grep -E ">>>|signal|Abort|Cause|backtrace|#[0-9]{2} pc" | head -45
     local t; t=$(timeout 10 adb shell 'ls -t /data/tombstones/ 2>/dev/null | grep -v pb | head -1' | tr -d '\r')
-    [ -n "$t" ] && { echo "--- tombstone $t ---"; timeout 20 adb shell cat "/data/tombstones/$t" 2>/dev/null | grep -E "^pid|signal|Abort|Cause|backtrace:|#[0-9]{2} pc" | head -45; }
+    [ -n "$t" ] && { echo "--- tombstone $t: every thread that was drawing ---"; timeout 20 adb shell cat "/data/tombstones/$t" 2>/dev/null | python3 -c '
+import sys, re
+blocks = re.split(r"\n(?=-{3} -{3} -{3}|pid: \d+, tid: )", sys.stdin.read())
+for b in blocks:
+    head = next((l for l in b.splitlines() if l.startswith("pid:")), "")
+    frames = [l.strip() for l in b.splitlines() if re.search(r"#\d+ pc", l)]
+    interesting = [f for f in frames if re.search(r"hwui|Sk|rbsbweather|Canvas|Text|Layout|Widget|Scene|Strip|Moon|Cloud|ThreadPool|Looper|Choreographer|RenderThread", f)]
+    if head and interesting:
+        print("THREAD", head[:120]); [print("   ", f[:200]) for f in interesting[:40]]
+'; }
   fi
 }
 clearlogs() { timeout 10 adb logcat -c; timeout 10 adb logcat -b events -c 2>/dev/null; timeout 10 adb logcat -b crash -c 2>/dev/null; }
