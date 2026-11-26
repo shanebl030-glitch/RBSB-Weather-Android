@@ -38,7 +38,11 @@ class WidgetStabilityTest {
         val until = System.currentTimeMillis() + 30_000
         while (!done.await(20, TimeUnit.MILLISECONDS)) {
             shadowOf(Looper.getMainLooper()).idle()
-            assertTrue("timed out", System.currentTimeMillis() < until)
+            if (System.currentTimeMillis() >= until) {
+                val dump = Thread.getAllStackTraces().entries.filter { it.key.name.contains("rbsb") || it.key.name.contains("Main") || it.key.name.contains("main") || it.key.name.contains("Test") }
+                    .joinToString("\n") { (t, st) -> "THREAD ${t.name} ${t.state}\n" + st.take(25).joinToString("\n") { "    at $it" } }
+                throw AssertionError("timed out waiting for the widget thread\n$dump")
+            }
         }
     }
 

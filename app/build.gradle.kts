@@ -13,8 +13,8 @@ android {
         applicationId = "io.github.shanebl030glitch.rbsbweather"
         minSdk = 29                     // Android 10 and newer
         targetSdk = 35
-        versionCode = 12
-        versionName = "0.7.0"
+        versionCode = 13
+        versionName = "0.7.1"
     }
 
     signingConfigs {
@@ -81,3 +81,6 @@ dependencies {
     testImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
+
+// diagnostic branch only: full failure messages in the CI log
+tasks.withType<Test>().configureEach { testLogging { exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL; events("failed") } }
