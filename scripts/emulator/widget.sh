@@ -16,7 +16,24 @@ dump() { timeout 30 adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; t
 tap() { for i in 1 2 3 4 5 6; do dump; if xy=$(python3 "$HERE/find.py" "$OUT/ui.xml" "$1" "${2:-exact}"); then adb shell input tap $xy; echo "tapped '$1' at $xy"; return 0; fi; sleep 2; done; echo "(not found: '$1')"; return 1; }
 resumed() { timeout 20 adb shell dumpsys activity activities 2>/dev/null | grep -m1 -E "topResumedActivity|mResumedActivity" | sed 's/^ *//'; }
 events() { timeout 20 adb logcat -d -b events 2>/dev/null | grep -E "am_(crash|anr|proc_died|kill|finish_activity|create_activity|destroy_activity|on_resume_called|on_stop_called|activity_launch_time|focused_root_task|wtf)" | grep -i "rbsbweather\|$PKG" | tail -${1:-14} | cut -c1-230; }
-crashes() { timeout 20 adb logcat -d -b crash 2>/dev/null | grep -A30 "Process: $PKG" | head -45; }
+crashes() {   # Java crashes, and native ones with their backtrace (from the crash log and Android's tombstone)
+  local c; c=$(timeout 20 adb logcat -d -b crash 2>/dev/null)
+  echo "$c" | grep -A30 "Process: $PKG" | head -45
+  if echo "$c" | grep -q ">>> $PKG <<<"; then
+    echo "$c" | grep -A60 ">>> $PKG <<<" | grep -E ">>>|signal|Abort|Cause|backtrace|#[0-9]{2} pc" | head -45
+    local t; t=$(timeout 10 adb shell 'ls -t /data/tombstones/ 2>/dev/null | grep -v pb | head -1' | tr -d '\r')
+    [ -n "$t" ] && { echo "--- tombstone $t: every thread that was drawing ---"; timeout 20 adb shell cat "/data/tombstones/$t" 2>/dev/null | python3 -c '
+import sys, re
+blocks = re.split(r"\n(?=-{3} -{3} -{3}|pid: \d+, tid: )", sys.stdin.read())
+for b in blocks:
+    head = next((l for l in b.splitlines() if l.startswith("pid:")), "")
+    frames = [l.strip() for l in b.splitlines() if re.search(r"#\d+ pc", l)]
+    interesting = [f for f in frames if re.search(r"hwui|Sk|rbsbweather|Canvas|Text|Layout|Widget|Scene|Strip|Moon|Cloud|ThreadPool|Looper|Choreographer|RenderThread", f)]
+    if head and interesting:
+        print("THREAD", head[:120]); [print("   ", f[:200]) for f in interesting[:40]]
+'; }
+  fi
+}
 clearlogs() { timeout 10 adb logcat -c; timeout 10 adb logcat -b events -c 2>/dev/null; timeout 10 adb logcat -b crash -c 2>/dev/null; }
 
 add_auckland() {
@@ -29,22 +46,15 @@ add_auckland() {
   done; return 1; }
 
 # the widget's rectangle on the home screen (the launcher's nodes for it carry our package name)
-widget_rect() { dump; python3 - "$OUT/ui.xml" "$PKG" <<'PY'
-import re, sys, xml.etree.ElementTree as ET
-root = ET.parse(sys.argv[1]).getroot(); best = None
-for n in root.iter("node"):
-    if n.get("package") == sys.argv[2]:
-        x1, y1, x2, y2 = map(int, re.findall(r"\d+", n.get("bounds")))
-        a = (x2 - x1) * (y2 - y1)
-        if best is None or a > best[0]: best = (a, x1, y1, x2, y2)
-if best: print(*best[1:])
-else: sys.exit(1)
-PY
-}
+WBOX=""
+widget_rect() { [ -n "$WBOX" ] && echo "$WBOX" || return 1; }
+# where to tap: the middle of the widget
+widget_tap_xy() { local r; r=$(widget_rect) || return 1; set -- $r; echo $(( ($1 + $3) / 2 )) $(( ($2 + $4) / 2 )); }
 
 place_widget() {   # through the launcher: long-press the home screen → Widgets → search → drag
   for attempt in 1 2 3; do
     adb shell input keyevent KEYCODE_HOME; sleep 2; adb shell input keyevent KEYCODE_HOME; sleep 2
+    timeout 30 adb exec-out screencap -p > "$OUT/home-before.png"
     adb shell input swipe 540 1250 540 1250 1500; sleep 2
     tap "Widgets" || { shot "no-widgets-menu-$attempt"; continue; }
     sleep 3; shot "picker-$attempt"
@@ -61,14 +71,18 @@ place_widget() {   # through the launcher: long-press the home screen → Widget
     sleep 4; shot "after-drop-$attempt"
     dump; for b in "Add" "ADD" "Add automatically" "Create"; do python3 "$HERE/find.py" "$OUT/ui.xml" "$b" >/dev/null && tap "$b"; done
     adb shell input keyevent KEYCODE_HOME; sleep 4
-    if r=$(widget_rect); then echo "WIDGET PLACED at $r"; return 0; fi
+    dump; if grep -q "package=\"$PKG\"" "$OUT/ui.xml"; then
+      sleep 3; timeout 30 adb exec-out screencap -p > "$OUT/home-after.png"
+      WBOX=$(python3 "$HERE/diffbox.py" "$OUT/home-before.png" "$OUT/home-after.png") || WBOX=""
+      echo "WIDGET PLACED at ${WBOX:-unknown}"; [ -n "$WBOX" ] && return 0
+    fi
     echo "(not on the home screen yet, attempt $attempt)"; shot "home-$attempt"
   done; return 1; }
 
 film_widget() {   # $1 = label, $2 = seconds: records the home screen and measures the widget's frame-to-frame jumps
   local label="$1" secs="$2" r
   adb shell input keyevent KEYCODE_HOME; sleep 3
-  r=$(widget_rect) || { echo "WIDGET ($label): not found on the home screen"; return 1; }
+  r=$(widget_rect) || { echo "WIDGET ($label): position unknown"; shot "widget-$label-not-found"; return 1; }
   timeout $((secs + 20)) adb shell screenrecord --time-limit "$secs" --bit-rate 8000000 /sdcard/w.mp4 2>/dev/null
   timeout 60 adb pull /sdcard/w.mp4 "$OUT/widget-$label.mp4" >/dev/null 2>&1
   python3 "$HERE/flicker.py" "$OUT/widget-$label.mp4" $r "$OUT/widget-$label" "$label"
@@ -76,8 +90,8 @@ film_widget() {   # $1 = label, $2 = seconds: records the home screen and measur
 }
 
 tap_widget() {   # $1 = how the app was before the tap
-  local how="$1" r; r=$(widget_rect) || { echo "TAP ($how): widget not found"; FAIL=1; return; }
-  set -- $r; cx=$(( ($1 + $3) / 2 )); cy=$(( ($2 + $4) / 2 ))
+  local how="$1" xy; xy=$(widget_tap_xy) || { echo "TAP ($how): widget not found"; FAIL=1; return; }
+  set -- $xy; cx=$1; cy=$2; echo "tapping the widget's temperature at $cx,$cy"
   clearlogs
   adb shell input tap $cx $cy
   local ok=yes
@@ -112,7 +126,32 @@ PY
   python3 "$HERE/flicker.py" "$OUT/playback-$label.mp4" $sky "$OUT/playback-$label" "playback-$label" moon
 }
 
+net() { for i in $(seq 1 40); do timeout 8 adb shell "ping -c 1 -W 3 geocoding-api.open-meteo.com" >/dev/null 2>&1 && return 0; sleep 3; done; echo "(no network after 2 minutes)"; }
+# the widget's tap, sent directly: what Android runs when the widget is tapped (open the app, clearing above it)
+intent_tap() {   # $1 = label
+  clearlogs
+  timeout 30 adb shell am start -W -n $PKG/.MainActivity -f 0x14000000 2>&1 | grep -E "Status|Activity|TotalTime|Warning" | tr '\n' ' '; echo
+  local ok=yes; for t in 3 8; do sleep 5; local top; top=$(resumed); echo "INTENT TAP ($1) after ~${t}s: $top"; echo "$top" | grep -q "$PKG" || ok=no; done
+  timeout 10 adb shell pidof $PKG >/dev/null || { echo "INTENT TAP ($1): the app's process is gone"; ok=no; }
+  echo "--- Android's activity log ---"; events 16
+  C="$(crashes)"; [ -n "$C" ] && { echo "--- crash ---"; echo "$C"; ok=no; }
+  echo "INTENT TAP ($1): app stayed open = $ok"; [ $ok = yes ] || FAIL=1
+}
+
+adb root >/dev/null 2>&1; sleep 4; adb wait-for-device
+coldstarts() {   # $1 = label: 15 cold starts by the widget's own tap, counting crashes
+  local crashed=0
+  for k in $(seq 1 15); do
+    adb shell am force-stop $PKG; sleep 2; clearlogs
+    timeout 30 adb shell am start -n $PKG/.MainActivity -f 0x14000000 >/dev/null 2>&1; sleep 9
+    local ev; ev=$(events 30)
+    if echo "$ev" | grep -q "am_crash\|am_proc_died"; then crashed=$((crashed + 1)); echo "COLD START $k ($1): CRASHED"; echo "$ev" | grep "am_crash\|am_proc_died"; crashes; fi
+    adb shell input keyevent KEYCODE_HOME; sleep 2
+  done
+  echo "COLD STARTS ($1): $crashed of 15 crashed"; [ $crashed = 0 ] || FAIL=1
+}
 echo "== 1. The last good release (0.6.2), as on Shane's phone before"
+net
 adb install -r "$BASE" || exit 1
 adb shell pm grant $PKG android.permission.POST_NOTIFICATIONS 2>/dev/null
 adb emu geo fix 174.8960 -36.9460 >/dev/null
@@ -126,11 +165,21 @@ for how in closed background; do
   [ $how = background ] && { adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 4; adb shell input keyevent KEYCODE_HOME; sleep 3; }
   tap_widget "0.6.2-$how"; adb shell input keyevent KEYCODE_HOME; sleep 2
 done
+adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 5; adb shell input keyevent KEYCODE_HOME; sleep 3; intent_tap "0.6.2-background"
+adb shell am force-stop $PKG; sleep 2; intent_tap "0.6.2-closed"; adb shell input keyevent KEYCODE_HOME; sleep 2
+temp_on() { adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 3; tap "Menu" >/dev/null && tap "Settings" >/dev/null; sleep 2
+  for i in 1 2 3 4; do adb shell input swipe 540 1800 540 700 300; sleep 1; done
+  tap "Temperature in the status bar" >/dev/null; sleep 3
+  timeout 20 adb shell dumpsys notification --noredact 2>/dev/null | grep -c "pkg=$PKG" | sed 's/^/notifications from the app: /'; adb shell input keyevent KEYCODE_HOME; sleep 2; }
+temp_on
+coldstarts "0.6.2 with the widget and the temperature"
 FAIL_BASE=$FAIL; FAIL=0
-playback "0.6.2" 12
+playback "0.6.2" 26
 
 echo "== 2. The new build installed over it (as Shane did)"
 adb install -r "$NEW" || exit 1
+adb shell input keyevent KEYCODE_HOME; sleep 3; shot "home-right-after-update"; sleep 30; shot "home-30s-after-update"
+dump; grep -q "package=\"$PKG\"" "$OUT/ui.xml" && echo "WIDGET after the update: on the home screen" || echo "WIDGET after the update: our views not on the home screen"
 for p in POST_NOTIFICATIONS ACCESS_COARSE_LOCATION ACCESS_FINE_LOCATION ACCESS_BACKGROUND_LOCATION; do adb shell pm grant $PKG android.permission.$p 2>/dev/null; done
 adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 6
 adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 2; tap "Menu" && tap "Settings"; sleep 3
@@ -145,6 +194,16 @@ for how in closed background backed-out closed background; do
   esac
   tap_widget "new-$how"; adb shell input keyevent KEYCODE_HOME; sleep 3
 done
-playback "new" 12
+for how in background closed open backed-out; do
+  case $how in
+    closed) adb shell am force-stop $PKG; sleep 2 ;;
+    background) adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 5; adb shell input keyevent KEYCODE_HOME; sleep 3 ;;
+    open) adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 5 ;;
+    backed-out) adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 5; adb shell input keyevent KEYCODE_BACK; sleep 3 ;;
+  esac
+  intent_tap "new-$how"; adb shell input keyevent KEYCODE_HOME; sleep 2
+done
+coldstarts "new with the widget, My location and the temperature"
+playback "new" 26
 echo "WIDGET CHECK: 0.6.2 taps failed=$FAIL_BASE, new taps failed=$FAIL"
 exit $FAIL
