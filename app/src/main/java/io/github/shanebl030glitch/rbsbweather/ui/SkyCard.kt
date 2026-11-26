@@ -107,6 +107,7 @@ fun SkyCard(
     }
     LaunchedEffect(fc, minute) { updateConditions(true) }
     androidx.compose.runtime.DisposableEffect(place.key) { android.util.Log.i("RBSB-DBG", "SkyCard enter ${place.key}"); onDispose { android.util.Log.i("RBSB-DBG", "SkyCard leave ${place.key}") } }
+    LaunchedEffect(maxS, fc) { android.util.Log.i("RBSB-DBG", "fc=${fc != null} maxS=$maxS steps=${playbackSteps(maxS)}") }
     LaunchedEffect(playing, offset > 0) { android.util.Log.i("RBSB-DBG", "playing=$playing offset=$offset maxS=$maxS fc=${fc != null}") }
 
     LaunchedEffect(animate, playing) {
@@ -116,6 +117,7 @@ fun SkyCard(
                 val dt = ((now - last) / 1e9).coerceIn(0.0, 0.25)
                 last = now
                 if (playing) {
+                    if (frame % 15 == 0L) android.util.Log.i("RBSB-DBG", "tick offset=$offset dt=$dt maxS=$maxS")
                     val (nxt, end) = playTick(offset, dt, maxS)
                     offset = nxt
                     if (end) playing = false
@@ -190,6 +192,7 @@ fun SkyCard(
             val steps = playbackSteps(maxS)
             Row(Modifier.fillMaxWidth().testTag("playbackBar"), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = {
+                    android.util.Log.i("RBSB-DBG", "Play clicked: playing=$playing offset=$offset maxS=$maxS steps=$steps")
                     if (playing) playing = false
                     else if (maxS > 0) { if (offset >= maxS - 1) offset = 0.0; playing = true }
                 }, enabled = steps > 0, modifier = Modifier.testTag("play")) {
@@ -197,7 +200,7 @@ fun SkyCard(
                     else Icon(Icons.Filled.PlayArrow, contentDescription = "Play the coming hours in the sky (an hour a second)")
                 }
                 Slider(value = (offset / (STEP_MIN * 60)).toFloat().coerceIn(0f, maxOf(1, steps).toFloat()),
-                    onValueChange = { v -> playing = false; offset = minOf(maxS, v.roundToInt() * STEP_MIN * 60.0); updateConditions(true) },
+                    onValueChange = { v -> android.util.Log.i("RBSB-DBG", "slider $v"); playing = false; offset = minOf(maxS, v.roundToInt() * STEP_MIN * 60.0); updateConditions(true) },
                     valueRange = 0f..maxOf(1, steps).toFloat(), steps = maxOf(0, steps - 1), enabled = steps > 0,
                     modifier = Modifier.weight(1f).testTag("playback"))
                 Text(when {
