@@ -31,22 +31,19 @@ add_auckland() {
 # the widget's rectangle on the home screen (the launcher's nodes for it carry our package name)
 widget_rect() { dump; python3 - "$OUT/ui.xml" "$PKG" <<'PY'
 import re, sys, xml.etree.ElementTree as ET
+# the launcher's frame for our widget (its bounds are right; the views inside a scaled widget aren't):
+# the AppWidgetHostView that contains nodes from our package
 root = ET.parse(sys.argv[1]).getroot()
-for n in root.iter("node"):     # the widget's own layout (RemoteViews keep their ids)
-    if n.get("resource-id") == sys.argv[2] + ":id/widget_root":
-        print(*map(int, re.findall(r"\d+", n.get("bounds")))); sys.exit(0)
+def ours(n): return any(c.get("package") == sys.argv[2] for c in n.iter("node"))
+for n in root.iter("node"):
+    if "AppWidgetHostView" in (n.get("class") or "") or "WidgetHostView" in (n.get("class") or ""):
+        if ours(n):
+            print(*map(int, re.findall(r"\d+", n.get("bounds")))); sys.exit(0)
 sys.exit(1)
 PY
 }
-# where to tap: the widget's temperature (a big target, and plainly part of the widget)
-widget_tap_xy() { dump; python3 - "$OUT/ui.xml" "$PKG" <<'PY'
-import re, sys, xml.etree.ElementTree as ET
-for n in ET.parse(sys.argv[1]).getroot().iter("node"):
-    if n.get("resource-id") == sys.argv[2] + ":id/w_temp":
-        x1, y1, x2, y2 = map(int, re.findall(r"\d+", n.get("bounds"))); print((x1 + x2) // 2, (y1 + y2) // 2); sys.exit(0)
-sys.exit(1)
-PY
-}
+# where to tap: the middle of the widget's lower half (the temperature), inside the launcher's frame
+widget_tap_xy() { local r; r=$(widget_rect) || return 1; set -- $r; echo $(( $1 + ($3 - $1) / 4 )) $(( $2 + ($4 - $2) * 3 / 4 )); }
 
 place_widget() {   # through the launcher: long-press the home screen → Widgets → search → drag
   for attempt in 1 2 3; do
@@ -118,7 +115,20 @@ PY
   python3 "$HERE/flicker.py" "$OUT/playback-$label.mp4" $sky "$OUT/playback-$label" "playback-$label" moon
 }
 
+net() { for i in $(seq 1 40); do timeout 8 adb shell "ping -c 1 -W 3 geocoding-api.open-meteo.com" >/dev/null 2>&1 && return 0; sleep 3; done; echo "(no network after 2 minutes)"; }
+# the widget's tap, sent directly: what Android runs when the widget is tapped (open the app, clearing above it)
+intent_tap() {   # $1 = label
+  clearlogs
+  timeout 30 adb shell am start -W -n $PKG/.MainActivity -f 0x14000000 2>&1 | grep -E "Status|Activity|TotalTime|Warning" | tr '\n' ' '; echo
+  local ok=yes; for t in 3 8; do sleep 5; local top; top=$(resumed); echo "INTENT TAP ($1) after ~${t}s: $top"; echo "$top" | grep -q "$PKG" || ok=no; done
+  timeout 10 adb shell pidof $PKG >/dev/null || { echo "INTENT TAP ($1): the app's process is gone"; ok=no; }
+  echo "--- Android's activity log ---"; events 16
+  C="$(crashes)"; [ -n "$C" ] && { echo "--- crash ---"; echo "$C"; ok=no; }
+  echo "INTENT TAP ($1): app stayed open = $ok"; [ $ok = yes ] || FAIL=1
+}
+
 echo "== 1. The last good release (0.6.2), as on Shane's phone before"
+net
 adb install -r "$BASE" || exit 1
 adb shell pm grant $PKG android.permission.POST_NOTIFICATIONS 2>/dev/null
 adb emu geo fix 174.8960 -36.9460 >/dev/null
@@ -132,6 +142,8 @@ for how in closed background; do
   [ $how = background ] && { adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 4; adb shell input keyevent KEYCODE_HOME; sleep 3; }
   tap_widget "0.6.2-$how"; adb shell input keyevent KEYCODE_HOME; sleep 2
 done
+adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 5; adb shell input keyevent KEYCODE_HOME; sleep 3; intent_tap "0.6.2-background"
+adb shell am force-stop $PKG; sleep 2; intent_tap "0.6.2-closed"; adb shell input keyevent KEYCODE_HOME; sleep 2
 FAIL_BASE=$FAIL; FAIL=0
 playback "0.6.2" 26
 
@@ -150,6 +162,15 @@ for how in closed background backed-out closed background; do
     backed-out) adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 5; adb shell input keyevent KEYCODE_BACK; sleep 3; adb shell input keyevent KEYCODE_HOME; sleep 2 ;;
   esac
   tap_widget "new-$how"; adb shell input keyevent KEYCODE_HOME; sleep 3
+done
+for how in background closed open backed-out; do
+  case $how in
+    closed) adb shell am force-stop $PKG; sleep 2 ;;
+    background) adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 5; adb shell input keyevent KEYCODE_HOME; sleep 3 ;;
+    open) adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 5 ;;
+    backed-out) adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 5; adb shell input keyevent KEYCODE_BACK; sleep 3 ;;
+  esac
+  intent_tap "new-$how"; adb shell input keyevent KEYCODE_HOME; sleep 2
 done
 playback "new" 26
 echo "WIDGET CHECK: 0.6.2 taps failed=$FAIL_BASE, new taps failed=$FAIL"
