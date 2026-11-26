@@ -166,16 +166,25 @@ class SevenTest {
     }
 
     @Test fun theMoonPictureForTheScreenIsMadeInTheBackground() {
+        // the sky never waits for a new picture; meanwhile it shows the latest real one (since the
+        // 0.7.0 phone test: showing nothing made the Moon flash to the plain drawing in playback)
         val ctx = ApplicationProvider.getApplicationContext<android.app.Application>()
         io.github.shanebl030glitch.rbsbweather.ui.scene.MoonRender.init(ctx.assets)
         val mr = io.github.shanebl030glitch.rbsbweather.ui.scene.MoonRender
-        val before = mr.ready.intValue
-        assertNull(mr.renderLater(97, 61.0, 93.0))                       // not made yet: never waits
         val end = System.currentTimeMillis() + 60_000
-        var got: android.graphics.Bitmap? = null
-        while (got == null && System.currentTimeMillis() < end) { Thread.sleep(50); got = mr.renderLater(97, 61.0, 93.0) }
-        assertNotNull(got); assertEquals(97, got!!.width)
+        var first: android.graphics.Bitmap? = null
+        while (first == null && System.currentTimeMillis() < end) { first = mr.renderLater(97, 61.0, 93.0); if (first == null) Thread.sleep(50) }
+        assertNotNull(first)
+        val before = mr.ready.intValue
+        val t0 = System.nanoTime()
+        val standIn = mr.renderLater(97, 75.0, 120.0)                    // a new phase: returned at once…
+        assertTrue("didn't wait", System.nanoTime() - t0 < 200_000_000L)
+        assertNotNull("…as the latest real picture, never nothing", standIn)
+        var exact: android.graphics.Bitmap? = standIn                      // …and the exact one arrives
+        while (System.currentTimeMillis() < end && exact === standIn) { Thread.sleep(20); exact = mr.renderLater(97, 75.0, 120.0) }
+        assertNotNull(exact); assertEquals(97, exact!!.width)
         assertTrue(mr.ready.intValue > before)                           // screens are told to redraw
+        assertTrue(exact !== standIn)
         assertNull(mr.renderLater(1500, 61.0, 93.0))                     // big pictures aren't made this way
     }
 
