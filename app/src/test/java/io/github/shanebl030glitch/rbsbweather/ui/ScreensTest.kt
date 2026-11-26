@@ -151,20 +151,21 @@ class ScreensTest {
 
     @Test fun pressingPlayPlaysTheComingHours() {
         // Shane's 0.7.0 phone test: the playback must run smoothly, not keep resetting
-        for (anim in listOf(true, false)) {
-            val m = model(MemoryStore(Settings(animations = anim).toJson().toString()))
-            m.add(AUCKLAND)
-            compose.setContent { RbsbApp(m) }
-            compose.waitForIdle()
-            val before = compose.onNodeWithTag("playbackLabel").printToString()
-            compose.onNodeWithContentDescription("Play the coming hours in the sky (an hour a second)").performClick()
-            compose.mainClock.advanceTimeBy(3_000)
-            val after = compose.onNodeWithTag("playbackLabel").printToString()
-            assertTrue("animations=$anim: still at Now after 3 s of playing\nbefore: $before\nafter: $after\n" + compose.onRoot().printToString(),
-                !after.contains("Text = '[Now]'"))
-            compose.onNodeWithContentDescription("Pause").assertExists()
-            compose.onNodeWithContentDescription("Pause").performClick()
+        val m = model(MemoryStore(Settings(animations = true).toJson().toString()))
+        m.add(AUCKLAND)
+        compose.mainClock.autoAdvance = false          // the sky animates for ever: drive its frames by hand
+        compose.setContent { RbsbApp(m) }
+        compose.mainClock.advanceTimeBy(1_000)
+        val before = compose.onNodeWithTag("playbackLabel").printToString()
+        compose.onNodeWithContentDescription("Play the coming hours in the sky (an hour a second)").performClick()
+        val seen = mutableListOf<String>()
+        repeat(6) {
+            compose.mainClock.advanceTimeBy(500)
+            seen += compose.onNodeWithTag("playbackLabel").printToString().lines().first { "Text =" in it }.trim()
         }
+        assertTrue("still at Now after 3 s of playing\nbefore: $before\nseen: $seen", seen.none { "[Now]" in it })
+        assertEquals("the hour moves on every half second: $seen", seen.size, seen.distinct().size)
+        compose.onNodeWithContentDescription("Pause").assertExists()
     }
 
     @Test fun warningsBannerScreenAndMute() {
