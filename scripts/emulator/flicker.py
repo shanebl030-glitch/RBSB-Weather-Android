@@ -8,7 +8,11 @@ from PIL import Image, ImageChops, ImageStat
 video, x1, y1, x2, y2, prefix, label = sys.argv[1], *map(int, sys.argv[2:6]), sys.argv[6], sys.argv[7]
 moon = len(sys.argv) > 8
 d = prefix + "-frames"; os.makedirs(d, exist_ok=True)
-subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", video, "-vf", f"fps=20,crop={x2-x1}:{y2-y1}:{x1}:{y1},scale=360:-1", f"{d}/f%04d.png"], check=False)
+try:
+    import imageio_ffmpeg; FF = imageio_ffmpeg.get_ffmpeg_exe()
+except Exception:
+    FF = "ffmpeg"
+subprocess.run([FF, "-loglevel", "error", "-y", "-i", video, "-vf", f"fps=20,crop={x2-x1}:{y2-y1}:{x1}:{y1},scale=360:-1", f"{d}/f%04d.png"], check=False)
 files = sorted(f for f in os.listdir(d) if f.endswith(".png"))
 if len(files) < 3:
     print(f"FLICKER ({label}): no frames ({len(files)})"); sys.exit(0)

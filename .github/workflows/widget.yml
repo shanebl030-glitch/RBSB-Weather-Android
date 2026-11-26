@@ -31,8 +31,8 @@ jobs:
         run: |
           gh release download v0.6.2 -R "$GITHUB_REPOSITORY" -p "rbsb-weather-android_0.6.2.apk" -D base
           ls -la base
-          sudo apt-get install -y -qq ffmpeg >/dev/null
-          python3 -m pip install --quiet pillow || pip install --quiet --break-system-packages pillow
+          python3 -m pip install --quiet pillow imageio-ffmpeg || pip install --quiet --break-system-packages pillow imageio-ffmpeg
+          python3 -c "import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())"
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
