@@ -42,15 +42,23 @@ object Http {
     /** Reply headers of the last request made on this thread (lower-case names). */
     fun lastHeaders(): Map<String, String> = replyHeaders.get() ?: emptyMap()
 
-    val bytes = BytesClient { url, headers, limit ->
+    val bytes = client()
+
+    /**
+     * The app's downloads. connectMs/readMs: waits for the connection and for each read.
+     * totalMs (0.7.2): the whole download's limit, so a server that trickles a byte now and then
+     * (each read within readMs) can't keep a check going for ever.
+     */
+    fun client(connectMs: Int = 15_000, readMs: Int = 20_000, totalMs: Long = 60_000) = BytesClient { url, headers, limit ->
+        val started = System.currentTimeMillis()
         val conn = try {
             URL(url).openConnection() as HttpURLConnection
         } catch (e: Exception) {
             throw WeatherException("Couldn't open the connection.")
         }
         try {
-            conn.connectTimeout = 15_000
-            conn.readTimeout = 20_000
+            conn.connectTimeout = connectMs
+            conn.readTimeout = readMs
             conn.instanceFollowRedirects = true
             conn.setRequestProperty("User-Agent", USER_AGENT)
             conn.setRequestProperty("Accept-Encoding", "identity")
@@ -75,6 +83,7 @@ object Http {
                     if (n < 0) break
                     out.write(buf, 0, n)
                     if (out.size() > limit) throw WeatherException("The service sent far more data than expected.")
+                    if (System.currentTimeMillis() - started > totalMs) throw WeatherException("The weather service took too long to answer.", retryable = true)
                 }
                 out.toByteArray()
             }
