@@ -8,7 +8,7 @@ Created By Shane BlackbuRn
 | Date | 2026-11-26 |
 | Where | GitHub Actions: Ubuntu 26.04 runner, JDK 17 (Temurin), Gradle 8.14.3, Android Gradle Plugin 8.10.1, Kotlin 2.1.21, Compose BOM 2025.05.01, compile/target SDK 35, min SDK 29 |
 | Command | `./gradlew testDebugUnitTest`, then `./gradlew assembleRelease` |
-| Tests | 216 run, 216 passed (GitHub Actions, commit 72af59c). Widget check, emulator walk-through and stability audit: see below and docs/AUDIT_REPORT_0.7.0.md |
+| Tests | 218 run, 218 passed (GitHub Actions, commit cfb94cb). Widget check, emulator walk-through and stability audit: see below and docs/AUDIT_REPORT_0.7.0.md |
 | Earlier | 180+ run, all passed on GitHub Actions (see the CI run for this commit), plus the emulator check (run 45069457909): every step passed, no crash |
 
 ## What's tested
@@ -30,7 +30,10 @@ Created By Shane BlackbuRn
   - tapped in every state, real taps and its own intent, checked open after 2, 5 and 10 s;
   - 15 cold starts by its tap per version with the status-bar temperature on, with native crash backtraces;
   - the 24-hour playback filmed and the Moon's brightness tracked.
-- **Results** (commit 72af59c): every tap kept the app open, 0 of 15 cold starts crashed on either Android version, and there were no flashes in the widget or the Moon. 0.6.2 crashed once in 15 in an earlier run, with the same native text-drawing crash.
+- **Results** (commit cfb94cb, and the same in two earlier runs): every tap kept the app open, and 0 of 15 cold starts crashed on either Android version. 0.6.2 crashed in 1 of 15 on Android 12 (and once on Android 14 in an earlier run), with the same native text-drawing crash. There were no flashes in the widget's film. Pressing Play now plays on the emulator; 0.6.2 stops at once.
+- **Stability audit** (lint, walk-through, 12,500 random events and the restart/offline/permission/memory audit on Android 10, 12, 14, 15, a small phone and a tablet):
+  - commit ce54d01 (everything except the last playback fix): every job passed;
+  - commit cfb94cb (adds only the playback fix, a few lines in the sky card): Android 10, 12 and the tablet passed; the random testing on Android 14 and 15 found no crash and no ANR. The rest didn't finish because GitHub's emulators stopped responding or ran out of time (the small phone twice, Android 14's audit after its network didn't come back, Android 15 by time). One run on Android 12 caught a "not responding" with the app's main thread waiting for Android's graphics thread, while the emulator logged graphics errors ("bad color buffer handle"); its rerun passed.
 - **Emulator walk-through** (Android 14): every screen with no crash; Shane's three suburbs and the 8 world places named as before.
 
 

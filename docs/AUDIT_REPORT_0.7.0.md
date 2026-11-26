@@ -209,15 +209,15 @@ Shane's three problems, why this audit missed them, and what was done:
 
 **The new Widget check** (`.github/workflows/widget.yml`, Android 14 and 12) now runs on every push. It compares the 0.6.2 release with the new build on the same emulator.
 
-Final results for 0.7.1 (commit 72af59c):
+Final results for 0.7.1 (commit cfb94cb, Android 14 and 12; two earlier runs of the same checks gave the same results):
 
 | Check | 0.6.2 | 0.7.1 |
 |---|---|---|
 | Real taps on the widget: app closed, in the background, backed out of | stays open | stays open |
 | The widget's own intent: closed, background, backed out, already open | stays open | stays open |
-| Cold starts by the widget's tap, with the temperature on (15 per version per Android version) | 0 crashes (1 in 15 in an earlier run on Android 14) | 0 crashes |
+| Cold starts by the widget's tap, with the temperature on (15 per version per Android version) | 1 crash in 15 on Android 12 (and 1 in 15 on Android 14 in an earlier run) | 0 crashes in every run |
 | Widget film: flashes (a jump and straight back) | 0 | 0 |
-| 24-hour playback film: Moon flashes | 0 | 0 |
+| Pressing Play in the forecast | stopped at once (the second Moon-flicker cause) | plays: the hour moves on (Fri 02:25, then 09:57 six seconds later), Pause shows |
 
 **The crash in 0.6.2** shows the risk was old: Android drew the app's own text in software on the main thread while the widget thread drew its frames' text. 0.7.0 made it far more likely by drawing the temperature icon on the main thread right after the app opened. Since 0.7.1, the widget thread draws no text at all.
 
