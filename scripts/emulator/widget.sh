@@ -178,6 +178,12 @@ coldstarts() {   # $1 = label: 15 cold starts by the widget's own tap, counting 
   done
   echo "COLD STARTS ($1): $crashed of 15 crashed"; [ $crashed = 0 ] || FAIL=1
 }
+# --- DEBUG (repro branch only): the playback films alone
+net; adb install -r "$NEW" || exit 1
+adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 6
+add_auckland && echo "Auckland added"
+playback "new" 30
+exit 0
 echo "== 1. The last good release (0.6.2), as on Shane's phone before"
 net
 adb install -r "$BASE" || exit 1
