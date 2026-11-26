@@ -29,21 +29,14 @@ add_auckland() {
   done; return 1; }
 
 # the widget's rectangle on the home screen (the launcher's nodes for it carry our package name)
-widget_rect() { dump; python3 - "$OUT/ui.xml" "$PKG" <<'PY'
-import re, sys, xml.etree.ElementTree as ET
-# the launcher's frame for our widget (its bounds are right; the views inside a scaled widget aren't):
-# the AppWidgetHostView that contains nodes from our package
-root = ET.parse(sys.argv[1]).getroot()
-def ours(n): return any(c.get("package") == sys.argv[2] for c in n.iter("node"))
-for n in root.iter("node"):
-    if "AppWidgetHostView" in (n.get("class") or "") or "WidgetHostView" in (n.get("class") or ""):
-        if ours(n):
-            print(*map(int, re.findall(r"\d+", n.get("bounds")))); sys.exit(0)
-sys.exit(1)
-PY
+widget_rect() {   # the animating box on the home screen (our widget), from a 3-second film
+  adb shell input keyevent KEYCODE_HOME; sleep 2
+  timeout 20 adb shell screenrecord --time-limit 3 /sdcard/box.mp4 2>/dev/null; timeout 30 adb pull /sdcard/box.mp4 "$OUT/box.mp4" >/dev/null 2>&1
+  local wh; wh=$(timeout 10 adb shell wm size | grep -o '[0-9]*x[0-9]*' | tail -1)
+  python3 "$HERE/movingbox.py" "$OUT/box.mp4" ${wh%x*} ${wh#*x}
 }
-# where to tap: the middle of the widget's lower half (the temperature), inside the launcher's frame
-widget_tap_xy() { local r; r=$(widget_rect) || return 1; set -- $r; echo $(( $1 + ($3 - $1) / 4 )) $(( $2 + ($4 - $2) * 3 / 4 )); }
+# where to tap: the middle of the widget
+widget_tap_xy() { local r; r=$(widget_rect) || return 1; set -- $r; echo $(( ($1 + $3) / 2 )) $(( ($2 + $4) / 2 )); }
 
 place_widget() {   # through the launcher: long-press the home screen → Widgets → search → drag
   for attempt in 1 2 3; do
@@ -64,14 +57,15 @@ place_widget() {   # through the launcher: long-press the home screen → Widget
     sleep 4; shot "after-drop-$attempt"
     dump; for b in "Add" "ADD" "Add automatically" "Create"; do python3 "$HERE/find.py" "$OUT/ui.xml" "$b" >/dev/null && tap "$b"; done
     adb shell input keyevent KEYCODE_HOME; sleep 4
-    if r=$(widget_rect); then echo "WIDGET PLACED at $r"; return 0; fi
+    dump; if grep -q "package=\"$PKG\"" "$OUT/ui.xml"; then echo "WIDGET PLACED; animating box: $(widget_rect || echo 'none (not animating)')"; return 0; fi
     echo "(not on the home screen yet, attempt $attempt)"; shot "home-$attempt"
   done; return 1; }
 
 film_widget() {   # $1 = label, $2 = seconds: records the home screen and measures the widget's frame-to-frame jumps
   local label="$1" secs="$2" r
   adb shell input keyevent KEYCODE_HOME; sleep 3
-  r=$(widget_rect) || { echo "WIDGET ($label): not found on the home screen"; return 1; }
+  r=$(widget_rect) || { echo "WIDGET ($label): not animating / not found"; shot "widget-$label-not-found"; return 1; }
+  echo "WIDGET ($label): animating box $r"
   timeout $((secs + 20)) adb shell screenrecord --time-limit "$secs" --bit-rate 8000000 /sdcard/w.mp4 2>/dev/null
   timeout 60 adb pull /sdcard/w.mp4 "$OUT/widget-$label.mp4" >/dev/null 2>&1
   python3 "$HERE/flicker.py" "$OUT/widget-$label.mp4" $r "$OUT/widget-$label" "$label"
@@ -149,6 +143,8 @@ playback "0.6.2" 26
 
 echo "== 2. The new build installed over it (as Shane did)"
 adb install -r "$NEW" || exit 1
+adb shell input keyevent KEYCODE_HOME; sleep 3; shot "home-right-after-update"; sleep 30; shot "home-30s-after-update"
+dump; grep -q "package=\"$PKG\"" "$OUT/ui.xml" && echo "WIDGET after the update: on the home screen" || echo "WIDGET after the update: our views not on the home screen"
 for p in POST_NOTIFICATIONS ACCESS_COARSE_LOCATION ACCESS_FINE_LOCATION ACCESS_BACKGROUND_LOCATION; do adb shell pm grant $PKG android.permission.$p 2>/dev/null; done
 adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 6
 adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 2; tap "Menu" && tap "Settings"; sleep 3
