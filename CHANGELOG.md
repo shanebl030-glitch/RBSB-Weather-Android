@@ -4,6 +4,25 @@ Created By Shane BlackbuRn
 
 A separate app from RBSB-Weather for the desktop, with its own versions.
 
+## 0.7.2 – 2026-11-27 (release candidate, not released)
+
+Shane tested 0.7.1 on his phone: "it seems quite stable". He asked for the outstanding "not responding" to be fixed, then a final audit of the whole app and a release candidate.
+
+### Fixed
+- **The screen could freeze while warnings or earthquakes downloaded on a slow or failing connection** ("App isn't responding"; found by the 0.7.1 stability audit, there since 0.4).
+  - **Cause:** the warnings and earthquake checks held a lock for the whole download, and the screen reads the warnings under the same lock on the main thread. With a slow or dropped connection the screen waited for the download. A test with a hanging download measured the screen waiting 2 to 4 minutes, until the download was let go.
+  - **Fix:** downloads now run outside that lock, one at a time per feed. The screen never waits (under 200 ms in the same test). The open app and the background check still never download the same feed twice at once, and a warning is still notified only once.
+  - **Also:** a warnings or earthquake download now has a one-minute limit in total, so a server sending a byte now and then can't keep a check going for ever.
+- **A widget update could be reported as "not responding" on a slow connection** (found by this audit, there since 0.5). Android allows a widget update about 10 seconds (60 in the background). The update waited for the weather download, and each weather service can take up to a minute when the connection is slow. The widget's picture is now drawn and the update reported done first; the download follows.
+
+### Tests added
+- **Warnings and earthquakes (`SlowNetworkTest`):**
+  - with a download that hangs, the screen's reads stay instant (they waited minutes with the old code);
+  - a timed-out download is reported, and the last warnings are kept;
+  - two checks at once download once and notify once;
+  - real connections that hang, trickle or are refused all end in time.
+- **Widget (`WidgetStabilityTest`):** with a weather download that hangs, the widget update is reported done first.
+
 ## 0.7.1 – 2026-11-26 (test build, not released)
 
 0.7.0 was **not approved** after Shane tested it on his phone: "0.7.0 is not approved for stable release." He found three problems. Each was reproduced first, its cause found in the code, fixed, and covered by an automated test. The worldwide suburb naming and all the 0.7.0 audit fixes are unchanged.
@@ -25,7 +44,7 @@ A separate app from RBSB-Weather for the desktop, with its own versions.
   - **Not reproduced on the emulator:** its launcher barely animates widgets, so the flicker couldn't be seen there. The fix is based on the code and is covered by tests (a burst of 10 requests gives at most one redraw; an unchanged widget isn't redrawn).
 
 ### Found, not changed (older than 0.7)
-- **A possible "App isn't responding" while warnings are being checked on a slow or lost connection.** The stability audit caught it once on a tablet emulator: the app's screen waited for the warnings check, which held its lock during the download. It's been this way since 0.4 (0.6.2 has it too), so it isn't one of the three problems. It isn't changed here because Shane asked for no unrelated changes; it's the recommended next fix.
+- **A possible "App isn't responding" while warnings are being checked on a slow or lost connection.** The stability audit caught it once on a tablet emulator: the app's screen waited for the warnings check, which held its lock during the download. It's been this way since 0.4 (0.6.2 has it too), so it isn't one of the three problems. It isn't changed here because Shane asked for no unrelated changes. Fixed in 0.7.2.
 
 ## 0.7.0 – 2026-11-25 (test build)
 

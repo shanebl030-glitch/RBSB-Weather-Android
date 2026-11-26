@@ -2,6 +2,6 @@
 package io.github.shanebl030glitch.rbsbweather.data
 
 object Version {
-    const val NAME = "0.7.1"
+    const val NAME = "0.7.2"
     const val AUTHOR_CREDIT = "Created By Shane BlackbuRn"
 }
