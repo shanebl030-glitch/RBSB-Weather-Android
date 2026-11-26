@@ -138,7 +138,7 @@ PY
   # A. Play pressed once while filming (no screen reading meanwhile, which can disturb the app)
   timeout $((secs + 20)) adb shell screenrecord --time-limit "$secs" --bit-rate 8000000 /sdcard/p.mp4 2>/dev/null &
   local rec=$!
-  sleep 2; adb shell input tap $play
+  sleep 2; echo "PLAY TAP at $(adb shell date +%T)"; adb shell input tap $play
   sleep 4; timeout 20 adb exec-out screencap -p > "$OUT/playback-$label-4s.png" 2>/dev/null
   sleep 6; timeout 20 adb exec-out screencap -p > "$OUT/playback-$label-10s.png" 2>/dev/null
   wait $rec
@@ -151,7 +151,7 @@ PY
   adb shell input tap $x1 $y; sleep 2
   timeout 45 adb shell screenrecord --time-limit 26 --bit-rate 8000000 /sdcard/s.mp4 2>/dev/null &
   rec=$!
-  sleep 1; adb shell input swipe $x1 $y $x2 $y 22000 &
+  sleep 1; echo "SLIDE at $(adb shell date +%T)"; adb shell input swipe $x1 $y $x2 $y 22000 &
   sleep 11; timeout 20 adb exec-out screencap -p > "$OUT/scrub-$label-mid.png" 2>/dev/null
   wait $rec
   timeout 60 adb pull /sdcard/s.mp4 "$OUT/scrub-$label.mp4" >/dev/null 2>&1
@@ -186,10 +186,11 @@ coldstarts() {   # $1 = label: 15 cold starts by the widget's own tap, counting 
 net; adb install -r "$NEW" || exit 1
 adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 6
 add_auckland && echo "Auckland added"
-adb logcat -c
+echo "device time before playback: $(adb shell date +%T)"
 playback "new" 30
-echo "--- app debug log"; timeout 20 adb logcat -d -s RBSB-DBG:I | tail -40
-echo "--- activity events"; timeout 20 adb logcat -d -b events | grep -i "rbsbweather" | tail -30 | cut -c1-200
+echo "device time after: $(adb shell date +%T)"
+echo "--- app log"; timeout 30 adb logcat -d -v time 2>&1 | grep -E "RBSB|AndroidRuntime: (FATAL|Shutting)|Input|KEYCODE" | grep -v uiautomator | tail -60 | cut -c1-220
+echo "--- activity events"; timeout 30 adb logcat -d -v time -b events 2>&1 | grep -iE "rbsbweather|input_" | tail -40 | cut -c1-220
 exit 0
 echo "== 1. The last good release (0.6.2), as on Shane's phone before"
 net
