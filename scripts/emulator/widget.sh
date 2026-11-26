@@ -16,7 +16,15 @@ dump() { timeout 30 adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; t
 tap() { for i in 1 2 3 4 5 6; do dump; if xy=$(python3 "$HERE/find.py" "$OUT/ui.xml" "$1" "${2:-exact}"); then adb shell input tap $xy; echo "tapped '$1' at $xy"; return 0; fi; sleep 2; done; echo "(not found: '$1')"; return 1; }
 resumed() { timeout 20 adb shell dumpsys activity activities 2>/dev/null | grep -m1 -E "topResumedActivity|mResumedActivity" | sed 's/^ *//'; }
 events() { timeout 20 adb logcat -d -b events 2>/dev/null | grep -E "am_(crash|anr|proc_died|kill|finish_activity|create_activity|destroy_activity|on_resume_called|on_stop_called|activity_launch_time|focused_root_task|wtf)" | grep -i "rbsbweather\|$PKG" | tail -${1:-14} | cut -c1-230; }
-crashes() { timeout 20 adb logcat -d -b crash 2>/dev/null | grep -A30 "Process: $PKG" | head -45; }
+crashes() {   # Java crashes, and native ones with their backtrace (from the crash log and Android's tombstone)
+  local c; c=$(timeout 20 adb logcat -d -b crash 2>/dev/null)
+  echo "$c" | grep -A30 "Process: $PKG" | head -45
+  if echo "$c" | grep -q ">>> $PKG <<<"; then
+    echo "$c" | grep -A60 ">>> $PKG <<<" | grep -E ">>>|signal|Abort|Cause|backtrace|#[0-9]{2} pc" | head -45
+    local t; t=$(timeout 10 adb shell 'ls -t /data/tombstones/ 2>/dev/null | grep -v pb | head -1' | tr -d '\r')
+    [ -n "$t" ] && { echo "--- tombstone $t ---"; timeout 20 adb shell cat "/data/tombstones/$t" 2>/dev/null | grep -E "^pid|signal|Abort|Cause|backtrace:|#[0-9]{2} pc" | head -45; }
+  fi
+}
 clearlogs() { timeout 10 adb logcat -c; timeout 10 adb logcat -b events -c 2>/dev/null; timeout 10 adb logcat -b crash -c 2>/dev/null; }
 
 add_auckland() {
@@ -121,6 +129,18 @@ intent_tap() {   # $1 = label
   echo "INTENT TAP ($1): app stayed open = $ok"; [ $ok = yes ] || FAIL=1
 }
 
+adb root >/dev/null 2>&1; sleep 4; adb wait-for-device
+coldstarts() {   # $1 = label: 8 cold starts by the widget's own tap, counting crashes
+  local crashed=0
+  for k in 1 2 3 4 5 6 7 8; do
+    adb shell am force-stop $PKG; sleep 2; clearlogs
+    timeout 30 adb shell am start -n $PKG/.MainActivity -f 0x14000000 >/dev/null 2>&1; sleep 9
+    local ev; ev=$(events 30)
+    if echo "$ev" | grep -q "am_crash\|am_proc_died"; then crashed=$((crashed + 1)); echo "COLD START $k ($1): CRASHED"; echo "$ev" | grep "am_crash\|am_proc_died"; crashes; fi
+    adb shell input keyevent KEYCODE_HOME; sleep 2
+  done
+  echo "COLD STARTS ($1): $crashed of 8 crashed"; [ $crashed = 0 ] || FAIL=1
+}
 echo "== 1. The last good release (0.6.2), as on Shane's phone before"
 net
 adb install -r "$BASE" || exit 1
@@ -138,6 +158,7 @@ for how in closed background; do
 done
 adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 5; adb shell input keyevent KEYCODE_HOME; sleep 3; intent_tap "0.6.2-background"
 adb shell am force-stop $PKG; sleep 2; intent_tap "0.6.2-closed"; adb shell input keyevent KEYCODE_HOME; sleep 2
+coldstarts "0.6.2 with the widget"
 FAIL_BASE=$FAIL; FAIL=0
 playback "0.6.2" 26
 
@@ -168,6 +189,7 @@ for how in background closed open backed-out; do
   esac
   intent_tap "new-$how"; adb shell input keyevent KEYCODE_HOME; sleep 2
 done
+coldstarts "new with the widget"
 playback "new" 26
 echo "WIDGET CHECK: 0.6.2 taps failed=$FAIL_BASE, new taps failed=$FAIL"
 exit $FAIL
