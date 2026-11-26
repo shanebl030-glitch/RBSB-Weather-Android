@@ -139,16 +139,16 @@ intent_tap() {   # $1 = label
 }
 
 adb root >/dev/null 2>&1; sleep 4; adb wait-for-device
-coldstarts() {   # $1 = label: 8 cold starts by the widget's own tap, counting crashes
+coldstarts() {   # $1 = label: 15 cold starts by the widget's own tap, counting crashes
   local crashed=0
-  for k in 1 2 3 4 5 6 7 8; do
+  for k in $(seq 1 15); do
     adb shell am force-stop $PKG; sleep 2; clearlogs
     timeout 30 adb shell am start -n $PKG/.MainActivity -f 0x14000000 >/dev/null 2>&1; sleep 9
     local ev; ev=$(events 30)
     if echo "$ev" | grep -q "am_crash\|am_proc_died"; then crashed=$((crashed + 1)); echo "COLD START $k ($1): CRASHED"; echo "$ev" | grep "am_crash\|am_proc_died"; crashes; fi
     adb shell input keyevent KEYCODE_HOME; sleep 2
   done
-  echo "COLD STARTS ($1): $crashed of 8 crashed"; [ $crashed = 0 ] || FAIL=1
+  echo "COLD STARTS ($1): $crashed of 15 crashed"; [ $crashed = 0 ] || FAIL=1
 }
 echo "== 1. The last good release (0.6.2), as on Shane's phone before"
 net
@@ -167,7 +167,12 @@ for how in closed background; do
 done
 adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 5; adb shell input keyevent KEYCODE_HOME; sleep 3; intent_tap "0.6.2-background"
 adb shell am force-stop $PKG; sleep 2; intent_tap "0.6.2-closed"; adb shell input keyevent KEYCODE_HOME; sleep 2
-coldstarts "0.6.2 with the widget"
+temp_on() { adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 3; tap "Menu" >/dev/null && tap "Settings" >/dev/null; sleep 2
+  for i in 1 2 3 4; do adb shell input swipe 540 1800 540 700 300; sleep 1; done
+  tap "Temperature in the status bar" >/dev/null; sleep 3
+  timeout 20 adb shell dumpsys notification --noredact 2>/dev/null | grep -c "pkg=$PKG" | sed 's/^/notifications from the app: /'; adb shell input keyevent KEYCODE_HOME; sleep 2; }
+temp_on
+coldstarts "0.6.2 with the widget and the temperature"
 FAIL_BASE=$FAIL; FAIL=0
 playback "0.6.2" 26
 
@@ -198,7 +203,7 @@ for how in background closed open backed-out; do
   esac
   intent_tap "new-$how"; adb shell input keyevent KEYCODE_HOME; sleep 2
 done
-coldstarts "new with the widget"
+coldstarts "new with the widget, My location and the temperature"
 playback "new" 26
 echo "WIDGET CHECK: 0.6.2 taps failed=$FAIL_BASE, new taps failed=$FAIL"
 exit $FAIL
