@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
@@ -146,6 +147,47 @@ class ScreensTest {
         compose.onNodeWithTag("playbackNow").assertIsDisplayed()
         compose.onNodeWithTag("page-${AUCKLAND.key}").performScrollToNode(hasTestTag("daily"))
         compose.onAllNodesWithTag("dayIcon")[0].assertExists()          // animated icons in the 7-day list
+    }
+
+    @Test fun pressingPlayPlaysTheComingHours() {
+        // Shane's 0.7.0 phone test: the playback must run smoothly, not keep resetting
+        val m = model(MemoryStore(Settings(animations = true).toJson().toString()))
+        m.add(AUCKLAND)
+        compose.mainClock.autoAdvance = false          // the sky animates for ever: drive its frames by hand
+        compose.setContent { RbsbApp(m) }
+        compose.mainClock.advanceTimeBy(1_000)
+        val before = compose.onNodeWithTag("playbackLabel").printToString()
+        compose.onNodeWithContentDescription("Play the coming hours in the sky (an hour a second)").performClick()
+        val seen = mutableListOf<String>()
+        repeat(6) {
+            compose.mainClock.advanceTimeBy(500)
+            seen += compose.onNodeWithTag("playbackLabel").printToString().lines().first { "Text =" in it }.trim()
+        }
+        assertTrue("still at Now after 3 s of playing\nbefore: $before\nseen: $seen", seen.none { "[Now]" in it })
+        assertEquals("the hour moves on every half second: $seen", seen.size, seen.distinct().size)
+        compose.onNodeWithContentDescription("Pause").assertExists()
+    }
+
+    @Test fun playWorksWhenTheForecastArrivesAfterTheSkyIsShown() {
+        // Found on the emulator (0.7.1 investigation): the sky's frame loop kept the playback range
+        // of when it started. Shown before the forecast loaded (a new 📍 My location, or opening the
+        // app without a saved forecast), Play stopped at once and the sky flashed to the
+        // no-forecast sky, the Moon disappearing and coming back each time.
+        val fc = androidx.compose.runtime.mutableStateOf<io.github.shanebl030glitch.rbsbweather.data.Forecast?>(null)
+        compose.mainClock.autoAdvance = false
+        compose.setContent { SkyCard(fc.value, AUCKLAND, io.github.shanebl030glitch.rbsbweather.data.UnitPrefs(), true, "", false) }
+        compose.mainClock.advanceTimeBy(500)
+        fc.value = FakeProvider().forecast(AUCKLAND)                 // the forecast arrives
+        compose.mainClock.advanceTimeBy(500)
+        compose.onNodeWithContentDescription("Play the coming hours in the sky (an hour a second)").performClick()
+        val seen = mutableListOf<String>()
+        repeat(6) {
+            compose.mainClock.advanceTimeBy(500)
+            seen += compose.onNodeWithTag("playbackLabel").printToString().lines().first { "Text =" in it }.trim()
+        }
+        assertTrue("Play stopped at once: $seen", seen.none { "[Now]" in it })
+        assertEquals("the hour moves on every half second: $seen", seen.size, seen.distinct().size)
+        compose.onNodeWithContentDescription("Pause").assertExists()
     }
 
     @Test fun warningsBannerScreenAndMute() {
