@@ -120,30 +120,38 @@ for n in ET.parse(sys.argv[1]).getroot().iter("node"):
 PY
 )
   [ -n "$sky" ] || sky="27 320 1053 1170"
-  # tap Play until the button turns into Pause (a tap while the forecast is still settling can be lost)
-  local playing=no
-  for i in 1 2 3 4; do
-    tap "Play the coming hours in the sky (an hour a second)" >/dev/null || { sleep 3; continue; }
-    sleep 1; dump; grep -q 'content-desc="Pause"' "$OUT/ui.xml" && { playing=yes; break; }
-    sleep 2
-  done
-  echo "PLAYBACK ($label): playing = $playing"
-  [ $playing = yes ] || return
+  # where Play and the playback slider are
+  local play slider
+  play=$(python3 "$HERE/find.py" "$OUT/ui.xml" "Play the coming hours in the sky (an hour a second)") || { echo "PLAYBACK ($label): no play button"; return; }
+  slider=$(python3 - "$OUT/ui.xml" <<'PY'
+import re, sys, xml.etree.ElementTree as ET
+for n in ET.parse(sys.argv[1]).getroot().iter("node"):
+    if "SeekBar" in (n.get("class") or ""):
+        print(*map(int, re.findall(r"\d+", n.get("bounds")))); break
+PY
+)
+  echo "PLAYBACK ($label): play at $play, slider at ${slider:-?}"
+  # A. Play pressed once while filming (no screen reading meanwhile, which can disturb the app)
   timeout $((secs + 20)) adb shell screenrecord --time-limit "$secs" --bit-rate 8000000 /sdcard/p.mp4 2>/dev/null &
   local rec=$!
-  # proof the playback is running: the hour shown beside the slider, twice, and a full screenshot
-  for t in 6 14; do sleep $((t == 6 ? 6 : 8))
-    dump; echo "PLAYBACK ($label) after ${t}s, the hour shown: $(python3 - "$OUT/ui.xml" <<'PY'
-import re, sys, xml.etree.ElementTree as ET
-ts = [n.get("text") for n in ET.parse(sys.argv[1]).getroot().iter("node") if re.search(r"\d{1,2}:\d{2}|^Now$", n.get("text") or "")]
-print(" | ".join(ts) or "(none)")
-PY
-)"
-    timeout 20 adb exec-out screencap -p > "$OUT/playback-$label-${t}s.png" 2>/dev/null
-  done
+  sleep 2; adb shell input tap $play
+  sleep 4; timeout 20 adb exec-out screencap -p > "$OUT/playback-$label-4s.png" 2>/dev/null
+  sleep 6; timeout 20 adb exec-out screencap -p > "$OUT/playback-$label-10s.png" 2>/dev/null
   wait $rec
   timeout 60 adb pull /sdcard/p.mp4 "$OUT/playback-$label.mp4" >/dev/null 2>&1
   python3 "$HERE/flicker.py" "$OUT/playback-$label.mp4" $sky "$OUT/playback-$label" "playback-$label" moon
+  # B. the same 24 hours by sliding the playback slider slowly from Now to the end (every frame a new hour)
+  [ -n "$slider" ] || return
+  set -- $slider
+  local y=$(( ($2 + $4) / 2 )) x1=$(( $1 + 8 )) x2=$(( $3 - 8 ))
+  adb shell input tap $x1 $y; sleep 2
+  timeout 45 adb shell screenrecord --time-limit 26 --bit-rate 8000000 /sdcard/s.mp4 2>/dev/null &
+  rec=$!
+  sleep 1; adb shell input swipe $x1 $y $x2 $y 22000 &
+  sleep 11; timeout 20 adb exec-out screencap -p > "$OUT/scrub-$label-mid.png" 2>/dev/null
+  wait $rec
+  timeout 60 adb pull /sdcard/s.mp4 "$OUT/scrub-$label.mp4" >/dev/null 2>&1
+  python3 "$HERE/flicker.py" "$OUT/scrub-$label.mp4" $sky "$OUT/scrub-$label" "scrub-$label" moon
 }
 
 net() { for i in $(seq 1 40); do timeout 8 adb shell "ping -c 1 -W 3 geocoding-api.open-meteo.com" >/dev/null 2>&1 && return 0; sleep 3; done; echo "(no network after 2 minutes)"; }
