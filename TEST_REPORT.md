@@ -4,14 +4,34 @@ Created By Shane BlackbuRn
 
 | Item | Result |
 |---|---|
-| Version | 0.7.0 (test build) |
-| Date | 2026-11-25 |
+| Version | 0.7.1 (test build, not released; 0.7.0 was not approved) |
+| Date | 2026-11-26 |
 | Where | GitHub Actions: Ubuntu 26.04 runner, JDK 17 (Temurin), Gradle 8.14.3, Android Gradle Plugin 8.10.1, Kotlin 2.1.21, Compose BOM 2025.05.01, compile/target SDK 35, min SDK 29 |
 | Command | `./gradlew testDebugUnitTest`, then `./gradlew assembleRelease` |
-| Tests | 210 run, 210 passed (GitHub Actions, commit fc4d666). Full stable-release audit: see docs/AUDIT_REPORT_0.7.0.md |
+| Tests | 216 run, 216 passed (GitHub Actions, commit 72af59c). Widget check, emulator walk-through and stability audit: see below and docs/AUDIT_REPORT_0.7.0.md |
 | Earlier | 180+ run, all passed on GitHub Actions (see the CI run for this commit), plus the emulator check (run 45069457909): every step passed, no crash |
 
 ## What's tested
+
+**0.7.1: Shane's phone test of 0.7.0** (widget flicker, the app closing after a widget tap, the Moon flickering in playback):
+- **New unit tests:**
+  - `PlaybackFlickerTest`: the 24-hour playback, 720 frames: the Moon is never the plain stand-in, and clouds never go missing or pop in.
+  - `WidgetStabilityTest`:
+    - a burst of 10 widget requests gives at most one redraw, and an unchanged widget isn't redrawn;
+    - the widget's words and the temperature icon are drawn on the main thread only, and the words really are on the frames;
+    - no other code draws text into pictures;
+    - a busy main thread makes the widget keep its picture, not crash.
+  - `HereJitterTest`: ±2 km wobble doesn't move My location; a 3 km move does; a precise fix moves after 1 km.
+  - `SevenTest`: the Moon picture is made in the background, with the last real one shown meanwhile, never nothing.
+- **Widget check** (new workflow, Android 14 and 12 emulators, 0.6.2 release against the new build):
+  - the widget placed through the launcher;
+  - filmed (flashes counted);
+  - tapped in every state, real taps and its own intent, checked open after 2, 5 and 10 s;
+  - 15 cold starts by its tap per version with the status-bar temperature on, with native crash backtraces;
+  - the 24-hour playback filmed and the Moon's brightness tracked.
+- **Results** (commit 72af59c): every tap kept the app open, 0 of 15 cold starts crashed on either Android version, and there were no flashes in the widget or the Moon. 0.6.2 crashed once in 15 in an earlier run, with the same native text-drawing crash.
+- **Emulator walk-through** (Android 14): every screen with no crash; Shane's three suburbs and the 8 world places named as before.
+
 
 **Stability audit (0.7.0, for a stable release):**
 

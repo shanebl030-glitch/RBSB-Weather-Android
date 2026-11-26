@@ -4,6 +4,28 @@ Created By Shane BlackbuRn
 
 A separate app from RBSB-Weather for the desktop, with its own versions.
 
+## 0.7.1 – 2026-11-26 (test build, not released)
+
+0.7.0 was **not approved** after Shane tested it on his phone: "0.7.0 is not approved for stable release." He found three problems. Each was reproduced first, its cause found in the code, fixed, and covered by an automated test. The worldwide suburb naming and all the 0.7.0 audit fixes are unchanged.
+
+### Fixed
+- **The Moon flickered in 24-hour playback** (Shane: "The moon flickers during the 24-hour forecast playback").
+  - **Cause:** a 0.7.0 audit fix (against "App isn't responding") made the Moon picture in the background, but showed *nothing* until each new picture was ready, so the sky drew a plain disc instead. In playback the Moon's phase and tilt change every frame, so it was nearly always the plain disc, flashing to the real Moon now and then.
+  - **Reproduced:** a test playing the 24 hours frame by frame found the plain Moon in 718 of 720 frames. On the emulator, a film of the playback showed the plain disc at 23:12, 05:20 and 06:10 and the real Moon at 04:20.
+  - **Fix:** the last real Moon picture stays on screen while the next one is made. Clouds work the same way: a cloud keeps its last picture, and a cloud never drawn before borrows the latest cloud's picture for a moment instead of popping in. The pictures are still made in the background, so the 0.7.0 ANR fix stays.
+  - **Caught on the way:** a first version of this fix drew the very first Moon and each new cloud on the main thread. The stability audit's random testing then caused an ANR on Android 15 (the main thread making a cloud while memory was tight). Now nothing is made on the main thread except the first cloud of all.
+- **Tapping the widget opened the app, which then closed** (Shane: "the app opens and then immediately closes").
+  - **Cause:** a native crash inside Android's text drawing (SIGSEGV in Skia, `prepare_for_direct_mask_drawing`), which closes the app without a Java error. Android's software text drawing (text into a picture) isn't safe on two threads at once. The widget thread draws the mini forecast's words into each widget frame. 0.7.0 also drew the status-bar temperature icon (text) on the main thread every time My location changed, which happens right after the app opens. So opening the app from the widget made the two meet.
+  - **Reproduced on the emulator** with the 0.7.0 candidate (Android 12): the app crashed this way after a widget tap, main thread drawing text while the widget thread drew its frames. The same crash also happened once with 0.6.2 (Android 14, 1 of 15 cold starts by the widget's tap), with the main thread drawing the app's own text. So it's an old risk that 0.7.0 made much more likely.
+  - **Fix:** no text is ever drawn into a picture off the main thread. The widget's words don't move, so they're drawn once per update on the main thread and laid over every frame; the temperature icon is drawn there too. If the main thread is too busy to draw them within 10 seconds, the widget keeps its current picture and tries again at the next update.
+- **The widget flickered** (Shane: "The desktop widget flickers during normal operation").
+  - **Cause:** 0.7.0 redrew the widget several times within seconds: when the app opened, closed, located you and fetched weather, and whenever My location's approximate position wobbled. Each redraw sends new frames to the launcher, which restarts the widget's animation (a visible jump).
+  - **Fix:** requests that arrive within 1.2 seconds are merged into one redraw, and a redraw that would show the same picture again isn't sent. My location only moves when you've moved further than the position's own uncertainty, so an approximate position wobbling by a kilometre or two no longer makes it (and the widget) hop between suburbs.
+  - **Not reproduced on the emulator:** its launcher barely animates widgets, so the flicker couldn't be seen there. The fix is based on the code and is covered by tests (a burst of 10 requests gives at most one redraw; an unchanged widget isn't redrawn).
+
+### Found, not changed (older than 0.7)
+- **A possible "App isn't responding" while warnings are being checked on a slow or lost connection.** The stability audit caught it once on a tablet emulator: the app's screen waited for the warnings check, which held its lock during the download. It's been this way since 0.4 (0.6.2 has it too), so it isn't one of the three problems. It isn't changed here because Shane asked for no unrelated changes; it's the recommended next fix.
+
 ## 0.7.0 – 2026-11-25 (test build)
 
 Shane: "I'd like to add GPS tracking so if I travel to a different suburb or city or country it updates the widget. This is only for the android not the desktop app."
@@ -36,7 +58,7 @@ Shane: "I'd like to add GPS tracking so if I travel to a different suburb or cit
 - **Out of memory on the Earth tab** (Android 10 emulator that allowed the app only 16 MB): even with the app's large-memory setting, so the app now keeps the Earth maps at half size when Android gives it less than 96 MB (real phones allow 192–512 MB and keep full detail).
 - **Battery:** in the background check (about every 15 minutes), GPS is now asked at most once an hour; the rest of the time the phone's network or fused position is used.
 The audit ran lint, plus the full walk-through and 12,500 random taps, swipes, rotations and back presses (Android's "monkey") on each of Android 10, 12, 14 and 15. It found:
-- **"App isn't responding" (ANR) under random use on Android 12 and 15:** the forecast sky and the Earth globe made the real Moon picture on the main thread when it wasn't cached. That can take seconds, longer when the Moon tab is saving a 2048-pixel picture at the same time. The picture is now always made in the background; a simple Moon shows for a moment until it's ready.
+- **"App isn't responding" (ANR) under random use on Android 12 and 15:** the forecast sky and the Earth globe made the real Moon picture on the main thread when it wasn't cached. That can take seconds, longer when the Moon tab is saving a 2048-pixel picture at the same time. The picture is now always made in the background (0.7.1: the last real Moon stays on screen meanwhile, not a plain one).
 - **Android 10: My location never found a position** unless another app had asked recently (Android 10 has no "current location" call). It now asks for one update itself.
 - **GPS position:** now taken by listening for one update; Android 12 gave no fresh GPS position the other way.
 - **Low memory:** the Moon picture can no longer crash the sky, widgets or Earth screens when memory runs out; it's skipped and its memory freed. Its texture files are now closed after reading.

@@ -2,7 +2,7 @@
 
 Created By Shane BlackbuRn
 
-**Status: release candidate, not released.** Shane tests it on his phone and approves before anything is merged, tagged or published.
+**Status: 0.7.0 was not approved** (Shane, 26 Nov 2026, after testing it on his phone: "0.7.0 is not approved for stable release"). He found three problems this audit had missed. They are in the section **After Shane's phone test** below, fixed in the 0.7.1 test build. Nothing is merged, tagged or published.
 
 Shane asked (25 Nov 2026):
 - "suburb identification must work worldwide, not just in New Zealand"
@@ -197,6 +197,32 @@ Commit `fc4d666`, 26 Nov 2026. This is the APK delivered as the release candidat
 
 The scripts now handle all of these and say so when they happen.
 
+## After Shane's phone test (0.7.1)
+
+Shane's three problems, why this audit missed them, and what was done:
+
+| Problem | Cause | Why the audit missed it | Fix and test |
+|---|---|---|---|
+| The Moon flickers in 24-hour playback | This audit's own ANR fix showed no Moon until each new picture was made, so the plain disc was drawn in 718 of 720 playback frames | The audit checked for crashes and ANRs, not for what the sky looked like during playback | The last real Moon stays until the next is ready. Test: the plain Moon in none of 720 frames. Emulator film: no dips in the Moon's brightness |
+| Tapping the widget opens the app, which closes | Native crash in Android's text drawing when two threads draw text into pictures at once (the widget's frames; 0.7.0's temperature icon on the main thread) | The random-input tests never tapped the widget from the home screen, and the crash depends on timing | No text is drawn into pictures off the main thread. Tests check which thread draws it. Emulator: widget taps in every state, 15 cold starts by the tap per version |
+| The widget flickers | 0.7.0 redrew the widget several times within seconds (each restarts its animation), and position wobble moved My location | Nothing watched the widget on the home screen | Redraws merged (1.2 s) and skipped when unchanged; wobble within the position's uncertainty ignored. Tests: a burst of 10 requests gives at most 1 redraw; ±2 km wobble doesn't move My location |
+
+**The new Widget check** (`.github/workflows/widget.yml`, Android 14 and 12) now runs on every push. It compares the 0.6.2 release with the new build on the same emulator.
+
+Final results for 0.7.1 (commit 72af59c):
+
+| Check | 0.6.2 | 0.7.1 |
+|---|---|---|
+| Real taps on the widget: app closed, in the background, backed out of | stays open | stays open |
+| The widget's own intent: closed, background, backed out, already open | stays open | stays open |
+| Cold starts by the widget's tap, with the temperature on (15 per version per Android version) | 0 crashes (1 in 15 in an earlier run on Android 14) | 0 crashes |
+| Widget film: flashes (a jump and straight back) | 0 | 0 |
+| 24-hour playback film: Moon flashes | 0 | 0 |
+
+**The crash in 0.6.2** shows the risk was old: Android drew the app's own text in software on the main thread while the widget thread drew its frames' text. 0.7.0 made it far more likely by drawing the temperature icon on the main thread right after the app opened. Since 0.7.1, the widget thread draws no text at all.
+
+**Not reproducible here:** the widget's flicker itself. The emulator's launcher barely animates widgets (a change of 0.3–0.8 per frame), so the redraws couldn't be seen. Please check it on your phone.
+
 ## What Shane should test on his phone
 
 1. **Install over 0.6.2**, then open the app. Your places should still be there.
@@ -208,3 +234,6 @@ The scripts now handle all of these and say so when they happen.
 4. **Check smoothness:** is the sky animation smooth? Swipe between places, open Earth, the globe and Wind.
 5. **Battery after a day** with My location on: Settings → Battery → RBSB-Weather.
 6. **Take location access away** in Android's settings, then reopen the app: it should say so and not crash.
+7. **(0.7.1) Tap the widget** many times: with the app closed, in the background, and already open. The app should open and stay open each time.
+8. **(0.7.1) Watch the widget** for a few minutes, and after opening and closing the app: no flicker or restarting.
+9. **(0.7.1) Play the 24-hour forecast** at night with the Moon up: the Moon should change smoothly, never flash.

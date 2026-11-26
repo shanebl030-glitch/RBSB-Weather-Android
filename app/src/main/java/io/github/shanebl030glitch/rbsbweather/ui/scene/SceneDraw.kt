@@ -51,6 +51,10 @@ private val spriteCache = object : LinkedHashMap<String, ImageBitmap>(32, 0.75f,
 
 /** The latest sprite made for each cloud (any size or darkness), shown scaled while the exact one is being made. */
 private val lastBySeed = HashMap<Int, ImageBitmap>()
+/** The latest cloud made (guarded by spriteCache): the stand-in for a cloud never drawn before. */
+private var lastMade: ImageBitmap? = null
+/** Clouds made on the main thread (for the tests: at most the very first one). */
+val mainThreadSprites = java.util.concurrent.atomic.AtomicInteger(0)
 private val spritePending = java.util.Collections.synchronizedSet(HashSet<String>())
 private val spriteWorker = java.util.concurrent.Executors.newSingleThreadExecutor { r -> Thread(r, "rbsb-clouds").apply { isDaemon = true; priority = Thread.NORM_PRIORITY - 1 } }
 /** Goes up when a cloud made in the background is ready, so the sky redraws. */
@@ -59,17 +63,19 @@ val sceneAssetsReady = androidx.compose.runtime.mutableIntStateOf(0)
 private fun spriteKey(w: Int, h: Int, darkness: Double, seed: Int) = "$w/$h/${Math.round(darkness * 20) / 20.0}/$seed"
 
 /**
- * For drawing on the main thread: the cloud if it's been made, else the nearest one made for the
- * same cloud (or null) while it's made in the background. Painting a dozen new clouds in one frame
+ * For drawing on the main thread: the cloud if it's been made, else a stand-in (see below) while
+ * it's made in the background. Painting a dozen new clouds in one frame
  * (after turning the phone, or as dusk darkens them) took long enough for Android to report the app
  * as not responding (found by the stability audit). Off the main thread (widgets) it just makes it.
  */
 fun cloudSpriteOrLater(w: Int, h: Int, darkness: Double, seed: Int): ImageBitmap? {
     if (android.os.Looper.myLooper() != android.os.Looper.getMainLooper()) return cloudSprite(w, h, darkness, seed)
     val key = spriteKey(w, h, darkness, seed)
-    val standIn = synchronized(spriteCache) { spriteCache[key]?.let { return it }; lastBySeed[seed] }
-    // a cloud never drawn before is made now (one cloud, as 0.6 did), so clouds never pop in
-    if (standIn == null) return cloudSprite(w, h, darkness, seed)
+    // meanwhile: this cloud's latest picture; for a cloud never drawn before, the latest cloud made
+    // (scaled to fit, so no cloud pops in). Only the very first cloud of all is made here and now:
+    // making many on the main thread at once (the first frame has a dozen) caused an ANR.
+    val standIn = synchronized(spriteCache) { spriteCache[key]?.let { return it }; lastBySeed[seed] ?: lastMade }
+    if (standIn == null) { mainThreadSprites.incrementAndGet(); return cloudSprite(w, h, darkness, seed) }
     if (spritePending.add(key)) {
         try {
             spriteWorker.execute {
@@ -117,6 +123,7 @@ fun cloudSprite(w: Int, h: Int, darkness: Double, seed: Int): ImageBitmap {
     synchronized(spriteCache) {
         spriteCache[key] = img
         lastBySeed[seed] = img
+        lastMade = img
         if (lastBySeed.size > 200) lastBySeed.clear()
     }
     return img

@@ -26,9 +26,7 @@ object MoonRender {
     private val imgCache = object : LinkedHashMap<String, Bitmap>(16, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Bitmap>?) = size > 40
     }
-    @Volatile private var full: Pair<Bitmap, Bitmap>? = null
-    /** Sizes whose textures are loaded: read without a lock, so the main thread never waits on the worker. */
-    @Volatile private var loadedSizes: Set<Int> = emptySet()
+    private var full: Pair<Bitmap, Bitmap>? = null
     var bump = 0.008498; private set
     var tint = doubleArrayOf(1.0, 1.0, 1.0); private set
     var credit = CREDIT_DEFAULT; private set
@@ -67,7 +65,6 @@ object MoonRender {
         if (size <= CACHE_MAX_SIZE) {                       // a 2048 export's textures (33 MB) aren't kept
             if (texCache.size > 6) texCache.remove(texCache.keys.first())
             texCache[size] = pa to ph
-            loadedSizes = texCache.keys.toSet()
         }
         return pa to ph
     }
@@ -89,7 +86,7 @@ object MoonRender {
         renderOrThrow(sizeIn, phaseAngle, brightLimb, southern, rotation)
     } catch (e: OutOfMemoryError) {
         // never crash the sky, widget or Earth screens over a picture of the Moon: free what's kept and skip it
-        synchronized(this) { texCache.clear(); full = null; loadedSizes = emptySet() }
+        synchronized(this) { texCache.clear(); full = null }
         synchronized(imgCache) { imgCache.clear(); lastBySize.clear() }
         null
     } catch (e: Exception) { null }
@@ -112,8 +109,10 @@ object MoonRender {
      * For drawing on the main thread. The exact picture if it's ready. If not, it's made in the
      * background and, meanwhile, the latest real picture is returned (at this size if there is one),
      * which differs from the new one only by a fraction of a degree, so the Moon stays steady.
-     * Only before any picture exists is it made here and now, and only when its textures are
-     * already loaded (a few milliseconds); otherwise null, and the plain Moon shows for that moment.
+     * Only before the first real picture exists is null returned (the plain Moon shows for that
+     * moment, once). It is never made here: making it can wait seconds for the textures while the
+     * Moon tab saves a 2048-pixel picture (an ANR the 0.7.1 stability audit caught when an earlier
+     * version of this fix made the first one on the main thread).
      *
      * History: 0.6 made every picture on the main thread (slow: an ANR under random use). The
      * 0.7.0 audit fix returned null until the new one was ready, so during 24-hour playback, when
@@ -127,7 +126,6 @@ object MoonRender {
         synchronized(imgCache) { imgCache[key]?.let { return it } }
         if (size > CACHE_MAX_SIZE) return null                                  // only small, cached sizes this way
         val standIn = synchronized(imgCache) { lastBySize[size] ?: lastBySize.values.lastOrNull() }
-        if (standIn == null && texturesReady(size)) return render(sizeIn, phaseAngle, brightLimb, southern, rotation)
         if (pending.add(key)) {
             try {
                 worker.execute {
@@ -137,8 +135,6 @@ object MoonRender {
         }
         return standIn
     }
-
-    private fun texturesReady(size: Int): Boolean = size in loadedSizes || full != null
 
     private fun renderOrThrow(sizeIn: Int, phaseAngle: Double, brightLimb: Double, southern: Boolean, rotation: Double?): Bitmap? {
         val size = sizeIn.coerceIn(8, MAX_SIZE)

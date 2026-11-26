@@ -399,4 +399,24 @@ Created By Shane BlackbuRn
 
 Report: docs/AUDIT_REPORT_0.7.0.md. Release candidate: 0.7.0 from commit fc4d666 (SHA-256 4119fb1d…7d025), not merged, tagged or released.
 
+## 0.7.1 (2026-11-26, test build)
+
+**Shane (26 Nov):** "I've installed and tested 0.7.0 on my actual Android phone and have found several problems… 0.7.0 is not approved for stable release. Please do not merge, tag or publish anything." The desktop widget flickers; tapping the widget opens the app, which then immediately closes; the Moon flickers during the 24-hour playback. He asked for each to be reproduced, its root cause found and fixed properly with regression tests, a comparison with 0.6.2, emulator tests of the widget and animations, and a new APK, keeping the worldwide naming and the audit fixes, with nothing merged or published.
+
+**How it was investigated:**
+- A new `Widget check` workflow (Android 14 and 12 emulators) installs the 0.6.2 release and the new build in turn. For each it:
+  - places the widget on the home screen through the launcher, as a person would;
+  - films it, and measures frame-to-frame change and flashes;
+  - taps it with the app closed, in the background, backed out of and already open (real taps and the widget's own intent), and checks the app is still open 2, 5 and 10 seconds later;
+  - cold-starts the app from the widget's tap 15 times with the status-bar temperature on, and prints any native crash's backtrace and every thread's stack (from Android's tombstone);
+  - films the 24-hour playback and tracks the Moon.
+- Every 0.7.0 change was compared with 0.6.2 for the areas Shane listed: opening and closing, widget, Sun and Moon, playback, background and location updates, memory and image caching, activity lifecycle.
+
+**Found and fixed** (details in the CHANGELOG):
+- **Moon flicker:** caused by a 0.7.0 audit fix that showed no Moon until each new picture was made. Reproduced in a test (plain Moon in 718 of 720 playback frames) and on film. The last real Moon now stays until the next is ready.
+- **Widget tap closing the app:** a native crash in Android's text drawing when two threads draw text into pictures at once. Caught on the emulator with the 0.7.0 candidate (main thread drawing the temperature icon, widget thread drawing its frames) and, once, with 0.6.2. Now no text is drawn into a picture off the main thread.
+- **Widget flicker:** 0.7.0 redrew the widget several times within seconds (each redraw restarts its animation), and an approximate position's wobble moved My location. Redraws are now merged and skipped when nothing changed, and My location ignores wobble within the position's uncertainty. The emulator's launcher barely animates widgets, so this one couldn't be seen there; it's covered by tests.
+
+**Not changed:** the worldwide naming, the 0.7.0 audit fixes, anything else. Nothing merged, tagged or released; PR #7 stays open.
+
 Created By Shane BlackbuRn

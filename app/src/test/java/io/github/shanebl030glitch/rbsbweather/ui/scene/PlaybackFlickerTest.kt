@@ -48,7 +48,14 @@ class PlaybackFlickerTest {
         var missing = 0
         for (i in 0 until 40) if (cloudSpriteOrLater(220, 120, 0.2 + i * 0.02, 5) == null) missing++
         assertEquals("frames with the cloud missing", 0, missing)
-        // a cloud never seen before is drawn at once, not left out (no clouds popping in)
+        // a cloud never seen before is drawn at once, not left out (no clouds popping in)…
         assertNotNull(cloudSpriteOrLater(300, 140, 0.4, 77))
+        // …and a sky full of new clouds (the first frame has a dozen) isn't made on the main thread
+        // (the 0.7.1 stability audit caught an ANR with them made here; only the very first cloud may be)
+        val before = mainThreadSprites.get()
+        val t0 = System.nanoTime()
+        for (seed in 1100 until 1112) assertNotNull("cloud $seed left out", cloudSpriteOrLater(260 + seed % 7, 130, 0.3, seed))
+        assertEquals("clouds made on the main thread", before, mainThreadSprites.get())
+        assertTrue("didn't wait", System.nanoTime() - t0 < 200_000_000L)
     }
 }
