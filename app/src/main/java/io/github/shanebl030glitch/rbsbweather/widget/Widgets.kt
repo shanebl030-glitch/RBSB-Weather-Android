@@ -24,16 +24,7 @@ import java.util.concurrent.Executors
 abstract class BaseWidget : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         val pending = goAsync()
-        Widgets.executor.execute {
-            try {
-                Widgets.renderIds(context, manager, ids)
-                if (Widgets.refreshIfDue(context)) Widgets.renderIds(context, manager, ids)
-            } catch (e: Throwable) {
-                Log.w("RBSB-Weather", "Widget update failed: ${e.javaClass.simpleName}")
-            } finally {
-                pending.finish()
-            }
-        }
+        Widgets.executor.execute { Widgets.updateThenRefresh(context, manager, ids, finish = { pending.finish() }) }
     }
 
     override fun onAppWidgetOptionsChanged(context: Context, manager: AppWidgetManager, id: Int, newOptions: Bundle?) {
@@ -52,6 +43,28 @@ object Widgets {
      * which closed the app when its widget was tapped (Shane's phone, 26 Nov 2026).
      */
     val executor = Executors.newSingleThreadExecutor { r -> Thread(r, "rbsb-widgets").apply { isDaemon = true } }
+
+    /**
+     * A widget update from Android (on the widget thread). Android gives it about 10 seconds (60 in
+     * the background) before calling the app "not responding", so the picture is drawn and the
+     * update reported done ([finish]) first; the weather download, which on a slow connection can
+     * take a minute per provider, comes after (0.7.2; before, it came first).
+     */
+    fun updateThenRefresh(context: Context, manager: AppWidgetManager, ids: IntArray, finish: () -> Unit,
+                          refresh: (Context) -> Boolean = ::refreshIfDue) {
+        try {
+            renderIds(context, manager, ids)
+        } catch (e: Throwable) {
+            Log.w("RBSB-Weather", "Widget update failed: ${e.javaClass.simpleName}")
+        } finally {
+            finish()
+        }
+        try {
+            if (refresh(context)) renderIds(context, manager, ids)
+        } catch (e: Throwable) {
+            Log.w("RBSB-Weather", "Widget weather refresh failed: ${e.javaClass.simpleName}")
+        }
+    }
 
     /** Requests that arrive while one is waiting are merged into it (see [updateAll]). */
     private val queued = java.util.concurrent.atomic.AtomicBoolean(false)

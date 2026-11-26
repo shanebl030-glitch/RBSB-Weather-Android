@@ -131,4 +131,29 @@ class WidgetStabilityTest {
         assertTrue(r.exceptionOrNull() is TextNotDrawnInTime)
         shadowOf(Looper.getMainLooper()).idle()   // the late request runs harmlessly
     }
+
+    @Test fun aSlowWeatherDownloadDoesntHoldUpAndroidsWidgetUpdate() {
+        // Android calls the app "not responding" if a widget update isn't done within about 10 s
+        // (60 s in the background); the download could take longer on a slow connection
+        val graph = io.github.shanebl030glitch.rbsbweather.AppGraph.get(app)
+        graph.liveSettings = { Settings(places = emptyList()) }              // nothing goes online by itself
+        try { slowDownload() } finally { graph.liveSettings = null }
+    }
+
+    private fun slowDownload() {
+        val mgr = AppWidgetManager.getInstance(app)
+        val id = shadowOf(mgr).createWidget(LargeWeatherWidget::class.java, io.github.shanebl030glitch.rbsbweather.R.layout.widget_scene)
+        drain()
+        val finished = CountDownLatch(1); val downloading = CountDownLatch(1); val release = CountDownLatch(1)
+        val done = CountDownLatch(1)
+        Thread {
+            Widgets.updateThenRefresh(app, mgr, intArrayOf(id), finish = { finished.countDown() },
+                refresh = { downloading.countDown(); release.await(30, TimeUnit.SECONDS); false })
+            done.countDown()
+        }.start()
+        waitFor { l -> Thread { downloading.await(30, TimeUnit.SECONDS); l.countDown() }.start() }
+        assertEquals("the update was reported done before the download", 0L, finished.count)
+        release.countDown()
+        waitFor { l -> Thread { done.await(30, TimeUnit.SECONDS); l.countDown() }.start() }
+    }
 }
