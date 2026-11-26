@@ -38,7 +38,11 @@ class WidgetStabilityTest {
         val until = System.currentTimeMillis() + 30_000
         while (!done.await(20, TimeUnit.MILLISECONDS)) {
             shadowOf(Looper.getMainLooper()).idle()
-            assertTrue("timed out", System.currentTimeMillis() < until)
+            if (System.currentTimeMillis() >= until) {
+                val dump = Thread.getAllStackTraces().entries.filter { it.key.name.contains("rbsb") || it.key.name.contains("Main") || it.key.name.contains("main") || it.key.name.contains("Test") }
+                    .joinToString("\n") { (t, st) -> "THREAD ${t.name} ${t.state}\n" + st.take(25).joinToString("\n") { "    at $it" } }
+                throw AssertionError("timed out waiting for the widget thread\n$dump")
+            }
         }
     }
 
@@ -58,7 +62,14 @@ class WidgetStabilityTest {
         assertNotEquals(a, Widgets.signature(d, f, s, 400, 180, 1_790_000_000_000L))                   // resized
         assertNotEquals(a, Widgets.signature(d.copy(place = "📍 Flat Bush"), f, s, 320, 180, 1_790_000_000_000L))   // My location moved
 
-        // a real widget on the home screen; 10 requests in a burst (what 0.7.0 did when the app opened)
+        // a real widget on the home screen; 10 requests in a burst (what 0.7.0 did when the app opened).
+        // No place, so the widget's own refresh doesn't go to the internet (a unit test mustn't wait on it).
+        val graph = io.github.shanebl030glitch.rbsbweather.AppGraph.get(app)
+        graph.liveSettings = { Settings(places = emptyList()) }
+        try { burst() } finally { graph.liveSettings = null }
+    }
+
+    private fun burst() {
         val mgr = AppWidgetManager.getInstance(app)
         val id = shadowOf(mgr).createWidget(LargeWeatherWidget::class.java, io.github.shanebl030glitch.rbsbweather.R.layout.widget_scene)
         assertTrue(Widgets.allIds(app, mgr).contains(id))
