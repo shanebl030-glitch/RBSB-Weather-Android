@@ -186,7 +186,10 @@ coldstarts() {   # $1 = label: 15 cold starts by the widget's own tap, counting 
 net; adb install -r "$NEW" || exit 1
 adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 6
 add_auckland && echo "Auckland added"
+adb logcat -c
 playback "new" 30
+echo "--- app debug log"; timeout 20 adb logcat -d -s RBSB-DBG:I | tail -40
+echo "--- activity events"; timeout 20 adb logcat -d -b events | grep -i "rbsbweather" | tail -30 | cut -c1-200
 exit 0
 echo "== 1. The last good release (0.6.2), as on Shane's phone before"
 net

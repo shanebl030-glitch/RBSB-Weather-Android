@@ -106,6 +106,8 @@ fun SkyCard(
         engine.setConditions(fc?.let { conditionsFromForecast(it, now, offset) } ?: Conditions())
     }
     LaunchedEffect(fc, minute) { updateConditions(true) }
+    androidx.compose.runtime.DisposableEffect(place.key) { android.util.Log.i("RBSB-DBG", "SkyCard enter ${place.key}"); onDispose { android.util.Log.i("RBSB-DBG", "SkyCard leave ${place.key}") } }
+    LaunchedEffect(playing, offset > 0) { android.util.Log.i("RBSB-DBG", "playing=$playing offset=$offset maxS=$maxS fc=${fc != null}") }
 
     LaunchedEffect(animate, playing) {
         var last = withFrameNanos { it }

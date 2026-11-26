@@ -49,6 +49,7 @@ class MainActivity : ComponentActivity() {
     private val vm: AppViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        android.util.Log.i("RBSB-DBG", "MainActivity onCreate saved=${savedInstanceState != null}")
         CrashLog.install(this)                    // first, so any later crash is recorded
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
