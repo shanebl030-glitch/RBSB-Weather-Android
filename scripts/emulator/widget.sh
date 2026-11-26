@@ -29,18 +29,15 @@ add_auckland() {
   done; return 1; }
 
 # the widget's rectangle on the home screen (the launcher's nodes for it carry our package name)
-widget_rect() {   # the animating box on the home screen (our widget), from a 3-second film
-  adb shell input keyevent KEYCODE_HOME; sleep 2
-  timeout 20 adb shell screenrecord --time-limit 3 /sdcard/box.mp4 2>/dev/null; timeout 30 adb pull /sdcard/box.mp4 "$OUT/box.mp4" >/dev/null 2>&1
-  local wh; wh=$(timeout 10 adb shell wm size | grep -o '[0-9]*x[0-9]*' | tail -1)
-  python3 "$HERE/movingbox.py" "$OUT/box.mp4" ${wh%x*} ${wh#*x}
-}
+WBOX=""
+widget_rect() { [ -n "$WBOX" ] && echo "$WBOX" || return 1; }
 # where to tap: the middle of the widget
 widget_tap_xy() { local r; r=$(widget_rect) || return 1; set -- $r; echo $(( ($1 + $3) / 2 )) $(( ($2 + $4) / 2 )); }
 
 place_widget() {   # through the launcher: long-press the home screen → Widgets → search → drag
   for attempt in 1 2 3; do
     adb shell input keyevent KEYCODE_HOME; sleep 2; adb shell input keyevent KEYCODE_HOME; sleep 2
+    timeout 30 adb exec-out screencap -p > "$OUT/home-before.png"
     adb shell input swipe 540 1250 540 1250 1500; sleep 2
     tap "Widgets" || { shot "no-widgets-menu-$attempt"; continue; }
     sleep 3; shot "picker-$attempt"
@@ -57,15 +54,18 @@ place_widget() {   # through the launcher: long-press the home screen → Widget
     sleep 4; shot "after-drop-$attempt"
     dump; for b in "Add" "ADD" "Add automatically" "Create"; do python3 "$HERE/find.py" "$OUT/ui.xml" "$b" >/dev/null && tap "$b"; done
     adb shell input keyevent KEYCODE_HOME; sleep 4
-    dump; if grep -q "package=\"$PKG\"" "$OUT/ui.xml"; then echo "WIDGET PLACED; animating box: $(widget_rect || echo 'none (not animating)')"; return 0; fi
+    dump; if grep -q "package=\"$PKG\"" "$OUT/ui.xml"; then
+      sleep 3; timeout 30 adb exec-out screencap -p > "$OUT/home-after.png"
+      WBOX=$(python3 "$HERE/diffbox.py" "$OUT/home-before.png" "$OUT/home-after.png") || WBOX=""
+      echo "WIDGET PLACED at ${WBOX:-unknown}"; [ -n "$WBOX" ] && return 0
+    fi
     echo "(not on the home screen yet, attempt $attempt)"; shot "home-$attempt"
   done; return 1; }
 
 film_widget() {   # $1 = label, $2 = seconds: records the home screen and measures the widget's frame-to-frame jumps
   local label="$1" secs="$2" r
   adb shell input keyevent KEYCODE_HOME; sleep 3
-  r=$(widget_rect) || { echo "WIDGET ($label): not animating / not found"; shot "widget-$label-not-found"; return 1; }
-  echo "WIDGET ($label): animating box $r"
+  r=$(widget_rect) || { echo "WIDGET ($label): position unknown"; shot "widget-$label-not-found"; return 1; }
   timeout $((secs + 20)) adb shell screenrecord --time-limit "$secs" --bit-rate 8000000 /sdcard/w.mp4 2>/dev/null
   timeout 60 adb pull /sdcard/w.mp4 "$OUT/widget-$label.mp4" >/dev/null 2>&1
   python3 "$HERE/flicker.py" "$OUT/widget-$label.mp4" $r "$OUT/widget-$label" "$label"
