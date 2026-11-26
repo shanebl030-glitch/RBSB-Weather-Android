@@ -423,4 +423,26 @@ Report: docs/AUDIT_REPORT_0.7.0.md. Release candidate: 0.7.0 from commit fc4d666
 
 **Not changed:** the worldwide naming, the 0.7.0 audit fixes, anything else. Nothing merged, tagged or released; PR #7 stays open.
 
+## 0.7.2 (2026-11-27, release candidate)
+
+**Shane (27 Nov, 06:41):** "I'm following the recommendation. I'll install and test 0.7.1 on my actual phone before requesting any further changes." No code changes, no merge, no tag, no release. The warnings-check ANR "must be addressed and tested before we approve a stable release."
+
+**Shane (27 Nov, 06:44):** "I've completed testing 0.7.1 on my actual phone, and it seems quite stable. I'm happy to proceed to the next stage." He asked for four things:
+1. Fix the outstanding ANR, with regression tests for slow connections, timeouts and failed downloads.
+2. A final stability audit of the entire application: crashes, ANRs, memory, performance, battery, animations, widget, location naming, providers, warnings, offline recovery, background, Android versions, permissions and all features.
+3. Regression testing against 0.6.2, 0.7.0 and 0.7.1.
+4. A release candidate APK and a detailed report.
+
+Nothing is to be merged, tagged or published until he approves.
+
+**Done:**
+- **The ANR:** the warnings and earthquake downloads no longer hold the lock the screen reads warnings under. The tests reproduce the freeze on the old code (the screen waited 2 to 4 minutes) and pass on the new (under 200 ms). They cover hanging, timed-out, trickling and refused connections.
+- **Found by the audit:** a widget update could be reported as not responding on a slow connection, because it waited for the weather download. The update is now reported done first. A test covers it.
+- **Final run:**
+  - 224 of 224 tests pass;
+  - lint has 0 errors;
+  - the widget check, walk-through and stability audit results are in docs/AUDIT_REPORT_0.7.2.md;
+  - the 24-hour playback on the emulator plays through the night with the real Moon in every frame.
+- **Release candidate:** 0.7.2 (build 14), from commit 562c992. Nothing is merged, tagged or released.
+
 Created By Shane BlackbuRn

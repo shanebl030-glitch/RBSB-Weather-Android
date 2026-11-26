@@ -4,14 +4,24 @@ Created By Shane BlackbuRn
 
 | Item | Result |
 |---|---|
-| Version | 0.7.1 (test build, not released; 0.7.0 was not approved) |
-| Date | 2026-11-26 |
+| Version | 0.7.2 (release candidate, not released) |
+| Date | 2026-11-27 |
 | Where | GitHub Actions: Ubuntu 26.04 runner, JDK 17 (Temurin), Gradle 8.14.3, Android Gradle Plugin 8.10.1, Kotlin 2.1.21, Compose BOM 2025.05.01, compile/target SDK 35, min SDK 29 |
 | Command | `./gradlew testDebugUnitTest`, then `./gradlew assembleRelease` |
-| Tests | 218 run, 218 passed (GitHub Actions, commit cfb94cb). Widget check, emulator walk-through and stability audit: see below and docs/AUDIT_REPORT_0.7.0.md |
+| Tests | 224 run, 224 passed (GitHub Actions, commit 562c992). Final audit: docs/AUDIT_REPORT_0.7.2.md |
 | Earlier | 180+ run, all passed on GitHub Actions (see the CI run for this commit), plus the emulator check (run 45069457909): every step passed, no crash |
 
 ## What's tested
+
+**0.7.2: the final audit** (details and every result in docs/AUDIT_REPORT_0.7.2.md):
+- **New tests:**
+  - `SlowNetworkTest`: the screen stays responsive while the warnings or quake download hangs; this fails on the old code, where the screen waited 2 to 4 minutes. Also: timed-out downloads, two checks at once, and real hanging, trickling and refused connections.
+  - `WidgetStabilityTest`: a widget update is reported done before a hanging download.
+- **Final run (562c992):**
+  - widget check on Android 14 and 12: every tap kept the app open, and 0 of 30 cold starts crashed;
+  - emulator walk-through: everything worked, and Auckland showed 17°C, the same as Open-Meteo;
+  - stability audit (walk-through, 12,500 random events and the audit scenarios) passed on Android 10, 12 and 14, the 5" phone and the tablet. Android 15: see the report.
+
 
 **0.7.1: Shane's phone test of 0.7.0** (widget flicker, the app closing after a widget tap, the Moon flickering in playback):
 - **New unit tests:**

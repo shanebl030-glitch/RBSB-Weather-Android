@@ -15,8 +15,10 @@ dump() { adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; adb shell ca
   if grep -q "isn.t responding" "$OUT/ui.xml" 2>/dev/null; then echo "AUDIT FAIL: Android showed 'isn't responding'"; FAIL=1; xy=$(python3 "$HERE/find.py" "$OUT/ui.xml" "Wait") && adb shell input tap $xy; sleep 2; fi; }
 tap() { for i in 1 2 3 4 5 6; do dump; if xy=$(python3 "$HERE/find.py" "$OUT/ui.xml" "$1" "${2:-exact}"); then adb shell input tap $xy; return 0; fi; sleep 2; done; echo "(not found: '$1')"; return 1; }
 has() { dump; grep -q "$1" "$OUT/ui.xml"; }
-start() { adb shell am start -W -n $PKG/.MainActivity >/dev/null 2>&1; sleep "${1:-5}"; }
-home() { adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 2; tap "Forecast" >/dev/null || adb shell input keyevent KEYCODE_BACK; sleep 2; }
+# random taps can leave Android's quick-settings panel pulled down over the app: close it first
+shade() { adb shell cmd statusbar collapse >/dev/null 2>&1; }
+start() { shade; adb shell am start -W -n $PKG/.MainActivity >/dev/null 2>&1; sleep "${1:-5}"; }
+home() { shade; adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 2; tap "Forecast" >/dev/null || adb shell input keyevent KEYCODE_BACK; sleep 2; }
 settings() { home; tap "Menu" && tap "Settings"; sleep 3; }
 ok() { echo "AUDIT OK: $1"; }
 bad() { echo "AUDIT FAIL: $1"; FAIL=1; }
