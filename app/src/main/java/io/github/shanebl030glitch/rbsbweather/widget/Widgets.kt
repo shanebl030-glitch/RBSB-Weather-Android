@@ -171,11 +171,15 @@ object Widgets {
             val (wDp, hDp) = sizeDp(manager, id)
             val sig = signature(data, fc, s, wDp, hDp)
             if (onlyIfChanged && shown[id] == sig) { skipped.incrementAndGet(); continue }
-            shown[id] = sig
-            sent.incrementAndGet()
-            val frames = try { WidgetFrames.render(context, s, fc, wDp, hDp, density) } catch (e: Throwable) {
+            val frames = try { WidgetFrames.render(context, s, fc, wDp, hDp, density) } catch (e: TextNotDrawnInTime) {
+                // the main thread was too busy to draw the words: keep the picture already on the
+                // home screen and try again at the next update
+                Log.w("RBSB-Weather", "Widget text not drawn in time; keeping the current picture"); continue
+            } catch (e: Throwable) {
                 Log.w("RBSB-Weather", "Widget sky couldn't be drawn: ${e.javaClass.simpleName}"); emptyList()
             }
+            shown[id] = sig
+            sent.incrementAndGet()
             val views = buildViews(context, data, frames)
             try {
                 manager.updateAppWidget(id, views)

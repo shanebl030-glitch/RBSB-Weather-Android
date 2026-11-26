@@ -140,33 +140,39 @@ private fun DrawScope.shadowText(tm: TextMeasurer, s: String, st: TextStyle, x: 
     return tw
 }
 
-/** Paints a planned mini forecast at animation time t. */
-fun DrawScope.paintStrip(lay: StripLayout, t: Double, unit: TempUnit, tm: TextMeasurer) {
+/**
+ * Paints a planned mini forecast at animation time t. art = the shade, icons and rain drops (they
+ * move with t); text = the day names, temperatures and rain chances (they don't). The widget draws
+ * the two separately: its text only on the main thread (widget/MainThreadText.kt).
+ */
+fun DrawScope.paintStrip(lay: StripLayout, t: Double, unit: TempUnit, tm: TextMeasurer, art: Boolean = true, text: Boolean = true) {
     val (f, fb, fs) = lay.styles
     val r = Rect(lay.rect.left - lay.iconPx * 0.6f, lay.rect.top - lay.iconPx * 0.5f, lay.rect.right + lay.iconPx * 0.6f, lay.rect.bottom + lay.iconPx * 0.4f)
     val rad = max(r.width, r.height) * 0.62f
     // a feathered shade, squashed to the strip's shape so it fades out evenly on every side
-    scale(1f, r.height / max(1f, r.width), r.center) {
+    if (art) scale(1f, r.height / max(1f, r.width), r.center) {
         drawCircle(safeRadial(0f to Color(0, 10, 30, 95), 0.7f to Color(0, 10, 30, 55), 1f to Color(0, 10, 30, 0),
             center = r.center, radius = rad), rad, r.center)
     }
     lay.cells.forEachIndexed { i, c ->
         val cx = c.rect.center.x
-        shadowText(tm, c.name, fb, cx, c.nameTop, Color.White)
-        weatherIcon(c.icon, c.day.code, true, t + i * 0.37, c.day.windy)
+        if (text) shadowText(tm, c.name, fb, cx, c.nameTop, Color.White)
+        if (art) weatherIcon(c.icon, c.day.code, true, t + i * 0.37, c.day.windy)
         val hi = tempText(c.day.tempMax, unit); val lo = " " + tempText(c.day.tempMin, unit)
         val total = tm.measure(hi, fb).size.width + tm.measure(lo, f).size.width
         val x0 = cx - total / 2f
-        val w1 = shadowText(tm, hi, fb, x0, c.tempTop, Color.White, center = false)
-        shadowText(tm, lo, f, x0 + w1, c.tempTop, Color(232, 238, 248, 225), center = false)
+        if (text) {
+            val w1 = shadowText(tm, hi, fb, x0, c.tempTop, Color.White, center = false)
+            shadowText(tm, lo, f, x0 + w1, c.tempTop, Color(232, 238, 248, 225), center = false)
+        }
         c.day.rain?.let { rain ->
             val pct = "${rain.roundToInt()}%"
             val dw = lay.smallPx * 0.55f
             val total2 = dw + 3 + tm.measure(pct, fs).size.width
             val x1 = cx - total2 / 2
             val th = tm.measure(pct, fs).size.height
-            drop(Offset(x1 + dw / 2, c.rainTop + th * 0.5f), dw)
-            shadowText(tm, pct, fs, x1 + dw + 3, c.rainTop, if (rain >= 20) Color(195, 225, 255) else Color(225, 232, 242, 220), center = false)
+            if (art) drop(Offset(x1 + dw / 2, c.rainTop + th * 0.5f), dw)
+            if (text) shadowText(tm, pct, fs, x1 + dw + 3, c.rainTop, if (rain >= 20) Color(195, 225, 255) else Color(225, 232, 242, 220), center = false)
         }
     }
 }

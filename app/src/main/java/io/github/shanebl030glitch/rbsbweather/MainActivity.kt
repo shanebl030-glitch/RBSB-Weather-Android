@@ -29,7 +29,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val model = AppModel(graph.store, graph.repo, OpenMeteo(), viewModelScope, Dispatchers.IO,
         providers = graph.providers, onForecast = { Widgets.updateAll(app) }, watch = graph.watch,
         notify = { notices, s -> Notifier.post(app, notices, s.alerts.redAlarm); Widgets.updateAll(app) },
-        onTempNotification = { Widgets.updateTempNotification(app) },     // drawn on the widget thread, never here
+        onTempNotification = { Widgets.updateTempNotification(app) },     // built on the widget thread; its text drawn by MainThreadText
         onWidgetPlace = { Widgets.updateAll(app) })
 
     init {

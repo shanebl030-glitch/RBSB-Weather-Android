@@ -5,6 +5,7 @@ package io.github.shanebl030glitch.rbsbweather.widget
 
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
+import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import io.github.shanebl030glitch.rbsbweather.data.AUCKLAND
 import io.github.shanebl030glitch.rbsbweather.data.Settings
@@ -28,8 +29,22 @@ class WidgetStabilityTest {
     private val app get() = ApplicationProvider.getApplicationContext<android.app.Application>()
     private fun fc() = parseForecast(javaClass.classLoader!!.getResourceAsStream("openmeteo_forecast.json")!!.bufferedReader().readText(), AUCKLAND)
 
-    private fun drain() {   // wait for everything queued on the widget thread so far
-        val done = CountDownLatch(1); Widgets.executor.execute { done.countDown() }; assertTrue(done.await(30, TimeUnit.SECONDS))
+    // wait for everything queued on the widget thread so far, running the main thread meanwhile
+    // (the widget thread hands its text pictures to the main thread: MainThreadText.kt)
+    private fun drain() = waitFor { done -> Widgets.executor.execute { done.countDown() } }
+
+    private fun waitFor(start: (CountDownLatch) -> Unit) {
+        val done = CountDownLatch(1); start(done)
+        val until = System.currentTimeMillis() + 30_000
+        while (!done.await(20, TimeUnit.MILLISECONDS)) {
+            shadowOf(Looper.getMainLooper()).idle()
+            assertTrue("timed out", System.currentTimeMillis() < until)
+        }
+    }
+
+    private fun sleepRunningMain(ms: Long) {
+        val until = System.currentTimeMillis() + ms
+        while (System.currentTimeMillis() < until) { shadowOf(Looper.getMainLooper()).idle(); Thread.sleep(20) }
     }
 
     @Test fun theSameContentIsntSentTwiceAndBurstsBecomeOneRedraw() {
@@ -50,28 +65,59 @@ class WidgetStabilityTest {
         drain()
         val sent0 = Widgets.sent.get()
         repeat(10) { Widgets.updateAll(app) }
-        Thread.sleep(Widgets.MERGE_MS + 300); drain()
+        sleepRunningMain(Widgets.MERGE_MS + 300); drain()
         val afterBurst = Widgets.sent.get() - sent0
         assertTrue("one redraw for a burst of 10 requests, was $afterBurst", afterBurst <= 1)
         // nothing changed: further requests send nothing
         val sent1 = Widgets.sent.get()
-        repeat(3) { Widgets.updateAll(app); Thread.sleep(Widgets.MERGE_MS + 200); drain() }
+        repeat(3) { Widgets.updateAll(app); sleepRunningMain(Widgets.MERGE_MS + 200); drain() }
         assertEquals("unchanged widget redrawn", sent1, Widgets.sent.get())
     }
 
-    @Test fun textIntoPicturesIsOnlyEverDrawnOnTheWidgetThread() {
-        // the status-bar temperature icon is drawn with text into a picture: never on the caller's thread
-        val callerThreads = mutableSetOf<String>()
-        val latch = CountDownLatch(1)
-        Widgets.updateTempNotification(app)
-        Widgets.executor.execute { callerThreads += Thread.currentThread().name; latch.countDown() }
-        assertTrue(latch.await(30, TimeUnit.SECONDS))
-        assertEquals(setOf("rbsb-widgets"), callerThreads)
-        // and the app's callback for it goes there too (MainActivity wiring checked in the source)
-        val src = java.io.File("src/main/java/io/github/shanebl030glitch/rbsbweather/MainActivity.kt").takeIf { it.isFile }
-            ?: java.io.File("app/src/main/java/io/github/shanebl030glitch/rbsbweather/MainActivity.kt")
-        val text = src.readText()
-        assertTrue(text.contains("onTempNotification = { Widgets.updateTempNotification(app) }"))
-        assertTrue("no text drawn into pictures on the main thread", !text.contains("TempNotification.update(app) }"))
+    @Test fun textIntoPicturesIsOnlyEverDrawnOnTheMainThread() {
+        val mainName = Looper.getMainLooper().thread.name
+        // the widget's frames, made on the widget thread: their words are drawn on the main thread
+        val s = Settings(places = listOf(AUCKLAND))
+        val f = fc()
+        var frames: List<android.graphics.Bitmap> = emptyList()
+        MainThreadText.lastThread = null
+        waitFor { done -> Widgets.executor.execute { frames = WidgetFrames.render(app, s, f, 320, 180, 2f); done.countDown() } }
+        assertEquals(WidgetFrames.FRAMES, frames.size)
+        assertEquals(mainName, MainThreadText.lastThread)
+        // the words really are on the frames (white text in the mini forecast's area, bottom right)
+        val b = frames[0]
+        var white = 0
+        for (y in b.height / 2 until b.height) for (x in b.width / 2 until b.width) {
+            val c = b.getPixel(x, y)
+            if (android.graphics.Color.red(c) > 235 && android.graphics.Color.green(c) > 235 && android.graphics.Color.blue(c) > 235) white++
+        }
+        assertTrue("the mini forecast's words are missing from the widget ($white white pixels)", white > 50)
+
+        // the status-bar temperature icon, asked for on the widget thread: drawn on the main thread
+        MainThreadText.lastThread = null
+        var icon: android.graphics.Bitmap? = null
+        waitFor { done -> Widgets.executor.execute { icon = io.github.shanebl030glitch.rbsbweather.background.TempNotification.icon("17"); done.countDown() } }
+        assertEquals(mainName, MainThreadText.lastThread)
+        assertTrue(icon!!.width == 96)
+
+        // and no code draws text into a picture anywhere but through MainThreadText (or the app's own
+        // screens, which Android draws on the main thread): checked in the source
+        val root = java.io.File("src/main/java").takeIf { it.isDirectory } ?: java.io.File("app/src/main/java")
+        val offenders = root.walkTopDown().filter { it.isFile && it.extension == "kt" }.filter { file ->
+            val t = file.readText()
+            (t.contains("Canvas(") && (t.contains(".drawText(") || t.contains("paintStrip(")) && !t.contains("MainThreadText.draw"))
+                && file.name !in setOf("ForecastStrip.kt", "SkyCard.kt", "HourlyChart.kt", "EarthScreens.kt", "MainThreadText.kt")
+        }.map { it.name }.toList()
+        assertEquals("text drawn into pictures outside MainThreadText", emptyList<String>(), offenders)
+    }
+
+    @Test fun aBusyMainThreadMeansTheWidgetKeepsItsPictureNotACrash() {
+        // nothing runs the main thread here: the text can't be drawn, so the caller is told so
+        val r = runCatching {
+            val out = arrayOfNulls<Throwable>(1); val t = Thread { out[0] = runCatching { MainThreadText.draw(waitMs = 200) { 1 } }.exceptionOrNull() }
+            t.start(); t.join(); out[0]?.let { throw it }
+        }
+        assertTrue(r.exceptionOrNull() is TextNotDrawnInTime)
+        shadowOf(Looper.getMainLooper()).idle()   // the late request runs harmlessly
     }
 }

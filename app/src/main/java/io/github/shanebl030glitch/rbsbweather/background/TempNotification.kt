@@ -15,6 +15,7 @@ import android.graphics.Typeface
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import io.github.shanebl030glitch.rbsbweather.widget.MainThreadText
 import androidx.core.graphics.drawable.IconCompat
 import io.github.shanebl030glitch.rbsbweather.AppGraph
 import io.github.shanebl030glitch.rbsbweather.MainActivity
@@ -45,8 +46,13 @@ object TempNotification {
         return title to placeName + hl
     }
 
-    /** White digits on a transparent square, as Android wants for a status-bar icon. */
-    fun icon(text: String, px: Int = 96): Bitmap {
+    /**
+     * White digits on a transparent square, as Android wants for a status-bar icon. Text into a
+     * picture: drawn on the main thread only (widget/MainThreadText.kt explains why).
+     */
+    fun icon(text: String, px: Int = 96): Bitmap = MainThreadText.draw { drawIcon(text, px) }
+
+    private fun drawIcon(text: String, px: Int): Bitmap {
         val b = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888)
         val p = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = android.graphics.Color.WHITE; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
