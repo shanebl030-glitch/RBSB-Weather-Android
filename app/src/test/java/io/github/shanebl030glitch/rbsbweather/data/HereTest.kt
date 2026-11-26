@@ -173,3 +173,22 @@ class HereTest {
         assertTrue(tmp.root.listFiles()!!.any { it.name == "forecast-here.json" })    // the here file stays while it's saved
     }
 }
+
+/** Shane's 0.7.0 phone test: approximate positions wobble by a kilometre or two between checks. */
+class HereJitterTest {
+    private val names = PlaceNamer { lat, _ -> Naming(if (lat < -36.95) "Flat Bush" else "East Tāmaki", "Auckland", "New Zealand") }
+    private val now = 1_790_000_000_000L
+
+    @Test fun anApproximatePositionWobblingDoesntMoveMyLocation() {
+        val here = Here.next(null, Fix(-36.946, 174.896, 2000f, now), now, names)!!
+        // ±2 km fixes 1.5 km away, back and forth: no move, no new name, no widget redraw
+        for (k in 0 until 10) {
+            val lat = if (k % 2 == 0) -36.9595 else -36.946
+            org.junit.Assert.assertNull("wobble $k", Here.next(here, Fix(lat, 174.896, 2000f, now), now, names))
+        }
+        // a real move (3 km) still moves it
+        assertEquals("Flat Bush", Here.next(here, Fix(-36.973, 174.896, 2000f, now), now, names)!!.name)
+        // a precise fix moves it after 1 km as before
+        assertEquals("Flat Bush", Here.next(here, Fix(-36.957, 174.896, 15f, now), now, names)!!.name)
+    }
+}

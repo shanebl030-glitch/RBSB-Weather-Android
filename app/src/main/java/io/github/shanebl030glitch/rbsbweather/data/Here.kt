@@ -44,7 +44,10 @@ object Here {
     fun next(old: Place?, fix: Fix, now: Long, namer: PlaceNamer): Place? {
         if (!usable(fix, now)) return null
         val lat = round3(fix.lat); val lon = round3(fix.lon)
-        if (old != null && kmBetween(old.latitude, old.longitude, lat, lon) < MOVE_KM) {
+        // moved: further than 1 km, and further than this fix's own uncertainty, so an approximate
+        // (±2 km) position wobbling between checks doesn't make My location hop between suburbs
+        val threshold = maxOf(MOVE_KM, fix.accuracyM / 1000.0)
+        if (old != null && kmBetween(old.latitude, old.longitude, lat, lon) < threshold) {
             // hasn't moved; but if its name isn't down to the suburb yet, try again (and keep its spot)
             if (old.name != UNNAMED && old.detail >= Naming.SUBURB) return null
             val n = ask(namer, old.latitude, old.longitude) ?: return null
