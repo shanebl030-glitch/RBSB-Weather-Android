@@ -121,7 +121,19 @@ PY
 )
   [ -n "$sky" ] || sky="27 320 1053 1170"
   tap "Play the coming hours in the sky (an hour a second)" >/dev/null || { echo "PLAYBACK ($label): no play button"; return; }
-  timeout $((secs + 20)) adb shell screenrecord --time-limit "$secs" --bit-rate 8000000 /sdcard/p.mp4 2>/dev/null
+  timeout $((secs + 20)) adb shell screenrecord --time-limit "$secs" --bit-rate 8000000 /sdcard/p.mp4 2>/dev/null &
+  local rec=$!
+  # proof the playback is running: the hour shown beside the slider, twice, and a full screenshot
+  for t in 6 14; do sleep $((t == 6 ? 6 : 8))
+    dump; echo "PLAYBACK ($label) after ${t}s, the hour shown: $(python3 - "$OUT/ui.xml" <<'PY'
+import re, sys, xml.etree.ElementTree as ET
+ts = [n.get("text") for n in ET.parse(sys.argv[1]).getroot().iter("node") if re.search(r"\d{1,2}:\d{2}|^Now$", n.get("text") or "")]
+print(" | ".join(ts) or "(none)")
+PY
+)"
+    timeout 20 adb exec-out screencap -p > "$OUT/playback-$label-${t}s.png" 2>/dev/null
+  done
+  wait $rec
   timeout 60 adb pull /sdcard/p.mp4 "$OUT/playback-$label.mp4" >/dev/null 2>&1
   python3 "$HERE/flicker.py" "$OUT/playback-$label.mp4" $sky "$OUT/playback-$label" "playback-$label" moon
 }
