@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
@@ -146,6 +147,24 @@ class ScreensTest {
         compose.onNodeWithTag("playbackNow").assertIsDisplayed()
         compose.onNodeWithTag("page-${AUCKLAND.key}").performScrollToNode(hasTestTag("daily"))
         compose.onAllNodesWithTag("dayIcon")[0].assertExists()          // animated icons in the 7-day list
+    }
+
+    @Test fun pressingPlayPlaysTheComingHours() {
+        // Shane's 0.7.0 phone test: the playback must run smoothly, not keep resetting
+        for (anim in listOf(true, false)) {
+            val m = model(MemoryStore(Settings(animations = anim).toJson().toString()))
+            m.add(AUCKLAND)
+            compose.setContent { RbsbApp(m) }
+            compose.waitForIdle()
+            val before = compose.onNodeWithTag("playbackLabel").printToString()
+            compose.onNodeWithContentDescription("Play the coming hours in the sky (an hour a second)").performClick()
+            compose.mainClock.advanceTimeBy(3_000)
+            val after = compose.onNodeWithTag("playbackLabel").printToString()
+            assertTrue("animations=$anim: still at Now after 3 s of playing\nbefore: $before\nafter: $after\n" + compose.onRoot().printToString(),
+                !after.contains("Text = '[Now]'"))
+            compose.onNodeWithContentDescription("Pause").assertExists()
+            compose.onNodeWithContentDescription("Pause").performClick()
+        }
     }
 
     @Test fun warningsBannerScreenAndMute() {
