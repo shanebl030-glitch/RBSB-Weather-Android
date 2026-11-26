@@ -122,7 +122,11 @@ PY
   [ -n "$sky" ] || sky="27 320 1053 1170"
   # where Play and the playback slider are
   local play slider
-  play=$(python3 "$HERE/find.py" "$OUT/ui.xml" "Play the coming hours in the sky (an hour a second)") || { echo "PLAYBACK ($label): no play button"; return; }
+  for i in 1 2 3 4 5 6; do
+    play=$(python3 "$HERE/find.py" "$OUT/ui.xml" "Play the coming hours in the sky (an hour a second)") && break
+    sleep 3; dump
+  done
+  [ -n "$play" ] || { echo "PLAYBACK ($label): no play button"; return; }
   slider=$(python3 - "$OUT/ui.xml" <<'PY'
 import re, sys, xml.etree.ElementTree as ET
 for n in ET.parse(sys.argv[1]).getroot().iter("node"):
