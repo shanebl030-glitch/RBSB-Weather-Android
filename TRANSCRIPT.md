@@ -381,4 +381,22 @@ Created By Shane BlackbuRn
 
 **My reply:** those pictures were of the "Auckland" place the test adds by searching, not 📍 My location. The emulator check now moves the phone to his three examples. On Android 10, 12, 14 and 15, My location showed Waiuku, East Tāmaki and Clarks Beach. For Waiuku and Clarks Beach, OpenStreetMap supplied the town name because the phone only gave the wider area. The check also screenshots the My location forecast page.
 
+**Shane (25 Nov):** suburb naming "must work worldwide, not just in New Zealand… tested with realistic location data from multiple countries and verified in the actual Android app". He also asked for a full crash and bug audit covering 11 areas, a detailed report, and no merge, tag or release until he has tested the release candidate on his phone.
+
+**Worldwide naming:**
+- OpenStreetMap's local areas are used in Shane's order (suburb, neighbourhood, quarter, city district, district, borough), then village, municipality, and town or city last.
+- Administrative units and the city's own name are skipped.
+- Tested on real replies from 29 places in 21 countries, and in the app on emulators at 8 world cities and Shane's 3 Auckland suburbs, on Android 10, 12, 14 and 15.
+
+**Audit:** lint; walk-through; 65,000+ random events; restart, offline, permission, large-text, dark-mode, memory, frame and background checks on 4 Android versions and 3 screen sizes. Fixed:
+- ANRs from the Moon picture and the cloud images made on the main thread;
+- the globes making a 4 MB picture every frame;
+- out of memory with a small heap;
+- Android 10 and 12 location;
+- warnings from the previous place showing after My location moved;
+- hourly-at-most background GPS;
+- lint errors.
+
+Report: docs/AUDIT_REPORT_0.7.0.md. Release candidate: 0.7.0 from commit fc4d666 (SHA-256 4119fb1d…7d025), not merged, tagged or released.
+
 Created By Shane BlackbuRn

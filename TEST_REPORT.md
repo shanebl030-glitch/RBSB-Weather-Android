@@ -8,7 +8,8 @@ Created By Shane BlackbuRn
 | Date | 2026-11-25 |
 | Where | GitHub Actions: Ubuntu 26.04 runner, JDK 17 (Temurin), Gradle 8.14.3, Android Gradle Plugin 8.10.1, Kotlin 2.1.21, Compose BOM 2025.05.01, compile/target SDK 35, min SDK 29 |
 | Command | `./gradlew testDebugUnitTest`, then `./gradlew assembleRelease` |
-| Tests | 180+ run, all passed on GitHub Actions (see the CI run for this commit), plus the emulator check (run 45069457909): every step passed, no crash |
+| Tests | 210 run, 210 passed (GitHub Actions, commit fc4d666). Full stable-release audit: see docs/AUDIT_REPORT_0.7.0.md |
+| Earlier | 180+ run, all passed on GitHub Actions (see the CI run for this commit), plus the emulator check (run 45069457909): every step passed, no crash |
 
 ## What's tested
 

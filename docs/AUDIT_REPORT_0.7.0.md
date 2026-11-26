@@ -14,7 +14,7 @@ This report says what was tested, what failed, what was fixed and what is still 
 
 | What | Where | Size |
 |---|---|---|
-| Automated tests (unit, app logic, Robolectric screens) | GitHub Actions, JDK 17 | __TESTS__ tests |
+| Automated tests (unit, app logic, Robolectric screens) | GitHub Actions, JDK 17 | 210 tests |
 | Android lint, release build, all checks | GitHub Actions | 0 errors (39 warnings, listed below) |
 | Full walk-through (every tab, menu, settings, globe drag and rotate, Wind, Test connection, updates, rotation, leave and return, pull to refresh, My location) | Emulators: Android 10, 12, 14, 15 (Pixel 6) | 4 runs |
 | My location at Auckland suburbs (Waiuku, East Tāmaki, Clarks Beach) and around the world (Tokyo, Berlin, Paris, Rome, New York, Sydney, Marfa TX, Gordes FR), read off the app's own screen | Same 4 emulators | 11 places × 4 |
@@ -43,19 +43,10 @@ The scripts: `scripts/emulator/drive.sh` (walk-through), `stress.sh` (random use
   - Settings, forecast and warning files are written atomically, and a damaged settings file reads as the defaults.
 
 ### 2. Memory and performance
-- **Memory over 30 rounds of every tab:** it rises while the Earth, Moon and Wind textures load, then levels off (the change between round 6 and round 12):
-
-  | Device | Change, round 6 to 12 |
-  |---|---|
-  | Android 10 | +13 MB |
-  | Android 12 | −6 MB |
-  | Android 15 | −2 MB |
-  | 5" phone | −4 MB |
-  | Tablet | +2 MB |
-
-  No leak was found.
+- **Memory over 90 tab changes:** it rises while the Earth, Moon and Wind textures load, then stays within a band (see Final run below).
+  - Before the globe fix, memory kept climbing (+26 MB per 6 rounds on Android 12). After it, there's no steady climb.
 - **Size:** typical total use is 150–250 MB with every tab opened. The Pixel 6 emulator showed up to 450 MB after random use, mostly graphics for the globes.
-- **Frame timing:** on the emulators, which draw everything in software without a GPU, 77–100% of frames are slower than 16 ms (90th percentile 53–129 ms). **This can't be judged here**; a phone's GPU draws the animated sky far faster. **Outstanding:** check smoothness on Shane's phone. If it stutters, the sky animation is the place to look ("Animated sky" can be turned off in Settings).
+- **Frame timing:** on the emulators, which draw everything in software without a GPU, 97–100% of frames are slower than 16 ms (90th percentile 133–150 ms on phones, 450 ms on the 10" tablet). **This can't be judged here**; a phone's GPU draws the animated sky far faster. **Outstanding:** check smoothness on Shane's phone. If it stutters, the sky animation is the place to look ("Animated sky" can be turned off in Settings).
 
 ### 3. Location detection and reverse geocoding
 - **Found:** Android 10 never found a position for My location unless another app had asked recently (Android 10 has no "current location" call). **Fixed:** the app asks for one update itself.
@@ -129,7 +120,7 @@ The scripts: `scripts/emulator/drive.sh` (walk-through), `stress.sh` (random use
 - **Not covered:** real phones from other makers (Samsung One UI, Xiaomi and so on), Android 11 and 13 (in between the tested versions), and devices without Google's geocoder (the OpenStreetMap backup is for those, and is tested on real data).
 
 ### 11. Regression of existing features
-- **Automated tests:** all __TESTS__ pass. They cover forecasts, providers and backups, units, warnings, earthquakes, Moon, Earth, Wind (GRIB2), updates, Test connection, widgets, the status-bar temperature and the coffee link.
+- **Automated tests:** all 210 pass. They cover forecasts, providers and backups, units, warnings, earthquakes, Moon, Earth, Wind (GRIB2), updates, Test connection, widgets, the status-bar temperature and the coffee link.
 - **On emulators:** the walk-through repeats everything Shane has used, with checks that the globe moves when dragged and when rotating slowly, and that the wind streaks move.
 
 ## Everything found, and what happened
@@ -166,7 +157,45 @@ Lint warnings left (none are crash risks):
 
 ## Final run
 
-__FINAL__
+Commit `fc4d666`, 26 Nov 2026. This is the APK delivered as the release candidate.
+
+**Results by job:**
+
+| Job | Walk-through, suburbs and world names | Random use | Audit scenarios |
+|---|---|---|---|
+| Automated tests | 210 of 210 passed | | |
+| Lint | 0 errors | | |
+| Emulator check, Android 14 (Pixel 6) | ✅ all steps; Auckland 21°C, same as Open-Meteo | | |
+| Android 10 (Pixel 6) | ✅ | ✅ 12,500 events, no crash or ANR | ✅ all passed |
+| Android 12 (Pixel 6) | ✅ | ✅ 12,500 events, no crash or ANR | ✅ all passed |
+| Android 14 (Pixel 6) | ✅ | ✅ 12,500 events, no crash or ANR | ✅ all passed except memory, see below |
+| Android 15 (Pixel 6) | ✅ | ✅ 12,500 events, no crash or ANR | ✅ all passed |
+| 5" phone, Android 14 | n/a | ✅ 7,500 events, no crash or ANR | ✅ all passed |
+| 10" tablet, Android 14 | n/a | ✅ 7,500 events, no crash or ANR | ✅ passed; no GPS on this emulator, so My location says it has no position, without crashing |
+
+**Memory** (total PSS after 6, 12 and 18 rounds of every tab):
+
+| Device | Round 6 | Round 12 | Round 18 |
+|---|---|---|---|
+| Android 10 | 149 MB | 154 MB | 153 MB |
+| Android 12 | 158 MB | 174 MB | 162 MB |
+| Android 15 | 150 MB | 151 MB | 159 MB |
+| 5" phone | 182 MB | 184 MB | 153 MB |
+| Tablet | 389 MB | 352 MB | 378 MB |
+| Android 14 | 163 MB | 150 MB | 210 MB |
+
+- Android 14's last reading tripped the audit's 25 MB rule.
+- During random use on the same emulator, memory went 394 → 476 → 412 → 357 MB, so it comes back down.
+- Every run goes up and down with what's loaded (globes, wind data), with no steady climb. **Judged: not a leak, but worth watching on the phone.**
+
+**Things that went wrong in earlier runs and weren't the app** (each checked):
+- **Android's own Pixel Launcher showed "isn't responding"** over the app and swallowed typing. Screenshot checked.
+- **The random taps reached Android's quick settings** and turned airplane mode on.
+- **The emulator stopped answering adb** after 10,000 random events on Android 12. No crash or ANR of the app was logged, and 1.2 GB was still free.
+- **Android 15's system server died once:** "DeadSystemException: The system died" hit every app at once.
+- **The audit's search ran before the network was back** after offline testing, and the app said so ("Couldn't reach the weather service"), which is the right behaviour.
+
+The scripts now handle all of these and say so when they happen.
 
 ## What Shane should test on his phone
 
