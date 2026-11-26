@@ -67,7 +67,9 @@ private fun spriteKey(w: Int, h: Int, darkness: Double, seed: Int) = "$w/$h/${Ma
 fun cloudSpriteOrLater(w: Int, h: Int, darkness: Double, seed: Int): ImageBitmap? {
     if (android.os.Looper.myLooper() != android.os.Looper.getMainLooper()) return cloudSprite(w, h, darkness, seed)
     val key = spriteKey(w, h, darkness, seed)
-    synchronized(spriteCache) { spriteCache[key]?.let { return it }; }
+    val standIn = synchronized(spriteCache) { spriteCache[key]?.let { return it }; lastBySeed[seed] }
+    // a cloud never drawn before is made now (one cloud, as 0.6 did), so clouds never pop in
+    if (standIn == null) return cloudSprite(w, h, darkness, seed)
     if (spritePending.add(key)) {
         try {
             spriteWorker.execute {
@@ -75,7 +77,7 @@ fun cloudSpriteOrLater(w: Int, h: Int, darkness: Double, seed: Int): ImageBitmap
             }
         } catch (e: Exception) { spritePending.remove(key) }
     }
-    return synchronized(spriteCache) { lastBySeed[seed] }
+    return standIn
 }
 
 /** A soft, volumetric cloud: overlapping lit puffs with a shaded underside (scene.cloud_sprite). */
