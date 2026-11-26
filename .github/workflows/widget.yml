@@ -1,0 +1,60 @@
+# Widget and playback regression check against the last good release (0.6.2): the real widget
+# on the home screen, filmed for flicker, tapped with the app closed / in the background / backed
+# out of, and the forecast's 24-hour playback filmed for the Moon. Added after Shane's phone test
+# of 0.7.0 (26 Nov 2026). Created By Shane BlackbuRn
+name: Widget check
+
+on:
+  push:
+    branches: ["repro/widget-*", "claude/android-*"]
+
+permissions:
+  contents: write          # only to publish the films' frames to the widget-shots branch
+
+jobs:
+  widget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [34, 31]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build the APK
+        run: ./gradlew --no-daemon assembleRelease
+      - name: The last good release (0.6.2) and tools
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          gh release download v0.6.2 -R "$GITHUB_REPOSITORY" -p "rbsb-weather-android_0.6.2.apk" -D base
+          ls -la base
+          sudo apt-get install -y -qq ffmpeg >/dev/null
+          python3 -m pip install --quiet pillow || pip install --quiet --break-system-packages pillow
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Widget and playback on Android API ${{ matrix.api }}
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 3072M
+          heap-size: 256M
+          disable-animations: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: bash scripts/emulator/widget.sh base/rbsb-weather-android_0.6.2.apk "$(ls app/build/outputs/apk/release/*.apk | head -1)" widget-out
+      - name: Publish the frames to the widget-shots-API branch
+        if: always()
+        run: |
+          mkdir -p shots && cp widget-out/*.png shots/ 2>/dev/null; for d in widget-out/*-frames; do [ -d "$d" ] && mkdir -p "shots/$(basename $d)" && ls "$d" | head -80 | while read f; do cp "$d/$f" "shots/$(basename $d)/"; done; done
+          cd shots && [ -n "$(ls)" ] || exit 0
+          git init -q -b widget-shots-api${{ matrix.api }} && git add -A
+          git -c user.name="RBSB-Weather CI" -c user.email="ci@users.noreply.github.com" commit -q -m "Widget check: ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" widget-shots-api${{ matrix.api }}
