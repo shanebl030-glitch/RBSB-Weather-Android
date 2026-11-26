@@ -32,6 +32,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
@@ -107,6 +108,13 @@ fun SkyCard(
     }
     LaunchedEffect(fc, minute) { updateConditions(true) }
 
+    // The frame loop below runs for as long as the card is shown, so it must read the forecast's
+    // playback range and the conditions update as they are now, not as they were when it started.
+    // (Before 0.7.1 it kept those of its start: when the card appeared before the forecast had
+    // loaded, as it does for a new 📍 My location, the range was 0, so Play stopped at once and
+    // the sky flashed to the no-forecast daytime sky: the Moon vanished and came back.)
+    val currentMaxS by rememberUpdatedState(maxS)
+    val currentUpdate by rememberUpdatedState<(Boolean) -> Unit>({ force -> updateConditions(force) })
     LaunchedEffect(animate, playing) {
         var last = withFrameNanos { it }
         while (true) {
@@ -114,10 +122,10 @@ fun SkyCard(
                 val dt = ((now - last) / 1e9).coerceIn(0.0, 0.25)
                 last = now
                 if (playing) {
-                    val (nxt, end) = playTick(offset, dt, maxS)
+                    val (nxt, end) = playTick(offset, dt, currentMaxS)
                     offset = nxt
                     if (end) playing = false
-                    updateConditions(false)
+                    currentUpdate(false)
                 }
                 if (animate) engine.advance(dt)
                 val m = System.currentTimeMillis() / 60_000

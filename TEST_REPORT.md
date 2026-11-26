@@ -21,6 +21,7 @@ Created By Shane BlackbuRn
     - the widget's words and the temperature icon are drawn on the main thread only, and the words really are on the frames;
     - no other code draws text into pictures;
     - a busy main thread makes the widget keep its picture, not crash.
+  - `ScreensTest`: pressing Play plays (the hour moves on every half second, Pause shows), also when the sky appeared before its forecast loaded. The second case fails on the old code: the playback stays at "Now".
   - `HereJitterTest`: ±2 km wobble doesn't move My location; a 3 km move does; a precise fix moves after 1 km.
   - `SevenTest`: the Moon picture is made in the background, with the last real one shown meanwhile, never nothing.
 - **Widget check** (new workflow, Android 14 and 12 emulators, 0.6.2 release against the new build):

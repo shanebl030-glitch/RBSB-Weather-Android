@@ -417,6 +417,10 @@ Report: docs/AUDIT_REPORT_0.7.0.md. Release candidate: 0.7.0 from commit fc4d666
 - **Widget tap closing the app:** a native crash in Android's text drawing when two threads draw text into pictures at once. Caught on the emulator with the 0.7.0 candidate (main thread drawing the temperature icon, widget thread drawing its frames) and, once, with 0.6.2. Now no text is drawn into a picture off the main thread.
 - **Widget flicker:** 0.7.0 redrew the widget several times within seconds (each redraw restarts its animation), and an approximate position's wobble moved My location. Redraws are now merged and skipped when nothing changed, and My location ignores wobble within the position's uncertainty. The emulator's launcher barely animates widgets, so this one couldn't be seen there; it's covered by tests.
 
+**Later the same day:**
+- The emulator's films of the playback turned out to show the sky still at "Now". Logging in a test build showed why: Play was pressed, then stopped within the same frame, because the sky's frame loop still had the playback range of 0 from before the forecast loaded. Each press also flashed the sky to the no-forecast daytime sky. This is a second cause of the Moon flicker, fixed, with a test that fails on the old code.
+- The stability audit of the first fix caught an ANR on Android 15: a new cloud being made on the main thread. Fixed: nothing is made on the main thread but the very first cloud. It also caught a rare ANR from 0.4 (the warnings check holding a lock during a download). That one is recorded but not changed, since Shane asked for no unrelated changes.
+
 **Not changed:** the worldwide naming, the 0.7.0 audit fixes, anything else. Nothing merged, tagged or released; PR #7 stays open.
 
 Created By Shane BlackbuRn
