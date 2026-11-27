@@ -28,17 +28,21 @@ open; has "Auckland" && echo "BEFORE: Auckland shown" || echo "BEFORE: Auckland 
 signer
 
 echo "== 2. 0.7.2 signed with the NEW key, rotated from the test key, installed over it"
-R=$(adb install -r "$ROT" 2>&1 | tail -1); echo "ROTATED UPDATE: $R"
+R=$(adb install -r "$ROT" 2>&1 | grep -E "Success|Fail|Error|INSTALL" | tail -1); echo "ROTATED UPDATE: $R"
 open; has "Auckland" && echo "AFTER: Auckland still there (data kept)" || echo "AFTER: Auckland gone"
 signer
 adb exec-out screencap -p > "$OUT/after-rotation.png"
 
 echo "== 3. a later build signed only with the public TEST key (what an attacker could make)"
-R=$(adb install -r "$BAD" 2>&1 | tail -1); echo "TEST-KEY UPDATE: $R"
+R=$(adb install -r "$BAD" 2>&1 | grep -E "Success|Fail|Error|INSTALL" | tail -1); echo "TEST-KEY UPDATE: $R"
 
 echo "== 4. a later release signed with the new key (the normal next release)"
-R=$(adb install -r "$NEXT" 2>&1 | tail -1); echo "NEXT RELEASE: $R"
+R=$(adb install -r "$NEXT" 2>&1 | grep -E "Success|Fail|Error|INSTALL" | tail -1); echo "NEXT RELEASE: $R"
 open; has "Auckland" && echo "NEXT: Auckland still there" || echo "NEXT: Auckland gone"
+
+echo "== 4b. the test-key build again, now that the new key's release is installed"
+R=$(adb install -r "$BAD" 2>&1 | grep -E "Success|Fail|Error|INSTALL" | tail -1); echo "TEST-KEY UPDATE AFTER NEXT: $R"
+signer
 
 echo "== 5. a fresh install of the rotated 0.7.2 (a new user)"
 adb uninstall $PKG >/dev/null

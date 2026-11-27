@@ -29,7 +29,7 @@ jobs:
           AS=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1); echo "$AS"
           keytool -genkeypair -keystore new.jks -storepass newpass123 -keypass newpass123 -alias newkey -keyalg RSA -keysize 4096 -validity 10000 -dname "CN=throwaway test" -noprompt
           "$AS" rotate --out lineage.bin \
-            --old-signer --ks keystore/rbsb-test.keystore --ks-pass pass:rbsbtest --ks-key-alias rbsbtest --set-installed-data false --set-rollback false \
+            --old-signer --ks keystore/rbsb-test.keystore --ks-pass pass:rbsbtest --ks-key-alias rbsbtest --set-installed-data true --set-rollback false \
             --new-signer --ks new.jks --ks-pass pass:newpass123 --ks-key-alias newkey
           "$AS" lineage --in lineage.bin --print-certs -v
           for v in v072 v15; do
