@@ -22,14 +22,27 @@ Android only installs an update signed by the same key as the installed app, or 
   - "permission". The app has one signature-level permission, added by AndroidX for its own internal broadcasts. Without this capability, Android refused the update on the emulator (`INSTALL_FAILED_DUPLICATE_PERMISSION`).
   - Rollback, shared user and auth are switched off for it.
 
-**Tested on emulators** with a throwaway release key and the Release workflow's exact signing commands (the "Key rotation check" on the `repro/key-rotation` branch). On Android 10, 14 and 15:
-1. 0.6.2 from GitHub was installed, with a place added.
-2. 0.7.2, signed this way, installed over it: "Success". On Android 10 and 15 the place was still there. On Android 14 the test couldn't add the place to begin with (its search didn't load), so the data wasn't checked there.
-3. A later build signed only with the test key was refused: `INSTALL_FAILED_UPDATE_INCOMPATIBLE: signatures do not match`.
-4. A later release signed with the release key installed: "Success". The test-key build was still refused after it.
-5. A fresh install of 0.7.2 works.
+**Tested on emulators** with a throwaway release key and the Release workflow's exact signing commands (the "Key rotation check" on the `repro/key-rotation` branch), separately on Android 10, 11, 12, 13, 14 and 15:
+1. **Install 0.6.2 from GitHub, with a place added.**
+2. **0.7.2, signed this way, installed over it:** "Success", and the place was still there on every version.
+3. **Updates an attacker could make, all refused** with `INSTALL_FAILED_UPDATE_INCOMPATIBLE: signatures do not match`:
+   - signed only with the public test key;
+   - signed with another key;
+   - signed with the attacker's own hand-over from the test key, with every capability switched on.
+4. **A later release signed with the release key** installed: "Success". The test-key build was still refused after it.
+5. **A fresh install of 0.7.2** works.
+
+**Which signer each version uses:** the release is signed with `--rotation-min-sdk-version 28`, so the v3 block holds the release key for Android 9 and newer, and there's no v3.1 block. The app needs Android 10, so there are no v1 or v2 signatures either. `apksigner verify` for each version from 29 to 35 (Android 10 to 15, including 12L) shows only the v3 signature, made by the release key. **No version relies on the test key.**
+
+**The one permission the hand-over keeps for the test key:**
+- **Name and level:** `io.github.shanebl030glitch.rbsbweather.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, `protectionLevel="signature"`.
+- **Where it comes from:** AndroidX Core declares it in every app (targetSdk 33+). It's only used by `ContextCompat.registerReceiver(…, RECEIVER_NOT_EXPORTED)` on Android 12 and older.
+- **Unused in RBSB-Weather:** that call has no callers in the app (checked in the APK's code), and no component is protected by this permission.
+- **So a test-key app gains nothing from it.** If future code uses `ContextCompat.registerReceiver`, see "Later" below.
 
 **The one case needing a reinstall:** a phone with a **test build from the `test-builds` branch made after 0.7.2** (test key only) can't take a release over it, and a phone with a release can't take those test builds. From now on, test builds are for emulators; release candidates come from the Release workflow as drafts.
+
+**Later (optional):** once everyone has 0.7.2, a later release can switch the test key's "permission" capability off too (`apksigner lineage --set-permission false`). It must be tested on emulators first.
 
 ## Making the release key (Shane, once, on your own computer)
 
