@@ -465,7 +465,7 @@ class AlertClient(
     }
 
     private fun match(parsed: List<Pair<Alert, List<Area>>>, locs: List<Place>): Map<String, List<Alert>> =
-        locs.associate { p -> p.key to parsed.filter { (_, areas) -> covers(areas, p.latitude, p.longitude) == true }.map { it.first } }
+        locs.associate { p -> p.alertKey to parsed.filter { (_, areas) -> covers(areas, p.latitude, p.longitude) == true }.map { it.first } }
 
     private fun metservice(locs: List<Place>) =
         match(capFeed(metserviceUrl, "MetService", colourParam = "ColourCode", trustSeverity = false), locs)
@@ -491,7 +491,7 @@ class AlertClient(
         val out = mutableMapOf<String, List<Alert>>()
         for (p in locs) {
             val url = "$nwsUrl?point=" + String.format(Locale.US, "%.4f,%.4f", p.latitude, p.longitude)
-            try { out[p.key] = parseNws(JSONObject(String(get(url, "application/geo+json")))) }
+            try { out[p.alertKey] = parseNws(JSONObject(String(get(url, "application/geo+json")))) }
             catch (e: Exception) { errors["nws"] = (e as? AlertException)?.message ?: "the reply couldn't be read" }
         }
         return out
@@ -501,7 +501,7 @@ class AlertClient(
         val out = mutableMapOf<String, List<Alert>>()
         for (p in locs) {
             val url = "$metnoUrl?" + String.format(Locale.US, "lat=%.4f&lon=%.4f&lang=en", p.latitude, p.longitude)
-            try { out[p.key] = parseMetno(JSONObject(String(get(url, "application/json"))), p.latitude, p.longitude) }
+            try { out[p.alertKey] = parseMetno(JSONObject(String(get(url, "application/json"))), p.latitude, p.longitude) }
             catch (e: Exception) { errors["metno"] = (e as? AlertException)?.message ?: "the reply couldn't be read" }
         }
         return out

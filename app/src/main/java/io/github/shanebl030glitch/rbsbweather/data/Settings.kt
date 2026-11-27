@@ -24,7 +24,26 @@ data class Settings(
     val earthClouds: Boolean = true,                      // Live clouds on the Earth map and globe
     val updateCheck: Boolean = true,                      // check GitHub once a day for a newer version (0.6)
     val tempNotification: Boolean = false,                // the temperature in the status bar (0.6; the desktop's tray icon)
+    val followLocation: Boolean = false,                  // 0.7: a 📍 My location place that follows the phone
+    val widgetHere: Boolean = true,                       // 0.7: the widgets (and status bar) show 📍 My location
 ) {
+    /** The phone's own location, when "Use my location" is on and it has been found. */
+    fun here(): Place? = places.firstOrNull { it.current }
+
+    /** Put (or move) 📍 My location: it stays where it is in the list (first when new) and keeps being selected. */
+    fun withHere(p: Place): Settings {
+        val h = p.copy(current = true)
+        val i = places.indexOfFirst { it.current }
+        val l = places.toMutableList()
+        if (i >= 0) l[i] = h else l.add(0, h)
+        return copy(places = l, selected = selected ?: h.key)
+    }
+
+    fun withoutHere(): Settings = places.firstOrNull { it.current }?.let { withoutPlace(it.key) } ?: this
+
+    /** The place the widgets and the status-bar temperature show. */
+    fun widgetPlace(): Place? = (if (followLocation && widgetHere) here() else null) ?: selectedPlace()
+
     fun option(provider: String, name: String): String? = providerOptions["$provider.$name"]?.takeIf { it.isNotBlank() }
 
     fun withOption(provider: String, name: String, value: String?): Settings =
@@ -70,6 +89,8 @@ data class Settings(
         .put("earth_clouds", earthClouds)
         .put("update_check", updateCheck)
         .put("temp_notification", tempNotification)
+        .put("follow_location", followLocation)
+        .put("widget_here", widgetHere)
 
     companion object {
         fun fromJson(text: String?): Settings {
@@ -103,7 +124,9 @@ data class Settings(
                 AlertSettings.fromJson(o.optJSONObject("alerts")), QuakeSettings.fromJson(o.optJSONObject("quakes")),
                 if (o.opt("earth_clouds") is Boolean) o.getBoolean("earth_clouds") else true,
                 if (o.opt("update_check") is Boolean) o.getBoolean("update_check") else true,
-                if (o.opt("temp_notification") is Boolean) o.getBoolean("temp_notification") else false)
+                if (o.opt("temp_notification") is Boolean) o.getBoolean("temp_notification") else false,
+                if (o.opt("follow_location") is Boolean) o.getBoolean("follow_location") else false,
+                if (o.opt("widget_here") is Boolean) o.getBoolean("widget_here") else true)
         }
     }
 }

@@ -4,13 +4,95 @@ Created By Shane BlackbuRn
 
 | Item | Result |
 |---|---|
-| Version | 0.6.2 (test build) |
-| Date | 2026-11-22 |
+| Version | 0.7.2 (release candidate, not released) |
+| Date | 2026-11-27 |
 | Where | GitHub Actions: Ubuntu 26.04 runner, JDK 17 (Temurin), Gradle 8.14.3, Android Gradle Plugin 8.10.1, Kotlin 2.1.21, Compose BOM 2025.05.01, compile/target SDK 35, min SDK 29 |
 | Command | `./gradlew testDebugUnitTest`, then `./gradlew assembleRelease` |
-| Tests | 180+ run, all passed on GitHub Actions (see the CI run for this commit), plus the emulator check (run 45069457909): every step passed, no crash |
+| Tests | 224 run, 224 passed (GitHub Actions, commit 562c992). Final audit: docs/AUDIT_REPORT_0.7.2.md |
+| Earlier | 180+ run, all passed on GitHub Actions (see the CI run for this commit), plus the emulator check (run 45069457909): every step passed, no crash |
 
 ## What's tested
+
+**0.7.2: the final audit** (details and every result in docs/AUDIT_REPORT_0.7.2.md):
+- **New tests:**
+  - `SlowNetworkTest`: the screen stays responsive while the warnings or quake download hangs; this fails on the old code, where the screen waited 2 to 4 minutes. Also: timed-out downloads, two checks at once, and real hanging, trickling and refused connections.
+  - `WidgetStabilityTest`: a widget update is reported done before a hanging download.
+- **Final run (562c992):**
+  - widget check on Android 14 and 12: every tap kept the app open, and 0 of 30 cold starts crashed;
+  - emulator walk-through: everything worked, and Auckland showed 17°C, the same as Open-Meteo;
+  - stability audit (walk-through, 12,500 random events and the audit scenarios) passed on Android 10, 12 and 14, the 5" phone and the tablet. Android 15: see the report.
+
+
+**0.7.1: Shane's phone test of 0.7.0** (widget flicker, the app closing after a widget tap, the Moon flickering in playback):
+- **New unit tests:**
+  - `PlaybackFlickerTest`: the 24-hour playback, 720 frames: the Moon is never the plain stand-in, and clouds never go missing or pop in.
+  - `WidgetStabilityTest`:
+    - a burst of 10 widget requests gives at most one redraw, and an unchanged widget isn't redrawn;
+    - the widget's words and the temperature icon are drawn on the main thread only, and the words really are on the frames;
+    - no other code draws text into pictures;
+    - a busy main thread makes the widget keep its picture, not crash.
+  - `ScreensTest`: pressing Play plays (the hour moves on every half second, Pause shows), also when the sky appeared before its forecast loaded. The second case fails on the old code: the playback stays at "Now".
+  - `HereJitterTest`: ±2 km wobble doesn't move My location; a 3 km move does; a precise fix moves after 1 km.
+  - `SevenTest`: the Moon picture is made in the background, with the last real one shown meanwhile, never nothing.
+- **Widget check** (new workflow, Android 14 and 12 emulators, 0.6.2 release against the new build):
+  - the widget placed through the launcher;
+  - filmed (flashes counted);
+  - tapped in every state, real taps and its own intent, checked open after 2, 5 and 10 s;
+  - 15 cold starts by its tap per version with the status-bar temperature on, with native crash backtraces;
+  - the 24-hour playback filmed and the Moon's brightness tracked.
+- **Results** (commit cfb94cb, and the same in two earlier runs): every tap kept the app open, and 0 of 15 cold starts crashed on either Android version. 0.6.2 crashed in 1 of 15 on Android 12 (and once on Android 14 in an earlier run), with the same native text-drawing crash. There were no flashes in the widget's film. Pressing Play now plays on the emulator; 0.6.2 stops at once.
+- **Stability audit** (lint, walk-through, 12,500 random events and the restart/offline/permission/memory audit on Android 10, 12, 14, 15, a small phone and a tablet):
+  - commit ce54d01 (everything except the last playback fix): every job passed;
+  - commit cfb94cb (adds only the playback fix, a few lines in the sky card): Android 10, 12 and the tablet passed; the random testing on Android 14 and 15 found no crash and no ANR. The rest didn't finish because GitHub's emulators stopped responding or ran out of time (the small phone twice, Android 14's audit after its network didn't come back, Android 15 by time). One run on Android 12 caught a "not responding" with the app's main thread waiting for Android's graphics thread, while the emulator logged graphics errors ("bad color buffer handle"); its rerun passed.
+- **Emulator walk-through** (Android 14): every screen with no crash; Shane's three suburbs and the 8 world places named as before.
+
+
+**Stability audit (0.7.0, for a stable release):**
+
+Shane asked for "a complete crash and bug audit for a stable release". These run in the new `Stability audit` workflow on every push:
+- **Android lint:** release build, all checks; errors fail the build. Result: 0 errors. 39 warnings remain, none of them crash risks: newer library versions available, `SDK_INT` checks that are always true on Android 10+, Kotlin style suggestions, small text in the widget.
+- **On emulators of Android 10, 12, 14 and 15** (Pixel 6, x86_64, Google APIs):
+  - the full walk-through, as in the emulator check;
+  - then 5 rounds of 2,500 random events each: taps, swipes, rotation, back and menu. Each round runs with two places, My location, warnings and the status-bar temperature on.
+  - Android's crash and ANR logs are checked after each round, and an ANR's main-thread trace is printed.
+- **Code review** of crash paths:
+  - null assertions (`!!`, 23 checked);
+  - bitmap decoding and out-of-memory handling;
+  - main-thread work in drawing;
+  - threads and executors;
+  - pending intents (all immutable);
+  - exported components (only the launcher activity);
+  - network timeouts (15 s connect, 20 s read, size-limited);
+  - settings and cache files (atomic writes; a damaged settings file reads as the defaults instead of crashing);
+  - duplicate keys in lists (removed when settings are read).
+- **The suburb, with Shane's examples** (all four Android versions):
+  - the emulator was moved to Waiuku, East Tāmaki and Clarks Beach;
+  - My location showed "Waiuku, Franklin, New Zealand", "East Tāmaki, Auckland, New Zealand" and "Clarks Beach, Franklin, New Zealand";
+  - for Waiuku and Clarks Beach the phone's geocoder gave only the wider area, and OpenStreetMap gave the town (the app's log says which was used).
+- **Results and fixes:** see the 0.7.0 CHANGELOG. In short:
+  - ANRs on Android 12 and 15 (Moon picture on the main thread), fixed;
+  - Android 10 had no position for My location, fixed;
+  - GPS position on Android 12, fixed;
+  - out-of-memory with the Moon picture, guarded;
+  - 4 lint errors, fixed.
+- **Not covered:** real phones from other makers (Samsung, Xiaomi and so on change Android's battery and location rules), and Play Protect.
+
+**New in 0.7 (📍 My location):**
+- **When it moves** (HereTest): a first fix makes My location, rounded to 3 decimals and named; under 1 km changes nothing and doesn't ask for a name; 1.5 km, another city and another country move it; NaN, out-of-range, older than 30 minutes or vaguer than 5 km fixes are ignored; without a name it keeps the old name nearby, else "My location".
+- **Down to the suburb** (after Shane's phone showed only the city):
+  - the phone's suburb is used as is;
+  - a city or region from the phone is replaced by OpenStreetMap's suburb, keeping the phone's spelling of the country;
+  - a city name is replaced by the suburb later, without moving, and the level is saved;
+  - names are remembered for 6 hours (30 minutes when none was found).
+- **Naming from OpenStreetMap** (after Shane's phone showed only "My location"): suburb, town, city, region and country read from Nominatim's reply; only the rounded position and the phone's language are sent; errors, the sea, no internet and junk give no name. An unnamed My location is named later without moving, then small moves change nothing again. The emulator check also asks Nominatim for Auckland, Wellington and Sydney to confirm its live replies have the fields used.
+- **Settings:** saved and read back; first in the list when new, keeps its spot after that; the widget's place with each switch; settings from before 0.7 still read.
+- **Saved forecast:** Auckland's saved weather isn't shown after My location moves to Wellington; its file is kept while it's in use.
+- **The app** (SevenTest): off by default and never looks; on, it adds My location and fetches its weather; a few hundred metres changes nothing; driving to Wellington renames it, fetches Wellington's weather, says "📍 Now at …" and updates the widget; no fix explains why and keeps the last place; turning it off or the bin removes it and its saved forecast; the widget shows 📍 My location or the place on screen.
+- **Choosing a position:** the newest fix from any of Android's providers wins (so a cached position from before you moved isn't used), then the most accurate; if the newest is over a minute old (an hour in the background check, to spare the battery), GPS is asked too. The first emulator runs showed why: the fused position stayed at Auckland after the emulator moved to Wellington.
+- **The background check:** without "Allow all the time" it never looks; with it, it moves My location and gets the weather; unchanged, it does nothing; with the app open it hands the place to the app instead; turned off, it never looks.
+- **The Settings section** (Robolectric, with Android's location permission granted): the switch, the status ("Now: …"), the approximate-location note, Update my location now, Widgets show my location, the "while the app is closed" text with and without background access, and turning it off. My places shows 📍 and the bin asks "Stop using your location?".
+- **Emulator check:** location permissions granted, the emulator's position set to Auckland and then Wellington (`adb emu geo fix`); the step passes only if My location changes.
+- **Not testable here:** a real phone travelling, Android's battery limits on the background check, and the geocoder names on your phone (the test emulator may not have one).
 
 **0.6.2:**
 - The same code and tests as 0.6.0. 0.6.1 had removed the in-app installer, and Shane chose to keep it and explain the Play Protect warning instead.

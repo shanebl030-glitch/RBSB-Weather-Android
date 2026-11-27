@@ -314,7 +314,7 @@ private fun WindGlobe(fld: WindField?, layer: String, ms: List<Marker>, selected
         snapshotFlow { Triple(cLat to cLon, zoom, dragging) }.conflate().collect { (c, z, moving) ->
             val full = (min(box.width, box.height) * 0.86f * z).roundToInt().coerceIn(64, GlobeRenderer.MAX_SIZE)
             val px = if (moving) (full * 0.5f).roundToInt() else full
-            val made = withContext(Dispatchers.Default) { try { r.render(px, c.first, c.second).asImageBitmap() } catch (e: Throwable) { null } }
+            val made = withContext(Dispatchers.Default) { try { r.renderReused(px, c.first, c.second).asImageBitmap() } catch (e: Throwable) { null } }
             if (made != null) { globe = made; frames++ }
         }
     }

@@ -39,11 +39,13 @@ class AppGraph private constructor(context: Context) {
     /** Set by the open app so the chain follows changes at once; otherwise read from storage. */
     @Volatile var liveSettings: (() -> Settings)? = null
     fun settings(): Settings = liveSettings?.invoke() ?: Settings.fromJson(store.load())
+    /** Set by the open app (0.7): the background check hands a new 📍 My location to it instead of writing the settings itself. */
+    @Volatile var onHere: ((io.github.shanebl030glitch.rbsbweather.data.Place) -> Unit)? = null
     val providers = ProviderManager(Http.default, PrefsKeys(context), ::settings)
     val repo = WeatherRepository({ providers.chain() }, ForecastCache(File(context.filesDir, "forecasts")),
         { settings().recovery })
     /** Warnings and earthquakes, shared by the app and the background check. */
-    val watch = Watch(File(context.filesDir, "watch"), AlertClient(Http.bytes), QuakeClient(Http.bytes))
+    val watch = Watch(File(context.filesDir, "watch"), AlertClient(Http.checks), QuakeClient(Http.checks))
     /** Update checks (0.6): GitHub's newest release, and when it was last asked. */
     var updateClient = io.github.shanebl030glitch.rbsbweather.data.UpdateClient()
     val updateStore = io.github.shanebl030glitch.rbsbweather.data.UpdateStore(File(context.filesDir, "updates"))

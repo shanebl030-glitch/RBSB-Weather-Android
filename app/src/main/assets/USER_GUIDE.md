@@ -15,6 +15,17 @@ The tabs along the bottom: **Forecast**, **Moon**, **Earth**, **Wind** and **War
 * Swipe left and right to move between your places. The dots at the top show which one you're on.
 * Menu (⋮) → **My places** lists them. Tap one to show it, use the arrows to change the order, or the bin to remove it.
 
+## 📍 My location
+
+* Menu (⋮) → **Settings** → **📍 Use my location**. Android asks for location access: **approximate** is enough.
+* **My location** is added to your places, shown with 📍. When you travel to another suburb, town or country (more than 1 km), it moves and gets that place's weather.
+* **Its name** is the most specific local area there is, wherever you are in the world: the suburb, neighbourhood, quarter or district (whatever the country calls it), for example "East Tāmaki, Auckland", "Kreuzberg, Berlin" or "Trastevere, Rome". Where nothing smaller is named, it's the village, town or city ("Waiuku", "Marfa, Presidio County, Texas"). Your phone's own maps are asked first, and OpenStreetMap when the phone doesn't know the local area. If neither can name it (no internet, say), it shows **My location** with its coordinates until a name is found.
+* It updates when you open the app. **Update my location now** updates it straight away.
+* **Widgets show my location** (on by default): the home-screen widgets and the status-bar temperature show My location instead of the place you last looked at.
+* **While the app is closed:** for the widget to follow you without opening the app, tap **Allow all the time…** and choose **Allow all the time** for Location. Then about every 15 minutes (when Android allows; it may wait longer to save battery) My location and the widget follow you.
+* **Privacy:** your location stays on your phone. Only the rounded position (about 100 m) is sent, to your weather providers, the same as for any saved place, and to OpenStreetMap only when your phone can't name the spot.
+* To stop, turn **Use my location** off, or remove 📍 My location in My places.
+
 ## Reading the screen
 
 * **The sky** is the same animated sky as RBSB-Weather on the desktop. Its colour follows the local time there, including dawn and dusk.
@@ -123,7 +134,7 @@ The **Wind** tab shows the world's weather on a globe, from NOAA's Global Foreca
 * The widget shows the same animated sky as the app, with the place and the provider under it, **↻** and the time of the last update (amber, with how long ago, when the weather is getting old), the temperature, conditions, and high and low. When there's room it also shows the mini forecast.
 * **Resize it** (touch and hold it, then drag the edges): bigger widgets show more forecast days.
 * **About the animation:** Android doesn't let widgets run live animation the way a desktop can. RBSB-Weather draws a few seconds of the sky and the widget loops them. It's redrawn every time the weather updates, so the Sun and Moon move on. If your phone's launcher won't take that many pictures, the widget shows a still picture instead. Turning off **Animated sky** in Settings also makes the widget still.
-* The widgets show the place you last looked at in the app. They update when the app does, and by themselves about every 30 minutes when the weather is older than your refresh setting. Tap a widget to open the app.
+* The widgets show the place you last looked at in the app, or 📍 My location if you use it (see **📍 My location**). They update when the app does, and by themselves about every 30 minutes when the weather is older than your refresh setting. Tap a widget to open the app.
 
 ## Settings
 

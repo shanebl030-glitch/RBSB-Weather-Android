@@ -32,6 +32,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
@@ -83,7 +84,7 @@ fun SkyCard(
     onAlert: () -> Unit = {},
 ) {
     val ctx = LocalContext.current
-    remember { try { MoonRender.init(ctx.applicationContext.assets) } catch (e: Exception) { } }
+    remember { try { MoonRender.init(ctx.applicationContext.assets) } catch (e: Exception) { }; true }
     val density = LocalDensity.current.density
     val tm = rememberTextMeasurer()
     val engine = remember(place.key) { SceneEngine(seed = 7) }
@@ -107,6 +108,13 @@ fun SkyCard(
     }
     LaunchedEffect(fc, minute) { updateConditions(true) }
 
+    // The frame loop below runs for as long as the card is shown, so it must read the forecast's
+    // playback range and the conditions update as they are now, not as they were when it started.
+    // (Before 0.7.1 it kept those of its start: when the card appeared before the forecast had
+    // loaded, as it does for a new 📍 My location, the range was 0, so Play stopped at once and
+    // the sky flashed to the no-forecast daytime sky: the Moon vanished and came back.)
+    val currentMaxS by rememberUpdatedState(maxS)
+    val currentUpdate by rememberUpdatedState<(Boolean) -> Unit>({ force -> updateConditions(force) })
     LaunchedEffect(animate, playing) {
         var last = withFrameNanos { it }
         while (true) {
@@ -114,10 +122,10 @@ fun SkyCard(
                 val dt = ((now - last) / 1e9).coerceIn(0.0, 0.25)
                 last = now
                 if (playing) {
-                    val (nxt, end) = playTick(offset, dt, maxS)
+                    val (nxt, end) = playTick(offset, dt, currentMaxS)
                     offset = nxt
                     if (end) playing = false
-                    updateConditions(false)
+                    currentUpdate(false)
                 }
                 if (animate) engine.advance(dt)
                 val m = System.currentTimeMillis() / 60_000
@@ -158,7 +166,7 @@ fun SkyCard(
                     WarningBanner(alert, moreAlerts, io.github.shanebl030glitch.rbsbweather.data.Sun.zoneFor(place, fc?.utcOffsetSeconds), units.clock, onAlert,
                         Modifier.padding(bottom = 6.dp).avoid("banner"))
                 }
-                Text(place.displayName, style = white.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold), maxLines = 2,
+                Text((if (place.current) "📍 " else "") + place.displayName, style = white.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold), maxLines = 2,
                     modifier = Modifier.widthIn(max = 260.dp).avoid("place"))
                 val c = fc?.current
                 val temp = if (hp != null) hp.temperature else c?.temperature

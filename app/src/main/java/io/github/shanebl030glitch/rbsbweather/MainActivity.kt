@@ -20,6 +20,8 @@ import android.Manifest
 import android.content.Intent
 import android.os.Build
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import io.github.shanebl030glitch.rbsbweather.background.LocationFinder
 
 /** Keeps the app's state across screen rotation and while the app is in the background. */
 class AppViewModel(app: Application) : AndroidViewModel(app) {
@@ -27,15 +29,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val model = AppModel(graph.store, graph.repo, OpenMeteo(), viewModelScope, Dispatchers.IO,
         providers = graph.providers, onForecast = { Widgets.updateAll(app) }, watch = graph.watch,
         notify = { notices, s -> Notifier.post(app, notices, s.alerts.redAlarm); Widgets.updateAll(app) },
-        onTempNotification = { io.github.shanebl030glitch.rbsbweather.background.TempNotification.update(app) })
+        onTempNotification = { Widgets.updateTempNotification(app) },     // built on the widget thread; its text drawn by MainThreadText
+        onWidgetPlace = { Widgets.updateAll(app) })
 
     init {
         graph.liveSettings = { model.settingsNow }
+        graph.onHere = { p -> viewModelScope.launch { model.setHere(p) } }
         graph.repo.cleanUp(model.state.value.settings.places)
     }
 
     override fun onCleared() {
         graph.liveSettings = null
+        graph.onHere = null
         super.onCleared()
     }
 }
@@ -87,6 +92,17 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         vm.model.refresh()               // coming back to the app: update if it's due
+        locate()
+    }
+
+    /** 📍 My location (0.7): look where the phone is now, if "Use my location" is on and allowed. */
+    fun locate() {
+        val m = vm.model
+        if (!m.settingsNow.followLocation) return
+        if (!LocationFinder.hasPermission(this)) { m.setHereNote("Location access is off for RBSB-Weather. Turn it on in Settings → My location."); return }
+        if (!LocationFinder.locationOn(this)) { m.setHereNote("Your phone's Location is switched off."); return }
+        val src = LocationFinder.androidSource(this)
+        m.locate({ src.current() }, LocationFinder.androidNamer(this))
     }
 
     override fun onStop() {

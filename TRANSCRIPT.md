@@ -334,4 +334,123 @@ Created By Shane BlackbuRn
 
 **Shane (23 Nov):** "buy me a coffee to be $1.47 NZD", not as a new version and not announced. About now shows NZ$1.47 and the PayPal link asks for 1.47 NZD, with a new test for the link. There is no version bump or CHANGELOG entry; it ships with the next release.
 
+## 0.7.0: 📍 My location (25 Nov)
+
+**Shane:** "I'd like to add GPS tracking so if I travel to a different suburb or city or country it updates the widget. This is only for the android not the desktop app."
+
+**What I built** (branch `claude/android-0.7.0`):
+- Settings → **📍 Use my location** adds a special place, 📍 My location, that follows the phone. It moves once you're more than 1 km away and is named by Android's geocoder.
+- **Widgets show my location** makes the widgets and the status-bar temperature show it.
+- It updates when the app opens. With **Allow all the time**, the background check (about every 15 minutes) moves it and refreshes the widget while the app is closed.
+- Android's own location service is used (no Google Play services). Coordinates are rounded to about 100 m. The desktop app is unchanged.
+- The NZ$1.47 coffee change from 23 Nov ships with this version.
+
+**Tested:** see TEST_REPORT.md: new unit, app and screen tests, plus an emulator step that moves the emulator from Auckland to Wellington. A real phone travelling still needs checking by Shane.
+
+**Shane (25 Nov, testing 0.7.0 on his phone):** "It's just saying My Location not the actual suburb name, city or country."
+
+**Cause:** the phone's own place-name lookup (Android's geocoder) gave no name. The test emulator has a working one, so the emulator check didn't show this.
+
+**Fix:**
+- If the phone can't name the spot, OpenStreetMap's Nominatim is asked, with the rounded position only.
+- On Android 13 and newer, the phone's lookup uses the newer method with an 8-second limit.
+- A My location that is still unnamed is named as soon as a name is found, without having to move.
+- The log records where the name came from.
+- The credit is in About; the privacy notes are updated.
+
+**Shane (25 Nov):** "It's not showing the suburb that's a must. Also I need you to do a complete crush and bug audit for a stable release."
+
+**Suburb:**
+- The phone's geocoder named only the city, so OpenStreetMap was never asked.
+- Names now carry how exact they are (suburb, city, region). If the phone doesn't give the suburb, OpenStreetMap is asked, at zoom 17, which includes the suburb.
+- A city name already saved is replaced by the suburb next time the app looks, without having to move.
+
+**Audit:**
+- A new `Stability audit` workflow runs lint and, on Android 10, 12, 14 and 15, the walk-through plus 12,500 random events each.
+- It found:
+  - ANRs from making the Moon picture on the main thread;
+  - My location getting no position on Android 10;
+  - no fresh GPS position on Android 12;
+  - 4 lint errors.
+- All are fixed; see the CHANGELOG and TEST_REPORT.
+- Two things I didn't change, because they're Shane's decision:
+  - **The signing key:** the test signing key is in the public repository, so anyone could sign an APK that installs over RBSB-Weather. A private release key is needed for a stable release. Switching keys means one uninstall and reinstall.
+  - **The version number** for a stable release.
+
+**Shane (25 Nov):** "The images you just posted only show Auckland city and country New Zealand. not the suburb like Waiuku, Auckland or East Tamaki, Auckland or clarks beach auckland etc..."
+
+**My reply:** those pictures were of the "Auckland" place the test adds by searching, not 📍 My location. The emulator check now moves the phone to his three examples. On Android 10, 12, 14 and 15, My location showed Waiuku, East Tāmaki and Clarks Beach. For Waiuku and Clarks Beach, OpenStreetMap supplied the town name because the phone only gave the wider area. The check also screenshots the My location forecast page.
+
+**Shane (25 Nov):** suburb naming "must work worldwide, not just in New Zealand… tested with realistic location data from multiple countries and verified in the actual Android app". He also asked for a full crash and bug audit covering 11 areas, a detailed report, and no merge, tag or release until he has tested the release candidate on his phone.
+
+**Worldwide naming:**
+- OpenStreetMap's local areas are used in Shane's order (suburb, neighbourhood, quarter, city district, district, borough), then village, municipality, and town or city last.
+- Administrative units and the city's own name are skipped.
+- Tested on real replies from 29 places in 21 countries, and in the app on emulators at 8 world cities and Shane's 3 Auckland suburbs, on Android 10, 12, 14 and 15.
+
+**Audit:** lint; walk-through; 65,000+ random events; restart, offline, permission, large-text, dark-mode, memory, frame and background checks on 4 Android versions and 3 screen sizes. Fixed:
+- ANRs from the Moon picture and the cloud images made on the main thread;
+- the globes making a 4 MB picture every frame;
+- out of memory with a small heap;
+- Android 10 and 12 location;
+- warnings from the previous place showing after My location moved;
+- hourly-at-most background GPS;
+- lint errors.
+
+Report: docs/AUDIT_REPORT_0.7.0.md. Release candidate: 0.7.0 from commit fc4d666 (SHA-256 4119fb1d…7d025), not merged, tagged or released.
+
+## 0.7.1 (2026-11-26, test build)
+
+**Shane (26 Nov):** "I've installed and tested 0.7.0 on my actual Android phone and have found several problems… 0.7.0 is not approved for stable release. Please do not merge, tag or publish anything." The desktop widget flickers; tapping the widget opens the app, which then immediately closes; the Moon flickers during the 24-hour playback. He asked for each to be reproduced, its root cause found and fixed properly with regression tests, a comparison with 0.6.2, emulator tests of the widget and animations, and a new APK, keeping the worldwide naming and the audit fixes, with nothing merged or published.
+
+**How it was investigated:**
+- A new `Widget check` workflow (Android 14 and 12 emulators) installs the 0.6.2 release and the new build in turn. For each it:
+  - places the widget on the home screen through the launcher, as a person would;
+  - films it, and measures frame-to-frame change and flashes;
+  - taps it with the app closed, in the background, backed out of and already open (real taps and the widget's own intent), and checks the app is still open 2, 5 and 10 seconds later;
+  - cold-starts the app from the widget's tap 15 times with the status-bar temperature on, and prints any native crash's backtrace and every thread's stack (from Android's tombstone);
+  - films the 24-hour playback and tracks the Moon.
+- Every 0.7.0 change was compared with 0.6.2 for the areas Shane listed: opening and closing, widget, Sun and Moon, playback, background and location updates, memory and image caching, activity lifecycle.
+
+**Found and fixed** (details in the CHANGELOG):
+- **Moon flicker:** caused by a 0.7.0 audit fix that showed no Moon until each new picture was made. Reproduced in a test (plain Moon in 718 of 720 playback frames) and on film. The last real Moon now stays until the next is ready.
+- **Widget tap closing the app:** a native crash in Android's text drawing when two threads draw text into pictures at once. Caught on the emulator with the 0.7.0 candidate (main thread drawing the temperature icon, widget thread drawing its frames) and, once, with 0.6.2. Now no text is drawn into a picture off the main thread.
+- **Widget flicker:** 0.7.0 redrew the widget several times within seconds (each redraw restarts its animation), and an approximate position's wobble moved My location. Redraws are now merged and skipped when nothing changed, and My location ignores wobble within the position's uncertainty. The emulator's launcher barely animates widgets, so this one couldn't be seen there; it's covered by tests.
+
+**Later the same day:**
+- The emulator's films of the playback turned out to show the sky still at "Now". Logging in a test build showed why: Play was pressed, then stopped within the same frame, because the sky's frame loop still had the playback range of 0 from before the forecast loaded. Each press also flashed the sky to the no-forecast daytime sky. This is a second cause of the Moon flicker, fixed, with a test that fails on the old code.
+- The stability audit of the first fix caught an ANR on Android 15: a new cloud being made on the main thread. Fixed: nothing is made on the main thread but the very first cloud. It also caught a rare ANR from 0.4 (the warnings check holding a lock during a download). That one is recorded but not changed, since Shane asked for no unrelated changes.
+
+**Not changed:** the worldwide naming, the 0.7.0 audit fixes, anything else. Nothing merged, tagged or released; PR #7 stays open.
+
+## 0.7.2 (2026-11-27, release candidate)
+
+**Shane (27 Nov, 06:41):** "I'm following the recommendation. I'll install and test 0.7.1 on my actual phone before requesting any further changes." No code changes, no merge, no tag, no release. The warnings-check ANR "must be addressed and tested before we approve a stable release."
+
+**Shane (27 Nov, 06:44):** "I've completed testing 0.7.1 on my actual phone, and it seems quite stable. I'm happy to proceed to the next stage." He asked for four things:
+1. Fix the outstanding ANR, with regression tests for slow connections, timeouts and failed downloads.
+2. A final stability audit of the entire application: crashes, ANRs, memory, performance, battery, animations, widget, location naming, providers, warnings, offline recovery, background, Android versions, permissions and all features.
+3. Regression testing against 0.6.2, 0.7.0 and 0.7.1.
+4. A release candidate APK and a detailed report.
+
+Nothing is to be merged, tagged or published until he approves.
+
+**Done:**
+- **The ANR:** the warnings and earthquake downloads no longer hold the lock the screen reads warnings under. The tests reproduce the freeze on the old code (the screen waited 2 to 4 minutes) and pass on the new (under 200 ms). They cover hanging, timed-out, trickling and refused connections.
+- **Found by the audit:** a widget update could be reported as not responding on a slow connection, because it waited for the weather download. The update is now reported done first. A test covers it.
+- **Final run:**
+  - 224 of 224 tests pass;
+  - lint has 0 errors;
+  - the widget check, walk-through and stability audit results are in docs/AUDIT_REPORT_0.7.2.md;
+  - the 24-hour playback on the emulator plays through the night with the real Moon in every frame.
+- **Release candidate:** 0.7.2 (build 14), from commit 562c992. Nothing is merged, tagged or released.
+
+**Shane (27 Nov, 17:43):** "I've completed testing 0.7.2 on my actual phone, including all the features and fixes, and everything is working great. I'm happy to approve 0.7.2 for the stable release." He asked for:
+- production signing with a key he controls and backs up, never in GitHub, and not the public test key, explaining any uninstall and data loss before proceeding;
+- the final release checks (tested commit, 224 tests, 0 lint errors, APK and signature, checksums, accurate report and notes);
+- PR #7 merged, the tag v0.7.2, and the GitHub release with the APK, SHA256SUMS, audit report and notes;
+- no new features or unrelated changes.
+
+**Signing, without a reinstall:** APK key rotation. The release is signed with Shane's key plus a hand-over signed by the old test key, so it updates 0.6.2 and 0.7.x in place and keeps the data. After it, test-key updates are refused. Tested on emulators with a throwaway key; the first try showed Android refuses the hand-over unless the old key keeps the "permission" capability. The key is made by Shane on his own computer (docs/SIGNING.md), and given to the Release workflow only as encrypted secrets of a `release` environment that needs his approval for each run.
+
 Created By Shane BlackbuRn

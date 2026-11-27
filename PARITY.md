@@ -122,3 +122,9 @@ and where it stands on Android. It's updated with every version.
 | Buy me a coffee (PayPal) | ✅ 0.1 About. |
 | App icon (Shane's artwork) | ✅ 0.5: the round version on Android (desktop 2.5.1 uses the rounded square). |
 | Credits (weather, Earth maps, Moon imagery, wind, warnings, quakes) | ✅ 0.6 |
+
+## Android-only features
+
+| Feature | Android |
+|---|---|
+| 📍 My location: a place that follows the phone (moves after 1 km; named by Android's geocoder); widgets and the status-bar temperature can show it, also while the app is closed with "Allow all the time" | 0.7. Not on the desktop, by Shane's choice ("only for the android not the desktop app"). |

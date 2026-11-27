@@ -1,0 +1,163 @@
+# Builds a release of RBSB-Weather for Android signed with Shane's own release key, and puts it in
+# a DRAFT GitHub release for him to check and publish. Run by hand only (Actions → Release → Run
+# workflow), from main. See docs/SIGNING.md.
+#
+# Key rotation: versions up to 0.7.1 were signed with the public test key. The release is signed
+# with Shane's key plus a "lineage" saying the test key handed over to it (APK Signature Scheme
+# v3), so phones with an earlier version update in place and keep their data. Once a phone has a
+# release, Android refuses anything signed only with the test key. The test key keeps only what
+# the hand-over needs: installed data, and permission (the app's own signature permission, which
+# Android otherwise refuses to move to the new key: INSTALL_FAILED_DUPLICATE_PERMISSION on the
+# emulator); rollback, shared user and auth are off.
+#
+# Shane's key never touches the repository. It lives in the "release" environment's encrypted
+# secrets, which only this workflow can use, on main, after Shane approves the run:
+#   RBSB_RELEASE_KEYSTORE_B64     the keystore file, base64-encoded
+#   RBSB_RELEASE_STORE_PASSWORD   its password
+#   RBSB_RELEASE_KEY_ALIAS        the key's alias
+#   RBSB_RELEASE_KEY_PASSWORD     the key's password (for PKCS12 keystores, the same as above)
+# and one variable (not secret) that the APK's certificate must match:
+#   RBSB_RELEASE_CERT_SHA256      the certificate's SHA-256 fingerprint (keytool -list -v)
+# The keystore is written to the runner's temporary folder only while signing, then deleted.
+#
+# Created By Shane BlackbuRn
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v0.7.2); must match versionName"
+        required: true
+        default: "v0.7.2"
+
+permissions:
+  contents: write          # to create the draft release and upload its files
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: release     # its secrets, and Shane's approval of each run
+    steps:
+      - name: Only from main
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "Releases are built from main only (this is ${GITHUB_REF})."
+          exit 1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Cache Robolectric's Android jars
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/robolectric
+          key: robolectric-4.14.1-sdk34
+
+      - name: Version matches the tag
+        run: |
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          echo "versionName $VERSION, tag ${{ inputs.tag }}, commit $GITHUB_SHA"
+          [ "v$VERSION" = "${{ inputs.tag }}" ] || { echo "The tag doesn't match versionName."; exit 1; }
+          grep -q "const val NAME = \"$VERSION\"" app/src/main/java/io/github/shanebl030glitch/rbsbweather/data/Version.kt || { echo "Version.kt doesn't match."; exit 1; }
+          [ -f "docs/RELEASE_NOTES_${VERSION}.md" ] && [ -f "docs/AUDIT_REPORT_${VERSION}.md" ] || { echo "Release notes or audit report missing."; exit 1; }
+
+      - name: The release key is there
+        env:
+          KS: ${{ secrets.RBSB_RELEASE_KEYSTORE_B64 }}
+          SP: ${{ secrets.RBSB_RELEASE_STORE_PASSWORD }}
+          KA: ${{ secrets.RBSB_RELEASE_KEY_ALIAS }}
+          KP: ${{ secrets.RBSB_RELEASE_KEY_PASSWORD }}
+          FP: ${{ vars.RBSB_RELEASE_CERT_SHA256 }}
+        run: |
+          missing=""
+          [ -n "$KS" ] || missing="$missing RBSB_RELEASE_KEYSTORE_B64"
+          [ -n "$SP" ] || missing="$missing RBSB_RELEASE_STORE_PASSWORD"
+          [ -n "$KA" ] || missing="$missing RBSB_RELEASE_KEY_ALIAS"
+          [ -n "$KP" ] || missing="$missing RBSB_RELEASE_KEY_PASSWORD"
+          [ -n "$FP" ] || missing="$missing RBSB_RELEASE_CERT_SHA256(variable)"
+          [ -z "$missing" ] || { echo "Missing in the 'release' environment:$missing"; exit 1; }
+
+      - name: Tests (the full suite)
+        run: ./gradlew --no-daemon testDebugUnitTest
+      - name: Test totals
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          t = f = e = sk = 0
+          for x in glob.glob("app/build/test-results/testDebugUnitTest/*.xml"):
+              r = ET.parse(x).getroot()
+              t += int(r.get("tests", 0)); f += int(r.get("failures", 0)); e += int(r.get("errors", 0)); sk += int(r.get("skipped", 0))
+          print(f"TEST TOTALS: {t} run, {t - f - e - sk} passed, {f} failed, {e} errors, {sk} skipped")
+          PY
+      - name: Lint (any error stops the release)
+        run: |
+          ./gradlew --no-daemon lintRelease
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET, sys
+          issues = ET.parse("app/build/reports/lint-results-release.xml").getroot().findall("issue")
+          errors = [i for i in issues if i.get("severity") in ("Error", "Fatal")]
+          print(f"LINT: {len(errors)} errors, {len(issues) - len(errors)} warnings")
+          sys.exit(1 if errors else 0)
+          PY
+
+      - name: Build the APK
+        run: ./gradlew --no-daemon assembleRelease
+
+      - name: Sign with the release key, rotated from the test key
+        env:
+          KS: ${{ secrets.RBSB_RELEASE_KEYSTORE_B64 }}
+          SP: ${{ secrets.RBSB_RELEASE_STORE_PASSWORD }}
+          KA: ${{ secrets.RBSB_RELEASE_KEY_ALIAS }}
+          KP: ${{ secrets.RBSB_RELEASE_KEY_PASSWORD }}
+        run: |
+          set -e
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          AS=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          K="$RUNNER_TEMP/release.p12"
+          trap 'rm -f "$K"' EXIT
+          printf '%s' "$KS" | base64 -d > "$K"
+          export SP KP
+          "$AS" rotate --out "$RUNNER_TEMP/lineage.bin" \
+            --old-signer --ks keystore/rbsb-test.keystore --ks-pass pass:rbsbtest --ks-key-alias rbsbtest \
+              --set-installed-data true --set-permission true --set-rollback false --set-shared-uid false --set-auth false \
+            --new-signer --ks "$K" --ks-pass env:SP --ks-key-alias "$KA" --key-pass env:KP
+          mkdir -p out
+          "$AS" sign --ks keystore/rbsb-test.keystore --ks-pass pass:rbsbtest --ks-key-alias rbsbtest \
+            --next-signer --ks "$K" --ks-pass env:SP --ks-key-alias "$KA" --key-pass env:KP \
+            --lineage "$RUNNER_TEMP/lineage.bin" --rotation-min-sdk-version 28 \
+            --out "out/rbsb-weather-android_${VERSION}.apk" app/build/outputs/apk/release/app-release.apk
+          "$AS" lineage --in "$RUNNER_TEMP/lineage.bin" --print-certs -v | grep -E "Signer #|certificate SHA-256|Has (installed|rollback|permission|shared|auth)" || true
+
+      - name: Check the signature, and make the checksums
+        env:
+          FP: ${{ vars.RBSB_RELEASE_CERT_SHA256 }}
+        run: |
+          set -e
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          AS=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          APK="out/rbsb-weather-android_${VERSION}.apk"
+          "$AS" verify --verbose --print-certs --min-sdk-version 29 "$APK" | tee signer.txt
+          norm() { echo "$1" | tr -d ': ' | tr 'A-F' 'a-f'; }
+          GOT=$(grep -m1 -E "^Signer #1 certificate SHA-256 digest|^V3.0 Signer: certificate SHA-256 digest" signer.txt | awk '{print $NF}')
+          TEST=a9618b324c0ed08d0850953843fe7d6ea4aef6353ccaaffc3e6e53ad4a36e87c
+          [ -n "$GOT" ] || { echo "No signer found."; exit 1; }
+          [ "$(norm "$GOT")" != "$TEST" ] || { echo "Signed with the public TEST key: stopped."; exit 1; }
+          [ "$(norm "$GOT")" = "$(norm "$FP")" ] || { echo "Signed with an unexpected key ($GOT): stopped."; exit 1; }
+          grep -q "Verified using v3 scheme (APK Signature Scheme v3): true" signer.txt || { echo "No v3 signature: stopped."; exit 1; }
+          echo "SIGNER OK: release certificate SHA-256 $GOT"
+          cp "docs/AUDIT_REPORT_${VERSION}.md" out/
+          sed "s/RELEASE_CERT_SHA256/$GOT/" "docs/RELEASE_NOTES_${VERSION}.md" > "out/RELEASE_NOTES_${VERSION}.md"   # the key's public fingerprint
+          cd out && sha256sum "rbsb-weather-android_${VERSION}.apk" > SHA256SUMS && sha256sum -c SHA256SUMS && cat SHA256SUMS
+
+      - name: Draft GitHub release (Shane checks and publishes it; the tag is made when it's published)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          gh release create "${{ inputs.tag }}" --draft --target "$GITHUB_SHA" \
+            --title "RBSB-Weather-Android ${VERSION}" --notes-file "out/RELEASE_NOTES_${VERSION}.md" \
+            "out/rbsb-weather-android_${VERSION}.apk" out/SHA256SUMS "out/AUDIT_REPORT_${VERSION}.md" "out/RELEASE_NOTES_${VERSION}.md"
+          echo "Draft release ${{ inputs.tag }} created from commit $GITHUB_SHA"

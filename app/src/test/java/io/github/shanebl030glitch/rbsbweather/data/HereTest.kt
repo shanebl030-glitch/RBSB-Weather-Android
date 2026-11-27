@@ -1,0 +1,194 @@
+// 📍 My location (0.7): when a new position counts as a new place, naming, and the settings it lives in.
+// Created By Shane BlackbuRn
+package io.github.shanebl030glitch.rbsbweather.data
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+
+private const val NOW = 1_790_000_000_000L
+private val NAMES = PlaceNamer { lat, _ -> if (lat < -40) Naming("Te Aro", "Wellington", "New Zealand") else Naming("Ponsonby", "Auckland", "New Zealand") }
+
+class HereTest {
+    @get:Rule val tmp = TemporaryFolder()
+
+    @Test fun firstFixMakesMyLocationRoundedAndNamed() {
+        val p = Here.next(null, Fix(-36.848531, 174.763491, 30f, NOW), NOW, NAMES)!!
+        assertTrue(p.current)
+        assertEquals("Ponsonby", p.name); assertEquals("Auckland", p.admin1); assertEquals("New Zealand", p.country)
+        assertEquals(-36.849, p.latitude, 0.0); assertEquals(174.763, p.longitude, 0.0)    // ~100 m, nothing finer kept
+        assertEquals(Place.HERE_KEY, p.key)
+        assertEquals("📍 Ponsonby", p.label)
+    }
+
+    @Test fun smallMovesChangeNothingAndDontAskForAName() {
+        var asked = 0
+        val namer = PlaceNamer { _, _ -> asked++; Naming("X") }
+        val old = Here.next(null, Fix(-36.8485, 174.7635), NOW, namer)!!
+        assertEquals(1, asked)
+        assertNull(Here.next(old, Fix(-36.8530, 174.7635), NOW, namer))      // ~500 m
+        assertEquals(1, asked)
+        assertNotNull(Here.next(old, Fix(-36.8620, 174.7635), NOW, namer))   // ~1.5 km: a new suburb
+        assertEquals(2, asked)
+    }
+
+    @Test fun travellingToAnotherCityOrCountryMovesIt() {
+        val akl = Here.next(null, Fix(-36.8485, 174.7635), NOW, NAMES)!!
+        val wlg = Here.next(akl, Fix(-41.2866, 174.7756), NOW, NAMES)!!
+        assertEquals("Te Aro", wlg.name)
+        val syd = Here.next(wlg, Fix(-33.8688, 151.2093), NOW) { _, _ -> Naming("Sydney", "New South Wales", "Australia") }!!
+        assertEquals("Australia", syd.country)
+    }
+
+    @Test fun unusableFixesAreIgnored() {
+        assertNull(Here.next(null, Fix(Double.NaN, 1.0), NOW, NAMES))
+        assertNull(Here.next(null, Fix(95.0, 1.0), NOW, NAMES))
+        assertNull(Here.next(null, Fix(-36.8, 174.7, timeMs = NOW - 31 * 60_000L), NOW, NAMES))   // too old
+        assertNull(Here.next(null, Fix(-36.8, 174.7, accuracyM = 9_000f), NOW, NAMES))           // too vague
+        assertNotNull(Here.next(null, Fix(-36.8, 174.7, accuracyM = 2_000f, timeMs = NOW - 60_000L), NOW, NAMES))
+    }
+
+    @Test fun withoutANameItKeepsTheOldNameNearbyElseMyLocation() {
+        val none = PlaceNamer { _, _ -> null }
+        val boom = PlaceNamer { _, _ -> throw java.io.IOException("offline") }
+        val old = Here.next(null, Fix(-36.8485, 174.7635), NOW, NAMES)!!
+        assertEquals("Ponsonby", Here.next(old, Fix(-36.8700, 174.7635), NOW, none)!!.name)       // 2.4 km
+        assertEquals("Ponsonby", Here.next(old, Fix(-36.8700, 174.7635), NOW, boom)!!.name)
+        assertEquals(Here.UNNAMED, Here.next(old, Fix(-41.2866, 174.7756), NOW, none)!!.name)     // far away
+        assertEquals(Here.UNNAMED, Here.next(null, Fix(-41.2866, 174.7756), NOW, PlaceNamer { _, _ -> Naming("  ") })!!.name)
+    }
+
+    @Test fun anUnnamedMyLocationIsNamedLaterWithoutMoving() {
+        val old = Here.next(null, Fix(-36.8485, 174.7635), NOW) { _, _ -> null }!!
+        assertEquals(Here.UNNAMED, old.name)
+        assertNull(Here.next(old, Fix(-36.8490, 174.7635), NOW) { _, _ -> null })            // still no name: nothing changes
+        val named = Here.next(old, Fix(-36.8490, 174.7635), NOW, NAMES)!!
+        assertEquals("Ponsonby", named.name); assertEquals("New Zealand", named.country)
+        assertEquals(old.latitude, named.latitude, 0.0)                                          // same spot, no new download needed
+        assertNull(Here.next(named, Fix(-36.8490, 174.7635), NOW, NAMES))                      // named: small moves change nothing again
+    }
+
+    @Test fun aCityNameIsReplacedByTheSuburbOnceItsKnown() {
+        // Shane's phone: the phone named only the city
+        val city = Here.next(null, Fix(-36.8580, 174.7460), NOW) { _, _ -> Naming("Auckland", "Auckland", "New Zealand", Naming.TOWN) }!!
+        assertEquals("Auckland", city.name); assertEquals(Naming.TOWN, city.detail)
+        assertNull(Here.next(city, Fix(-36.8582, 174.7460), NOW) { _, _ -> Naming("Auckland", "Auckland", "New Zealand", Naming.TOWN) })  // nothing better
+        val sub = Here.next(city, Fix(-36.8582, 174.7460), NOW) { _, _ -> Naming("Grey Lynn", "Auckland", "New Zealand") }!!
+        assertEquals("Grey Lynn", sub.name); assertEquals(Naming.SUBURB, sub.detail)
+        assertEquals(city.latitude, sub.latitude, 0.0)
+        val back = Place.fromJson(sub.toJson())!!
+        assertEquals(sub, back)                                                    // the level is saved
+        assertEquals(0, Place.fromJson(sub.toJson().apply { remove("detail") })!!.detail)   // from an earlier 0.7 build: asked again
+    }
+
+    @Test fun thePhonesSuburbWinsElseOpenStreetMapsWhenMoreExact() {
+        var osmAsked = 0
+        val osm = { osmAsked++; Naming("Grey Lynn", "Auckland", "New Zealand / Aotearoa") }
+        assertEquals("Ponsonby", bestNaming(Naming("Ponsonby", "Auckland", "New Zealand"), osm)!!.name)
+        assertEquals(0, osmAsked)                                                  // not asked when the phone has the suburb
+        val fromOsm = bestNaming(Naming("Auckland", "", "New Zealand", Naming.TOWN), osm)!!
+        assertEquals("Grey Lynn", fromOsm.name); assertEquals("New Zealand", fromOsm.country)   // the phone's spelling of the country
+        assertEquals("Grey Lynn", bestNaming(null, osm)!!.name)
+        assertEquals("Auckland", bestNaming(Naming("Auckland", "", "NZ", Naming.TOWN)) { null }!!.name)
+        assertEquals("Auckland", bestNaming(Naming("Auckland", "", "NZ", Naming.TOWN)) { Naming("Auckland", "", "", Naming.TOWN) }!!.name)
+        assertEquals("Auckland", bestNaming(Naming("Auckland", "", "NZ", Naming.TOWN)) { throw RuntimeException() }!!.name)
+        assertNull(bestNaming(null) { null })
+    }
+
+    @Test fun namesAreRememberedSoTheNetworkIsAskedRarely() {
+        var now = NOW; var calls = 0; var answer: Naming? = null
+        val c = CachedNamer({ _, _ -> calls++; answer }, { now })
+        assertNull(c.name(-36.8581, 174.7461)); assertNull(c.name(-36.8584, 174.7459))   // same ~100 m spot
+        assertEquals(1, calls)
+        answer = Naming("Grey Lynn")
+        now += 31 * 60_000L                                                        // nothing found: asked again after 30 min
+        assertEquals("Grey Lynn", c.name(-36.858, 174.746)!!.name); assertEquals(2, calls)
+        now += 5 * 3_600_000L
+        c.name(-36.858, 174.746); assertEquals(2, calls)                          // a name: kept 6 hours
+        now += 2 * 3_600_000L
+        c.name(-36.858, 174.746); assertEquals(3, calls)
+        c.name(-41.287, 174.776); assertEquals(4, calls)                          // another spot
+    }
+
+    @Test fun openStreetMapNamesTheSuburbCityAndCountry() {
+        var asked = ""
+        val body = """{"place_id":1,"lat":"-36.858","lon":"174.746","display_name":"Ponsonby, Auckland, New Zealand",
+            "address":{"road":"Ponsonby Road","suburb":"Ponsonby","city":"Auckland","state":"Auckland","country":"New Zealand","country_code":"nz"}}"""
+        val n = OsmNamer(HttpClient { url, h -> asked = url + " " + h["Accept-Language"]; body }, language = { "en-NZ" }).name(-36.85812, 174.74633)!!
+        assertEquals(Naming("Ponsonby", "Auckland", "New Zealand"), n)
+        assertTrue(asked.startsWith("https://nominatim.openstreetmap.org/reverse?"))
+        assertTrue("lat=-36.858" in asked && "lon=174.746" in asked && "zoom=17" in asked && asked.endsWith("en-NZ"))   // only the rounded spot
+        // a country town: no smaller area, so the town (as a town)
+        assertEquals(Naming("Taupō", "Waikato", "New Zealand", Naming.TOWN), OsmNamer.parse("""{"address":{"town":"Taupō","state":"Waikato","country":"New Zealand"}}"""))
+        // a city with no suburb: the city, and its region
+        assertEquals(Naming("Wellington", "", "New Zealand", Naming.TOWN), OsmNamer.parse("""{"address":{"city":"Wellington","country":"New Zealand"}}"""))
+        // as Nominatim really answered for Grey Lynn (the emulator check): the suburb, not the smaller quarter
+        assertEquals(Naming("Grey Lynn", "Auckland", "New Zealand / Aotearoa"), OsmNamer.parse(
+            """{"address":{"quarter":"Arch Hill","suburb":"Grey Lynn","city":"Auckland","state":"Auckland","country":"New Zealand / Aotearoa"}}"""))
+        assertEquals(Naming("Waikato", "", "New Zealand", Naming.REGION), OsmNamer.parse("""{"address":{"state":"Waikato","country":"New Zealand"}}"""))
+        // the sea, errors and junk: no name
+        assertNull(OsmNamer.parse("""{"error":"Unable to geocode"}"""))
+        assertNull(OsmNamer.parse("""{"address":{"country":""}}"""))
+        assertNull(OsmNamer(HttpClient { _, _ -> throw WeatherException("No internet connection.") }).name(-36.8, 174.7))
+        assertNull(OsmNamer(HttpClient { _, _ -> "<html>" }).name(-36.8, 174.7))
+    }
+
+    @Test fun settingsKeepMyLocationAndTheWidgetChoice() {
+        val here = Here.next(null, Fix(-41.2866, 174.7756), NOW, NAMES)!!
+        val s = Settings(places = listOf(AUCKLAND), selected = AUCKLAND.key, followLocation = true).withHere(here)
+        assertEquals(listOf(Place.HERE_KEY, AUCKLAND.key), s.places.map { it.key })      // first when new
+        assertEquals(AUCKLAND.key, s.selected)                                             // what you were looking at stays
+        assertEquals(here.key, s.widgetPlace()!!.key)                                       // widgets follow you
+        assertEquals(AUCKLAND.key, s.copy(widgetHere = false).widgetPlace()!!.key)
+        assertEquals(AUCKLAND.key, s.copy(followLocation = false).widgetPlace()!!.key)
+        val back = Settings.fromJson(s.toJson().toString())
+        assertTrue(back.followLocation); assertTrue(back.widgetHere)
+        assertEquals(s.places, back.places)
+        assertTrue(back.places[0].current)
+        // moving keeps its spot in the list
+        val moved = s.moved(AUCKLAND.key, -1).withHere(here.copy(name = "Kelburn", latitude = -41.29))
+        assertEquals(listOf(AUCKLAND.key, Place.HERE_KEY), moved.places.map { it.key })
+        assertEquals("Kelburn", moved.here()!!.name)
+        assertEquals(listOf(AUCKLAND.key), moved.withoutHere().places.map { it.key })
+        // old settings files (before 0.7) still read
+        val old = Settings.fromJson(Settings(places = listOf(AUCKLAND)).toJson().apply { remove("follow_location"); remove("widget_here") }.toString())
+        assertFalse(old.followLocation); assertTrue(old.widgetHere); assertNull(old.here())
+    }
+
+    @Test fun savedForecastForSomewhereElseIsntShownForHere() {
+        val cache = ForecastCache(tmp.root)
+        val akl = Here.next(null, Fix(-36.8485, 174.7635), NOW, NAMES)!!
+        val fc = parseForecast(javaClass.classLoader!!.getResourceAsStream("openmeteo_forecast.json")!!.bufferedReader().readText(), akl)
+        cache.save(fc)
+        assertNotNull(cache.load(akl))
+        val wlg = Here.next(akl, Fix(-41.2866, 174.7756), NOW, NAMES)!!
+        assertNull(cache.load(wlg))                                        // Auckland's weather isn't Wellington's
+        assertTrue(tmp.root.listFiles()!!.any { it.name == "forecast-here.json" })
+        cache.cleanOrphans(listOf(wlg))
+        assertTrue(tmp.root.listFiles()!!.any { it.name == "forecast-here.json" })    // the here file stays while it's saved
+    }
+}
+
+/** Shane's 0.7.0 phone test: approximate positions wobble by a kilometre or two between checks. */
+class HereJitterTest {
+    private val names = PlaceNamer { lat, _ -> Naming(if (lat < -36.95) "Flat Bush" else "East Tāmaki", "Auckland", "New Zealand") }
+    private val now = 1_790_000_000_000L
+
+    @Test fun anApproximatePositionWobblingDoesntMoveMyLocation() {
+        val here = Here.next(null, Fix(-36.946, 174.896, 2000f, now), now, names)!!
+        // ±2 km fixes 1.5 km away, back and forth: no move, no new name, no widget redraw
+        for (k in 0 until 10) {
+            val lat = if (k % 2 == 0) -36.9595 else -36.946
+            org.junit.Assert.assertNull("wobble $k", Here.next(here, Fix(lat, 174.896, 2000f, now), now, names))
+        }
+        // a real move (3 km) still moves it
+        assertEquals("Flat Bush", Here.next(here, Fix(-36.973, 174.896, 2000f, now), now, names)!!.name)
+        // a precise fix moves it after 1 km as before
+        assertEquals("Flat Bush", Here.next(here, Fix(-36.957, 174.896, 15f, now), now, names)!!.name)
+    }
+}

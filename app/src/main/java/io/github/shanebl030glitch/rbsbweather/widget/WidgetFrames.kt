@@ -76,11 +76,23 @@ object WidgetFrames {
             tm.measure(widgetData(settings, fc, nowMs).hiLo, TextStyle(fontSize = 12.sp)).size.width).max() else 0
         val avoid = listOf(Rect(0f, h * 0.45f, pad + textW, h.toFloat()))
         val plan = if (fc != null) planStrip(w.toFloat(), h.toFloat(), sc, days, locationToday(fc), tm, avoid, settings.units.temp) else null
+        // The mini forecast's words don't move: drawn once, on the main thread (MainThreadText.kt),
+        // then laid over every frame. Text is never drawn into a picture on this thread.
+        val words: ImageBitmap? = plan?.let { p ->
+            MainThreadText.draw {
+                ImageBitmap(w, h).also { img ->
+                    CanvasDrawScope().draw(Density(sc), LayoutDirection.Ltr, Canvas(img), Size(w.toFloat(), h.toFloat())) {
+                        paintStrip(p, 0.0, settings.units.temp, tm, art = false, text = true)
+                    }
+                }
+            }
+        }
         val sim = (0 until n + k).map {
             val img = ImageBitmap(w, h)
             CanvasDrawScope().draw(Density(sc), LayoutDirection.Ltr, Canvas(img), Size(w.toFloat(), h.toFloat())) {
                 drawScene(engine, rounded = 16 * sc, scrim = true) {
-                    plan?.let { paintStrip(it, engine.t, settings.units.temp, tm) }
+                    plan?.let { paintStrip(it, engine.t, settings.units.temp, tm, art = true, text = false) }
+                    words?.let { drawImage(it) }
                 }
             }
             if (animate) engine.advance(FRAME_MS / 1000.0)

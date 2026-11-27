@@ -116,7 +116,7 @@ class WeatherRepository(
 
 /** One small JSON file per place in the app's private folder. */
 class ForecastCache(private val dir: File) {
-    private fun file(place: Place) = File(dir, "forecast-" + place.key.replace(Regex("[^0-9.,-]"), "_") + ".json")
+    private fun file(place: Place) = File(dir, "forecast-" + (if (place.current) "here" else place.key.replace(Regex("[^0-9.,-]"), "_")) + ".json")
 
     fun save(fc: Forecast) {
         dir.mkdirs()
@@ -133,7 +133,10 @@ class ForecastCache(private val dir: File) {
         val f = file(place)
         if (!f.isFile || f.length() > 4 * 1024 * 1024) return null
         return try {
-            Forecast.fromJson(JSONObject(f.readText()))?.copy(place = place)
+            val fc = Forecast.fromJson(JSONObject(f.readText())) ?: return null
+            // 📍 My location keeps one file: a forecast saved for somewhere else isn't shown for here
+            if (place.current && kmBetween(fc.place.latitude, fc.place.longitude, place.latitude, place.longitude) > Here.MOVE_KM) return null
+            fc.copy(place = place)
         } catch (e: Exception) {
             null
         }

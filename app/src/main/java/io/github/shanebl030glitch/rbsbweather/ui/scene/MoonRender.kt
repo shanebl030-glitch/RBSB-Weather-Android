@@ -50,8 +50,8 @@ object MoonRender {
         val a = assets ?: return null
         val (alb, hgt) = full ?: try {
             val opts = BitmapFactory.Options().apply { inPreferredConfig = Bitmap.Config.ARGB_8888 }
-            val x = BitmapFactory.decodeStream(a.open("textures/moon_albedo.jpg"), null, opts)!!
-            val y = BitmapFactory.decodeStream(a.open("textures/moon_height.jpg"), null, opts)!!
+            val x = a.open("textures/moon_albedo.jpg").use { BitmapFactory.decodeStream(it, null, opts) } ?: return null
+            val y = a.open("textures/moon_height.jpg").use { BitmapFactory.decodeStream(it, null, opts) } ?: run { x.recycle(); return null }
             (x to y).also { full = it }
         } catch (e: Exception) { return null }
         val sa = Bitmap.createScaledBitmap(alb, size, size, true)
@@ -82,10 +82,64 @@ object MoonRender {
      * textures. rotation: degrees clockwise (the parallactic angle); null: north up, or turned
      * over in the southern hemisphere.
      */
-    fun render(sizeIn: Int, phaseAngle: Double, brightLimb: Double, southern: Boolean = false, rotation: Double? = null): Bitmap? {
+    fun render(sizeIn: Int, phaseAngle: Double, brightLimb: Double, southern: Boolean = false, rotation: Double? = null): Bitmap? = try {
+        renderOrThrow(sizeIn, phaseAngle, brightLimb, southern, rotation)
+    } catch (e: OutOfMemoryError) {
+        // never crash the sky, widget or Earth screens over a picture of the Moon: free what's kept and skip it
+        synchronized(this) { texCache.clear(); full = null }
+        synchronized(imgCache) { imgCache.clear(); lastBySize.clear() }
+        null
+    } catch (e: Exception) { null }
+
+    private fun keyOf(sizeIn: Int, phaseAngle: Double, brightLimb: Double, southern: Boolean, rotation: Double?): String {
         val size = sizeIn.coerceIn(8, MAX_SIZE)
         val rot = (((rotation ?: if (southern) 180.0 else 0.0) % 360 + 360) % 360).let { Math.round(it).toInt() % 360 }
-        val key = "$size/${Math.round(phaseAngle * 10)}/${Math.round(brightLimb) % 360}/$rot"
+        return "$size/${Math.round(phaseAngle * 10)}/${Math.round(brightLimb) % 360}/$rot"
+    }
+
+    /** Goes up each time a picture asked for with [renderLater] is ready, so a screen reading it redraws. */
+    val ready = androidx.compose.runtime.mutableIntStateOf(0)
+    private val pending = java.util.Collections.synchronizedSet(HashSet<String>())
+    private val worker = java.util.concurrent.Executors.newSingleThreadExecutor { r -> Thread(r, "rbsb-moon").apply { isDaemon = true; priority = Thread.NORM_PRIORITY - 1 } }
+
+    /** The latest picture made at each size: shown while the next one is made (guarded by imgCache). */
+    private val lastBySize = HashMap<Int, Bitmap>()
+
+    /**
+     * For drawing on the main thread. The exact picture if it's ready. If not, it's made in the
+     * background and, meanwhile, the latest real picture is returned (at this size if there is one),
+     * which differs from the new one only by a fraction of a degree, so the Moon stays steady.
+     * Only before the first real picture exists is null returned (the plain Moon shows for that
+     * moment, once). It is never made here: making it can wait seconds for the textures while the
+     * Moon tab saves a 2048-pixel picture (an ANR the 0.7.1 stability audit caught when an earlier
+     * version of this fix made the first one on the main thread).
+     *
+     * History: 0.6 made every picture on the main thread (slow: an ANR under random use). The
+     * 0.7.0 audit fix returned null until the new one was ready, so during 24-hour playback, when
+     * every frame needs a new picture, the sky kept switching to the plain drawn Moon: the
+     * flicker Shane saw on his phone (26 Nov 2026).
+     */
+    fun renderLater(sizeIn: Int, phaseAngle: Double, brightLimb: Double, southern: Boolean = false, rotation: Double? = null): Bitmap? {
+        if (assets == null) return null
+        val size = sizeIn.coerceIn(8, MAX_SIZE)
+        val key = keyOf(sizeIn, phaseAngle, brightLimb, southern, rotation)
+        synchronized(imgCache) { imgCache[key]?.let { return it } }
+        if (size > CACHE_MAX_SIZE) return null                                  // only small, cached sizes this way
+        val standIn = synchronized(imgCache) { lastBySize[size] ?: lastBySize.values.lastOrNull() }
+        if (pending.add(key)) {
+            try {
+                worker.execute {
+                    try { render(sizeIn, phaseAngle, brightLimb, southern, rotation) } finally { pending.remove(key); ready.intValue++ }
+                }
+            } catch (e: Exception) { pending.remove(key) }
+        }
+        return standIn
+    }
+
+    private fun renderOrThrow(sizeIn: Int, phaseAngle: Double, brightLimb: Double, southern: Boolean, rotation: Double?): Bitmap? {
+        val size = sizeIn.coerceIn(8, MAX_SIZE)
+        val rot = (((rotation ?: if (southern) 180.0 else 0.0) % 360 + 360) % 360).let { Math.round(it).toInt() % 360 }
+        val key = keyOf(sizeIn, phaseAngle, brightLimb, southern, rotation)
         synchronized(imgCache) { imgCache[key]?.let { return it } }
         val (alb, hgt) = textures(size) ?: return null
         val s = sunVector(phaseAngle, brightLimb)
@@ -136,7 +190,7 @@ object MoonRender {
             bmp.recycle()
             bmp = turned
         }
-        if (size <= CACHE_MAX_SIZE) synchronized(imgCache) { imgCache[key] = bmp }   // big exports aren't kept (16 MB each at 2048)
+        if (size <= CACHE_MAX_SIZE) synchronized(imgCache) { imgCache[key] = bmp; lastBySize[size] = bmp; if (lastBySize.size > 12) lastBySize.remove(lastBySize.keys.first()) }   // big exports aren't kept (16 MB each at 2048)
         return bmp
     }
 }

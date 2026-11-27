@@ -47,7 +47,23 @@ adb shell am start -W -n $PKG/.MainActivity
 sleep 6; check "launch"; dump; shot launch
 step "add Auckland"
 tap "Add a place" && sleep 2 && adb shell input text Auckland && sleep 8
-tap "Auckland, New Zealand"; sleep 10; check "adding a place"; shot forecast
+if ! tap "Auckland, New Zealand"; then
+  echo "SEARCH: no result shown; what's on screen:"; grep -o 'text="[^"]\+"' "$OUT/ui.xml" | head -12; shot search-failed
+  for t in 1 2 3; do                                   # search again (a slow or failed search shouldn't sink the whole run)
+    adb shell input keyevent KEYCODE_MOVE_END; for i in $(seq 1 12); do adb shell input keyevent KEYCODE_DEL; done
+    sleep 2; adb shell input text Auckland; sleep 12
+    tap "Auckland, New Zealand" && { echo "SEARCH: found on try $((t + 1))"; break; }
+    grep -o 'text="[^"]\+"' "$OUT/ui.xml" | head -6
+  done
+fi
+sleep 10; check "adding a place"; shot forecast
+dump; APPT=$(python3 -c 'import re,sys,xml.etree.ElementTree as ET
+for n in ET.parse(sys.argv[1]).getroot().iter("node"):
+    m = re.fullmatch(r"(-?\d+)°C", (n.get("text") or "").strip())
+    if m: print(m.group(1)); break' "$OUT/ui.xml" 2>/dev/null)
+OMT=$(curl -s -m 20 "https://api.open-meteo.com/v1/forecast?latitude=-36.8485&longitude=174.7635&current=temperature_2m" | python3 -c 'import json,sys; print(round(json.load(sys.stdin)["current"]["temperature_2m"]))' 2>/dev/null)
+echo "ACCURACY: the app shows ${APPT:-?}°C for Auckland; Open-Meteo says ${OMT:-?}°C right now"
+[ -n "$APPT" ] && [ -n "$OMT" ] && [ $(( APPT > OMT ? APPT - OMT : OMT - APPT )) -le 1 ] && echo "ACCURACY OK" || echo "ACCURACY CHECK: differs or unavailable"
 step "Moon tab"; tap "Moon"; sleep 8; check "Moon tab"; shot moon
 step "Earth tab"; tap "Earth"; sleep 15; check "Earth tab"; shot earth-flat
 step "Earth Globe (what crashed)"; tap "Earth Globe"; sleep 3; check "tapping Earth Globe (3 s)"; sleep 12; check "Earth Globe (15 s)"; shot earth-globe
@@ -131,6 +147,76 @@ adb shell input keyevent KEYCODE_HOME; sleep 5
 adb shell am start -n $PKG/.MainActivity; sleep 6; check "reopening"; shot reopened
 tap "Earth"; sleep 3; tap "Earth Globe"; sleep 8; check "globe after reopening"; shot globe-reopened
 
+step "📍 My location: Auckland, then Wellington (0.7)"
+here_now() { dump; grep -o 'text="\(Now: [^"]*\|Finding[^"]*\|Waiting for your[^"]*\|Couldn.t find[^"]*\|Your phone[^"]*\)"' "$OUT/ui.xml" | head -2; }
+adb shell pm grant $PKG android.permission.ACCESS_COARSE_LOCATION
+adb shell pm grant $PKG android.permission.ACCESS_FINE_LOCATION
+adb shell pm grant $PKG android.permission.ACCESS_BACKGROUND_LOCATION
+adb emu geo fix 174.7635 -36.8485; sleep 3           # longitude first: Auckland CBD
+back_to_forecast; tap "Menu" && sleep 1 && tap "Settings"; sleep 4
+tap "📍 Use my location"; for i in $(seq 1 10); do sleep 3; here_now | grep -q "Now:" && break; done
+check "turning on My location"; shot here-auckland
+AKL="$(here_now | grep 'Now:')"; echo "HERE (Auckland fix): $AKL"
+dump; grep -q "On: about every 15 minutes" "$OUT/ui.xml" && echo "HERE BACKGROUND: allowed" || echo "HERE BACKGROUND: not shown as allowed"
+for i in 1 2 3 4 5; do adb emu geo fix 174.7756 -41.2866; sleep 1; done   # Wellington, 490 km south
+for t in 1 2 3; do                                     # the emulator's location service can lag a moment behind
+  tap "Update my location now"
+  for i in $(seq 1 8); do adb emu geo fix 174.7756 -41.2866 >/dev/null; sleep 3; W="$(here_now | grep 'Now:')"; [ -n "$W" ] && [ "$W" != "$AKL" ] && break 2; done
+done
+adb logcat -d -s RBSB-Weather | grep "My location" | tail -6
+check "moving to Wellington"; shot here-wellington
+echo "HERE (Wellington fix): $W"
+[ -n "$AKL" ] && [ -n "$W" ] && [ "$W" != "$AKL" ] && echo "HERE MOVED: yes" || { echo "HERE MOVED: no"; HERE_FAILED=1; }
+# Shane's examples: My location must show the suburb or town, not just "Auckland"
+for spot in "Waiuku|174.7310|-37.2490|Waiuku" "East Tamaki|174.8960|-36.9460|East T.*maki" "Clarks Beach|174.7000|-37.1330|Clarks Beach"; do
+  IFS='|' read -r want lon lat pattern <<< "$spot"
+  prev="$(here_now | grep 'Now:')"; got=""
+  for t in 1 2 3; do
+    tap "Update my location now" >/dev/null
+    for i in $(seq 1 8); do adb emu geo fix $lon $lat >/dev/null; sleep 3; got="$(here_now | grep 'Now:')"; [ -n "$got" ] && [ "$got" != "$prev" ] && break 2; done
+  done
+  echo "SUBURB ($want): $got"
+  echo "$got" | grep -qi "$pattern" && echo "SUBURB OK: $want" || { echo "SUBURB WRONG: wanted $want"; HERE_FAILED=1; }
+  shot "here-${want// /-}"
+done
+adb logcat -d -s RBSB-Weather | grep "My location name" | tail -4
+
+step "📍 My location around the world (names in the app itself)"
+# "!X": the local area must not be just the city X; "=X": a town with nothing smaller named, so X itself
+for spot in "Tokyo, Shibuya|139.7000|35.6600|!Tokyo" "Berlin, Kreuzberg|13.4030|52.4990|!Berlin" "Paris 11e|2.3800|48.8590|!Paris" \
+            "Rome, Trastevere|12.4690|41.8890|!Rome" "New York, Williamsburg|-73.9570|40.7080|!New York" "Sydney, Bondi|151.2770|-33.8920|!Sydney" \
+            "Marfa, Texas|-104.0210|30.3090|=Marfa" "Gordes, France|5.2000|43.9120|=Gordes"; do
+  IFS='|' read -r label lon lat rule <<< "$spot"
+  prev="$(here_now | grep 'Now:')"; got=""
+  for t in 1 2 3; do
+    tap "Update my location now" >/dev/null
+    for i in $(seq 1 8); do adb emu geo fix $lon $lat >/dev/null; sleep 3; got="$(here_now | grep 'Now:')"; [ -n "$got" ] && [ "$got" != "$prev" ] && break 2; done
+  done
+  first="$(echo "$got" | sed -E 's/.*Now: ([^,"(]*).*/\1/' | sed 's/ *$//')"
+  src="$(adb logcat -d -s RBSB-Weather | grep 'My location name' | tail -1 | sed 's/.*name: //')"
+  case "$rule" in
+    !*) [ -n "$first" ] && [ "$first" != "${rule#!}" ] && [ "$got" != "$prev" ] && ok=yes || ok=no ;;
+    =*) [ "$first" = "${rule#=}" ] && ok=yes || ok=no ;;
+  esac
+  echo "WORLD ($label): $got  [$src]  ok=$ok"
+  [ $ok = yes ] || HERE_FAILED=1
+done
+shot here-world
+back_to_forecast; check "forecast with My location"
+for i in 1 2 3; do adb shell input swipe 150 1200 950 1200 300; sleep 1; done     # the first page: 📍 My location
+sleep 3; shot here-forecast
+dump; grep -o 'text="📍[^"]*"' "$OUT/ui.xml" | head -2
+adb shell input keyevent KEYCODE_HOME; sleep 3
+adb shell am start -n $PKG/.MainActivity; sleep 6; check "reopening with My location"
+
+step "OpenStreetMap names (the backup when a phone can't name My location)"
+for ll in "-36.858 174.746" "-41.287 174.776" "-33.869 151.209"; do set -- $ll
+  curl -s -m 20 -A "RBSB-Weather-Android emulator check (github.com/shanebl030-glitch/RBSB-Weather-Android)" \
+    "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=$1&lon=$2&zoom=14&addressdetails=1" \
+    | python3 -c 'import json,sys; a=json.load(sys.stdin).get("address",{}); print("OSM NAME:", {k:a[k] for k in a if k in ("suburb","neighbourhood","quarter","city_district","village","town","city","county","state","country")})' || echo "OSM NAME: no answer"
+  sleep 2
+done
+
 step "pull to refresh"
 tap "Forecast"; sleep 3; adb shell input swipe 540 700 540 1500 400; sleep 8; check "refresh"
 
@@ -138,3 +224,4 @@ adb logcat -d > "$OUT/logcat.txt"
 grep -n "FATAL\|ANR in\|OutOfMemory\|Skipped [0-9]* frames\|Davey" "$OUT/logcat.txt" | head -40
 echo "APP ALIVE: no crash"
 [ "${GLOBE_FAILED:-0}" = 0 ] || exit 3
+[ "${HERE_FAILED:-0}" = 0 ] || exit 4

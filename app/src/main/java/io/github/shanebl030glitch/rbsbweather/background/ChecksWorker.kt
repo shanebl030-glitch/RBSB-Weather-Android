@@ -24,8 +24,10 @@ class ChecksWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
             val g = AppGraph.get(applicationContext)
+            val s0 = g.settings()
+            if (s0.updateCheck) checkForUpdate(applicationContext, g)              // once a day (0.6)
+            if (s0.followLocation) followHere(applicationContext, g)                // 📍 My location (0.7)
             val s = g.settings()
-            if (s.updateCheck) checkForUpdate(applicationContext, g)              // once a day (0.6)
             if (s.places.isEmpty()) return@withContext Result.success()
             val forecasts = s.places.mapNotNull { p -> g.repo.cached(p)?.let { p.key to it } }.toMap()
             val notices = mutableListOf<Notice>()
@@ -56,6 +58,33 @@ class ChecksWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx
                 }
                 info.version
             } catch (e: Exception) { null }
+        }
+
+        /**
+         * Move 📍 My location if the phone has moved more than a kilometre since last time. Needs
+         * "Allow all the time" location access while the app is closed; without it this does nothing
+         * (My location then updates whenever you open the app). Returns the new place, if it moved.
+         */
+        suspend fun followHere(ctx: Context, g: AppGraph,
+                               source: LocationSource = LocationFinder.androidSource(ctx, LocationFinder.STALE_BACKGROUND_MS),
+                               namer: io.github.shanebl030glitch.rbsbweather.data.PlaceNamer = LocationFinder.androidNamer(ctx),
+                               allowed: Boolean = LocationFinder.hasPermission(ctx) && LocationFinder.hasBackground(ctx),
+                               fetch: (io.github.shanebl030glitch.rbsbweather.data.Place) -> Unit = { g.repo.fetch(it) }): io.github.shanebl030glitch.rbsbweather.data.Place? {
+            if (!allowed) return null
+            val s = g.settings()
+            if (!s.followLocation) return null
+            val fix = try { source.current() } catch (e: Exception) { null } ?: return null
+            val next = io.github.shanebl030glitch.rbsbweather.data.Here.next(s.here(), fix, System.currentTimeMillis(), namer) ?: return null
+            val live = g.onHere
+            if (live != null) {
+                // the app is open: it moves the place and gets the weather itself (on its own thread)
+                live(next)
+                return next
+            }
+            g.store.save(g.settings().withHere(next).toJson().toString())
+            try { fetch(next) } catch (e: Exception) { }     // saved to the cache for the widget
+            Widgets.updateAll(ctx)                                  // and the status-bar temperature
+            return next
         }
 
         /** Start (or keep) the background check. Safe to call often. */

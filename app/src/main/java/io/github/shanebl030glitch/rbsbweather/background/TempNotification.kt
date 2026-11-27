@@ -15,6 +15,7 @@ import android.graphics.Typeface
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import io.github.shanebl030glitch.rbsbweather.widget.MainThreadText
 import androidx.core.graphics.drawable.IconCompat
 import io.github.shanebl030glitch.rbsbweather.AppGraph
 import io.github.shanebl030glitch.rbsbweather.MainActivity
@@ -45,8 +46,13 @@ object TempNotification {
         return title to placeName + hl
     }
 
-    /** White digits on a transparent square, as Android wants for a status-bar icon. */
-    fun icon(text: String, px: Int = 96): Bitmap {
+    /**
+     * White digits on a transparent square, as Android wants for a status-bar icon. Text into a
+     * picture: drawn on the main thread only (widget/MainThreadText.kt explains why).
+     */
+    fun icon(text: String, px: Int = 96): Bitmap = MainThreadText.draw { drawIcon(text, px) }
+
+    private fun drawIcon(text: String, px: Int): Bitmap {
         val b = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888)
         val p = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = android.graphics.Color.WHITE; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
@@ -63,14 +69,14 @@ object TempNotification {
         try {
             val g = AppGraph.get(app)
             val s = g.settings()
-            val place = s.selectedPlace()
+            val place = s.widgetPlace()
             if (!s.tempNotification || place == null || !Notifier.allowed(app)) { nm.cancel(ID); return }
             if (Build.VERSION.SDK_INT >= 26) app.getSystemService(NotificationManager::class.java)?.createNotificationChannel(
                 NotificationChannel(CHANNEL, "Temperature in the status bar", NotificationManager.IMPORTANCE_LOW).apply {
                     description = "Keeps the temperature of the place on screen in the status bar"; setShowBadge(false)
                 })
             val fc = g.repo.cached(place)
-            val (title, text) = texts(s, fc, place.name)
+            val (title, text) = texts(s, fc, place.label)
             val open = PendingIntent.getActivity(app, ID, Intent(app, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
             val n = NotificationCompat.Builder(app, CHANNEL)

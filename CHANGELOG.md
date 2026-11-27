@@ -4,6 +4,108 @@ Created By Shane BlackbuRn
 
 A separate app from RBSB-Weather for the desktop, with its own versions.
 
+## 0.7.2 – 2026-11-27 (stable release)
+
+Shane tested the 0.7.2 release candidate on his phone ("everything is working great") and approved it for the stable release. The app is exactly the tested release candidate (commit 562c992); only the signing, the release workflow and the documents changed after it.
+
+### Signing (release preparation)
+- **Releases are now signed with Shane's own release key,** which is never in the repository. The public test key signs only test builds of branches.
+- **No uninstall:** 0.7.2 carries a key hand-over (APK key rotation, signature scheme v3) from the test key. It installs over 0.6.2, 0.7.0 and 0.7.1 and keeps all data. After it, Android refuses updates signed only with the test key.
+  - Tested on emulators with a throwaway key: the update installs and keeps the saved place, a later test-key build is refused, and a later release installs.
+  - The test key keeps the "installed data" and "permission" capabilities. Without "permission" the update was refused (`INSTALL_FAILED_DUPLICATE_PERMISSION`).
+- **New Release workflow** (`.github/workflows/release.yml`):
+  - it runs by hand, from main, after Shane approves it in the `release` environment;
+  - it runs all tests and lint, signs, checks the signer is the release key and not the test key, and makes `SHA256SUMS`;
+  - it creates a draft GitHub release for Shane to publish.
+- **New `docs/SIGNING.md`:** how the key is made, backed up and given to the workflow.
+
+
+Shane tested 0.7.1 on his phone: "it seems quite stable". He asked for the outstanding "not responding" to be fixed, then a final audit of the whole app and a release candidate.
+
+### Fixed
+- **The screen could freeze while warnings or earthquakes downloaded on a slow or failing connection** ("App isn't responding"; found by the 0.7.1 stability audit, there since 0.4).
+  - **Cause:** the warnings and earthquake checks held a lock for the whole download, and the screen reads the warnings under the same lock on the main thread. With a slow or dropped connection the screen waited for the download. A test with a hanging download measured the screen waiting 2 to 4 minutes, until the download was let go.
+  - **Fix:** downloads now run outside that lock, one at a time per feed. The screen never waits (under 200 ms in the same test). The open app and the background check still never download the same feed twice at once, and a warning is still notified only once.
+  - **Also:** a warnings or earthquake download now has a one-minute limit in total, so a server sending a byte now and then can't keep a check going for ever.
+- **A widget update could be reported as "not responding" on a slow connection** (found by this audit, there since 0.5). Android allows a widget update about 10 seconds (60 in the background). The update waited for the weather download, and each weather service can take up to a minute when the connection is slow. The widget's picture is now drawn and the update reported done first; the download follows.
+
+### Tests added
+- **Warnings and earthquakes (`SlowNetworkTest`):**
+  - with a download that hangs, the screen's reads stay instant (they waited minutes with the old code);
+  - a timed-out download is reported, and the last warnings are kept;
+  - two checks at once download once and notify once;
+  - real connections that hang, trickle or are refused all end in time.
+- **Widget (`WidgetStabilityTest`):** with a weather download that hangs, the widget update is reported done first.
+
+## 0.7.1 – 2026-11-26 (test build, not released)
+
+0.7.0 was **not approved** after Shane tested it on his phone: "0.7.0 is not approved for stable release." He found three problems. Each was reproduced first, its cause found in the code, fixed, and covered by an automated test. The worldwide suburb naming and all the 0.7.0 audit fixes are unchanged.
+
+### Fixed
+- **The Moon flickered in 24-hour playback** (Shane: "The moon flickers during the 24-hour forecast playback").
+  - **Cause:** a 0.7.0 audit fix (against "App isn't responding") made the Moon picture in the background, but showed *nothing* until each new picture was ready, so the sky drew a plain disc instead. In playback the Moon's phase and tilt change every frame, so it was nearly always the plain disc, flashing to the real Moon now and then.
+  - **Reproduced:** a test playing the 24 hours frame by frame found the plain Moon in 718 of 720 frames. On the emulator, a film of the playback showed the plain disc at 23:12, 05:20 and 06:10 and the real Moon at 04:20.
+  - **Fix:** the last real Moon picture stays on screen while the next one is made. Clouds work the same way: a cloud keeps its last picture, and a cloud never drawn before borrows the latest cloud's picture for a moment instead of popping in. The pictures are still made in the background, so the 0.7.0 ANR fix stays.
+  - **A second cause, found on the emulator:** pressing Play could stop the playback at once, and the sky flashed to the plain daytime sky for a moment (the Moon vanishing and coming back). The sky's frame loop kept the playback range from when it started. If the sky appeared before its forecast had loaded, that range was 0, so every Play ended straight away. This has been possible since 0.5, but 0.7.0 made it common: 📍 My location's page appears before its forecast, and again each time it moves. The loop now always uses the current forecast. A test shows the sky before the forecast arrives, then presses Play: with the old code the playback stays at "Now"; now the hour moves on every half second.
+  - **Caught on the way:** a first version of this fix drew the very first Moon and each new cloud on the main thread. The stability audit's random testing then caused an ANR on Android 15 (the main thread making a cloud while memory was tight). Now nothing is made on the main thread except the first cloud of all.
+- **Tapping the widget opened the app, which then closed** (Shane: "the app opens and then immediately closes").
+  - **Cause:** a native crash inside Android's text drawing (SIGSEGV in Skia, `prepare_for_direct_mask_drawing`), which closes the app without a Java error. Android's software text drawing (text into a picture) isn't safe on two threads at once. The widget thread draws the mini forecast's words into each widget frame. 0.7.0 also drew the status-bar temperature icon (text) on the main thread every time My location changed, which happens right after the app opens. So opening the app from the widget made the two meet.
+  - **Reproduced on the emulator** with the 0.7.0 candidate (Android 12): the app crashed this way after a widget tap, main thread drawing text while the widget thread drew its frames. The same crash also happened once with 0.6.2 (Android 14, 1 of 15 cold starts by the widget's tap), with the main thread drawing the app's own text. So it's an old risk that 0.7.0 made much more likely.
+  - **Fix:** no text is ever drawn into a picture off the main thread. The widget's words don't move, so they're drawn once per update on the main thread and laid over every frame; the temperature icon is drawn there too. If the main thread is too busy to draw them within 10 seconds, the widget keeps its current picture and tries again at the next update.
+- **The widget flickered** (Shane: "The desktop widget flickers during normal operation").
+  - **Cause:** 0.7.0 redrew the widget several times within seconds: when the app opened, closed, located you and fetched weather, and whenever My location's approximate position wobbled. Each redraw sends new frames to the launcher, which restarts the widget's animation (a visible jump).
+  - **Fix:** requests that arrive within 1.2 seconds are merged into one redraw, and a redraw that would show the same picture again isn't sent. My location only moves when you've moved further than the position's own uncertainty, so an approximate position wobbling by a kilometre or two no longer makes it (and the widget) hop between suburbs.
+  - **Not reproduced on the emulator:** its launcher barely animates widgets, so the flicker couldn't be seen there. The fix is based on the code and is covered by tests (a burst of 10 requests gives at most one redraw; an unchanged widget isn't redrawn).
+
+### Found, not changed (older than 0.7)
+- **A possible "App isn't responding" while warnings are being checked on a slow or lost connection.** The stability audit caught it once on a tablet emulator: the app's screen waited for the warnings check, which held its lock during the download. It's been this way since 0.4 (0.6.2 has it too), so it isn't one of the three problems. It isn't changed here because Shane asked for no unrelated changes. Fixed in 0.7.2.
+
+## 0.7.0 – 2026-11-25 (test build)
+
+Shane: "I'd like to add GPS tracking so if I travel to a different suburb or city or country it updates the widget. This is only for the android not the desktop app."
+
+### Added
+- **📍 My location** (Android only). Settings → **📍 Use my location** adds a place that follows the phone:
+  - it moves when you've travelled more than 1 km (another suburb, town or country), and is named by Android's geocoder (suburb or town, region, country). Small wobbles of the location fix don't cause new downloads;
+  - it's an ordinary place in the pager, My places, warnings, earthquakes, Moon, Earth and Wind, shown with 📍;
+  - it updates whenever you open the app, and **Update my location now** updates it at once.
+- **Widgets show my location** (on by default when Use my location is on): the home-screen widgets and the status-bar temperature show 📍 My location instead of the place you last looked at.
+- **While the app is closed:** with Android's **Allow all the time** location access, the background check (about every 15 minutes, when Android allows) moves My location and refreshes the widget. Without it, My location updates when you open the app. Settings shows which, with a button to Android's setting.
+- **Permissions:** approximate or precise location (asked only when you turn it on; approximate is enough), and optional background location. No Google Play services needed.
+- **Naming worldwide** (Shane: "suburb identification must work worldwide, not just in New Zealand"):
+  - **The most specific meaningful local area,** whatever the country calls it, in this order: suburb, neighbourhood, quarter, city district, district, borough. If none is named: the village or hamlet, then a municipality, and last the town or city.
+  - **Never a city or town passed off as a local area:**
+    - a "local area" that is just the city's own name again (Paris files Paris as its own district) is skipped;
+    - so are administrative units such as "Cape Town Ward 54" or "Municipio Roma I".
+  - **What comes after the name:** for a local area, its town or city and state ("Bondi Beach, Sydney, New South Wales"); for a town, its wider area and state ("Marfa, Presidio County, Texas").
+  - **Tested** on real OpenStreetMap replies from 29 places in 21 countries, and in the app on emulators at Tokyo, Berlin, Paris, Rome, New York, Sydney, Marfa and Gordes, as well as Waiuku, East Tāmaki and Clarks Beach.
+- **How the name is found:**
+  - **First:** the phone's own geocoder.
+  - **If the phone can't give the suburb** (Shane's phone showed "My location", then only the city), OpenStreetMap (Nominatim) is asked with the rounded position.
+  - **A less exact name** (none, a city, a region) is replaced as soon as the suburb is known, without having to move.
+  - **Lookups are remembered** for 6 hours per spot, so OpenStreetMap is asked rarely.
+- **Privacy:** coordinates are rounded to 3 decimals (about 100 m) before they're stored or sent. They go to your weather providers, the same as any saved place, and to OpenStreetMap only when the phone can't name the local area.
+
+### Fixed (stability audit for a stable release)
+- **Warnings from where you were showed at the new place:** after My location moved from Marfa, Texas to Gordes, France, its page still showed a US Freeze Warning until the next check. Official warnings for My location are now filed by where it is, so they go at once when it moves.
+- **The turning globes made a new 4 MB picture every frame** (Earth and Wind, while rotating or dragged), causing constant garbage collection, slow frames and an ANR under random use on Android 12. They now reuse three pictures in turn and allocate nothing per frame.
+- **Out of memory on the Earth tab** (Android 10 emulator that allowed the app only 16 MB): even with the app's large-memory setting, so the app now keeps the Earth maps at half size when Android gives it less than 96 MB (real phones allow 192–512 MB and keep full detail).
+- **Battery:** in the background check (about every 15 minutes), GPS is now asked at most once an hour; the rest of the time the phone's network or fused position is used.
+The audit ran lint, plus the full walk-through and 12,500 random taps, swipes, rotations and back presses (Android's "monkey") on each of Android 10, 12, 14 and 15. It found:
+- **"App isn't responding" (ANR) under random use on Android 12 and 15:** the forecast sky and the Earth globe made the real Moon picture on the main thread when it wasn't cached. That can take seconds, longer when the Moon tab is saving a 2048-pixel picture at the same time. The picture is now always made in the background (0.7.1: the last real Moon stays on screen meanwhile, not a plain one).
+- **Android 10: My location never found a position** unless another app had asked recently (Android 10 has no "current location" call). It now asks for one update itself.
+- **GPS position:** now taken by listening for one update; Android 12 gave no fresh GPS position the other way.
+- **Low memory:** the Moon picture can no longer crash the sky, widgets or Earth screens when memory runs out; it's skipped and its memory freed. Its texture files are now closed after reading.
+- **Lint errors:**
+  - location calls are explicitly marked as permission-checked;
+  - a Compose `remember` that returned nothing;
+  - a test reading state the wrong way.
+
+### Changed
+- **Buy me a coffee** is now NZ$1.47 (About and the PayPal link). This was changed on main without a release on 23 Nov and ships with this version.
+- Removing 📍 My location from My places turns Use my location off.
+- A saved forecast for My location is only shown if it's for the same spot (within 1 km).
+
 ## 0.6.2 – 2026-11-23 (released as v0.6.2)
 
 Shane: "I was about to say before you made the change to keep it as is but we can mention it on the GitHub page update".

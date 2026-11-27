@@ -1,0 +1,136 @@
+# Stability audit for a stable release: Android lint, and on Android 10, 12, 14 and 15 the full
+# emulator walk-through plus 5 rounds of random use (monkey), failing on any crash or ANR.
+# Created By Shane BlackbuRn
+name: Stability audit
+
+on:
+  push:
+    branches: ["claude/android-*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write          # only to publish the audit screenshots to audit-shots-* branches
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Android lint
+        run: ./gradlew --no-daemon lintRelease
+      - name: Lint summary
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET, collections
+          for x in glob.glob("app/build/reports/lint-results-release.xml"):
+              issues = ET.parse(x).getroot().findall("issue")
+              c = collections.Counter((i.get("severity"), i.get("id")) for i in issues)
+              print(f"LINT: {len(issues)} issues")
+              for (sev, iid), n in sorted(c.items()): print(f"LINT {sev} {iid}: {n}")
+              for i in issues:
+                  if i.get("severity") in ("Error", "Fatal") or i.get("id") in ("NewApi", "MissingPermission", "UnspecifiedRegisterReceiverFlag", "StaticFieldLeak", "Recycle", "WrongThread", "InlinedApi", "ObsoleteSdkInt", "UnsafeOptInUsageError", "DiscouragedApi", "ExportedReceiver", "ExportedService"):
+                      loc = i.find("location")
+                      print("LINT DETAIL", i.get("severity"), i.get("id"), loc.get("file").split("/app/")[-1] if loc is not None else "", loc.get("line") if loc is not None else "", "-", i.get("message"))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: lint-report, path: app/build/reports/lint-results-release.*, retention-days: 14 }
+
+  emulators:
+    runs-on: ubuntu-latest
+    timeout-minutes: 170
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [29, 31, 34, 35]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build the APK
+        run: ./gradlew --no-daemon assembleRelease
+      - name: Picture comparison tool
+        run: python3 -m pip install --quiet pillow || pip install --quiet --break-system-packages pillow
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Walk-through and random use on Android API ${{ matrix.api }}
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 3072M
+          heap-size: 256M
+          disable-animations: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: |
+            APK="$(ls app/build/outputs/apk/release/*.apk | head -1)"; bash scripts/emulator/drive.sh "$APK" emu-out; W=$?; echo "WALKTHROUGH EXIT: $W"; adb uninstall io.github.shanebl030glitch.rbsbweather >/dev/null; bash scripts/emulator/stress.sh "$APK" stress-out 2500; S=$?; echo "STRESS EXIT: $S"; bash scripts/emulator/audit.sh audit-out; A=$?; echo "AUDIT EXIT: $A"; [ $W = 0 ] && [ $S = 0 ] && [ $A = 0 ]
+      - name: Publish the screenshots to the audit-shots-api${{ matrix.api }} branch
+        if: always()
+        run: |
+          mkdir -p shots && for d in emu-out stress-out audit-out; do [ -d $d ] && cp $d/*.png shots/ 2>/dev/null; done
+          cd shots && [ -n "$(ls)" ] || exit 0
+          git init -q -b audit-shots-api${{ matrix.api }} && git add -A
+          git -c user.name="RBSB-Weather CI" -c user.email="ci@users.noreply.github.com" commit -q -m "Audit screenshots: ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" audit-shots-api${{ matrix.api }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: "stability-api-${{ matrix.api }}"
+          path: |
+            emu-out/
+            stress-out/
+            audit-out/
+          retention-days: 14
+
+  # other screen sizes: a small 5" phone and a 10" tablet (Android 14), random use and the audit
+  devices:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: ["Nexus 5", "pixel_c"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build the APK
+        run: ./gradlew --no-daemon assembleRelease
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Random use and audit on ${{ matrix.profile }}
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: ${{ matrix.profile }}
+          ram-size: 3072M
+          heap-size: 256M
+          disable-animations: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: |
+            APK="$(ls app/build/outputs/apk/release/*.apk | head -1)"; adb shell wm size; bash scripts/emulator/stress.sh "$APK" stress-out 1500; S=$?; echo "STRESS EXIT: $S"; bash scripts/emulator/audit.sh audit-out; A=$?; echo "AUDIT EXIT: $A"; [ $S = 0 ] && [ $A = 0 ]
+      - name: Publish the screenshots to the audit-shots-${{ matrix.profile == 'pixel_c' && 'tablet' || 'small' }} branch
+        if: always()
+        run: |
+          mkdir -p shots && for d in emu-out stress-out audit-out; do [ -d $d ] && cp $d/*.png shots/ 2>/dev/null; done
+          cd shots && [ -n "$(ls)" ] || exit 0
+          git init -q -b audit-shots-${{ matrix.profile == 'pixel_c' && 'tablet' || 'small' }} && git add -A
+          git -c user.name="RBSB-Weather CI" -c user.email="ci@users.noreply.github.com" commit -q -m "Audit screenshots: ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" audit-shots-${{ matrix.profile == 'pixel_c' && 'tablet' || 'small' }}

@@ -10,7 +10,7 @@ with its own versions, releases and tests.
 
 **Designed and Created By Shane BlackbuRn** · **Coded By Claude AI**
 
-## What it does (0.6)
+## What it does (0.7)
 
 - Search for any city or town and save up to 50 places. Swipe between them.
 - The desktop app's animated sky, ported: the Sun and the Moon in its real
@@ -40,6 +40,9 @@ with its own versions, releases and tests.
   with moving wind streaks.
 - Check for updates (from GitHub, checked against SHA256SUMS, then Android asks you to install it), Test connection, and an
   optional temperature in the status bar.
+- 📍 My location (0.7, Android only): a place that follows your phone to another suburb,
+  town or country, and the widget and status-bar temperature can follow it too
+  (also while the app is closed, with "Allow all the time" location access).
 - See [PARITY.md](PARITY.md) for every desktop feature and its Android status.
 - °C/°F, km/h · m/s · mph · knots, mm/inches, 12/24-hour time.
 
@@ -67,15 +70,14 @@ From RBSB-Weather for Android 0.6.2 on Android 14 (the warning screens use an ex
 
 ## Install
 
-1. On your phone, download `rbsb-weather-android_0.6.2.apk` from the
+1. On your phone, download `rbsb-weather-android_0.7.2.apk` from the
    [latest release](https://github.com/shanebl030-glitch/RBSB-Weather-Android/releases/latest).
-   (Test builds of work in progress are on the
-   [test-builds branch](https://github.com/shanebl030-glitch/RBSB-Weather-Android/tree/test-builds).)
 2. Open it. Android asks to allow installing apps from this source (for example
    Chrome or Files). Allow it once.
 3. Tap **Install**.
 
-New test builds install over the old one, and your places are kept.
+A new release installs over the one you have, and your places are kept. This includes 0.7.2 over
+0.6.2: see [Signing](#signing).
 
 To check the download, compare its SHA-256 with `SHA256SUMS`.
 
@@ -119,12 +121,16 @@ update feature and no warning.
 
 ## Signing
 
-Test builds (0.x) are signed with a **test key** kept in this repository
-(`keystore/rbsb-test.keystore`), so every test build installs over the last.
+**Releases** (from 0.7.2) are signed with Shane's own **release key**. It is never in this repository; only the Release workflow uses it, from GitHub's encrypted secrets, after Shane approves each run.
 
-Before any public release, a private release key replaces it. That key is kept
-by Shane and never put in the repository. Moving from the test key to the
-release key means uninstalling the test build once.
+**Before 0.7.2,** every build was signed with a **test key** kept in this repository (`keystore/rbsb-test.keystore`). The test key now signs only test builds of branches (on the [test-builds branch](https://github.com/shanebl030-glitch/RBSB-Weather-Android/tree/test-builds)), never a release.
+
+**No uninstalling is needed.** 0.7.2 carries a key hand-over (APK key rotation): a record, signed by the test key, that hands the app over to the release key.
+- It installs over 0.6.2, 0.7.0 or 0.7.1 and keeps all your data.
+- From then on, Android refuses any update signed only with the test key.
+- **The one exception:** test builds made after 0.7.2 don't install over a release, and a release doesn't install over them.
+
+Details, and how to check a release's signature: [docs/SIGNING.md](docs/SIGNING.md).
 
 ## Building
 
@@ -153,7 +159,11 @@ To build on your own computer, you need JDK 17 and the Android SDK:
 ## Data and privacy
 
 Only the coordinates of your saved places (and what you type when searching) are
-sent, and only to the weather services you've chosen. API keys you enter are
+sent, and only to the weather services you've chosen. If you turn on 📍 My
+location, the phone's position is rounded to about 100 m first and treated
+the same way; if the phone can't name the spot, that rounded position is also
+sent to OpenStreetMap's Nominatim to get the suburb's name. It's never sent anywhere else. Location access is only asked for
+when you turn it on. API keys you enter are
 kept in the app's private storage, apart from the settings, and are excluded
 from phone backups. There's no tracking and no account.
 
@@ -163,5 +173,6 @@ Tomorrow.io and Weather Underground / The Weather Company. Weather warnings from
 (public domain), MET Norway (CC BY 4.0) and MeteoAlarm. Earthquakes: USGS (public
 domain) and GeoNet (CC BY 3.0 NZ). Moon imagery: NASA's
 Scientific Visualization Studio, CGI Moon Kit (LRO LROC WAC and LOLA data).
+Place names for My location, when the phone can't give one: © OpenStreetMap contributors (Nominatim).
 
 Created By Shane BlackbuRn

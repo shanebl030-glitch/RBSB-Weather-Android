@@ -14,9 +14,21 @@ data class Place(
     val country: String = "",
     val admin1: String = "",
     val timezone: String = "auto",
+    /** The phone's own location (0.7): follows you, and keeps the same key wherever you are. */
+    val current: Boolean = false,
+    /** My location only: how exact its name is (Naming.SUBURB, TOWN or REGION; 0 = not known). */
+    val detail: Int = 0,
 ) {
+    /** The name as shown: 📍 in front of My location. */
+    val label: String get() = if (current) "📍 $name" else name
     /** Stable identifier: used to tell places apart and to name cache files. */
-    val key: String get() = String.format(Locale.US, "%.4f,%.4f", latitude, longitude)
+    val key: String get() = if (current) HERE_KEY else String.format(Locale.US, "%.4f,%.4f", latitude, longitude)
+    /**
+     * What official warnings are filed under: for My location, its key plus where it is, so a
+     * warning for where you were (a US freeze warning, say) never shows after you've moved
+     * (found by the audit: it did, until the next check).
+     */
+    val alertKey: String get() = if (current) String.format(Locale.US, "here@%.3f,%.3f", latitude, longitude) else key
 
     val displayName: String
         get() = listOf(name, admin1.takeIf { it.isNotBlank() && it != name }, country.takeIf { it.isNotBlank() })
@@ -25,6 +37,7 @@ data class Place(
     fun toJson(): JSONObject = JSONObject()
         .put("name", name).put("latitude", latitude).put("longitude", longitude)
         .put("country", country).put("admin1", admin1).put("timezone", timezone)
+        .also { if (current) it.put("current", true).put("detail", detail) }
 
     companion object {
         fun fromJson(o: JSONObject): Place? {
@@ -33,8 +46,12 @@ data class Place(
             val name = o.optString("name", "")
             if (name.isBlank() || lat.isNaN() || lon.isNaN() || lat !in -90.0..90.0 || lon !in -180.0..180.0) return null
             return Place(name.take(100), lat, lon, o.optString("country", "").take(100),
-                o.optString("admin1", "").take(100), o.optString("timezone", "auto").ifBlank { "auto" }.take(64))
+                o.optString("admin1", "").take(100), o.optString("timezone", "auto").ifBlank { "auto" }.take(64),
+                o.optBoolean("current", false), o.optInt("detail", 0).coerceIn(0, 3))
         }
+
+        /** The key of the phone's own location, wherever it is. */
+        const val HERE_KEY = "here"
     }
 }
 
