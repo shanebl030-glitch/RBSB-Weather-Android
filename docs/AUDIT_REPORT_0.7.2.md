@@ -120,7 +120,7 @@ Commit `562c992`, 27 Nov 2026. This is the APK delivered as the release candidat
   - In two runs the emulator stopped responding during the random testing.
   - In the third, the random taps had left Android's quick-settings panel pulled down over the app. The audit then couldn't type into the app's search, so every scenario after it failed ("couldn't add Auckland"); its screen dump shows the panel's Internet, Bluetooth and Flashlight tiles.
   - Android 14's audit had failed the same way in an earlier run and passed when run again.
-  - The audit script now closes the panel first (`scripts/emulator/audit.sh`).
+  - The audit script now closes the panel first, and presses Back when Android 15's tile editor stays open (`scripts/emulator/audit.sh`).
   - Android 15's walk-through, names and random testing passed in each run where the emulator kept going.
 - **The 5" phone and the tablet:** the emulator stopped responding in the first run; both passed when run again.
   - The tablet's first audit also flagged memory: 323 MB, then 437 MB. Two seconds later it read 322 MB again, and the rerun levelled off (343 → 364 MB), so this was a picture briefly held, not a leak.

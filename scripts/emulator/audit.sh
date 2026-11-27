@@ -16,7 +16,16 @@ dump() { adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; adb shell ca
 tap() { for i in 1 2 3 4 5 6; do dump; if xy=$(python3 "$HERE/find.py" "$OUT/ui.xml" "$1" "${2:-exact}"); then adb shell input tap $xy; return 0; fi; sleep 2; done; echo "(not found: '$1')"; return 1; }
 has() { dump; grep -q "$1" "$OUT/ui.xml"; }
 # random taps can leave Android's quick-settings panel pulled down over the app: close it first
-shade() { adb shell cmd statusbar collapse >/dev/null 2>&1; }
+# (Android 15 can leave its tile editor open, which collapsing doesn't close: Back does)
+shade() {
+  adb shell cmd statusbar collapse >/dev/null 2>&1
+  for i in 1 2 3; do
+    timeout 30 adb shell uiautomator dump /sdcard/shade.xml >/dev/null 2>&1
+    timeout 20 adb shell cat /sdcard/shade.xml 2>/dev/null | grep -q 'text="Flashlight"\|text="Internet, ' || break
+    echo "(closing Android's quick settings, left open by the random taps)"
+    adb shell input keyevent KEYCODE_BACK; sleep 1; adb shell cmd statusbar collapse >/dev/null 2>&1; sleep 1
+  done
+}
 start() { shade; adb shell am start -W -n $PKG/.MainActivity >/dev/null 2>&1; sleep "${1:-5}"; }
 home() { shade; adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 2; tap "Forecast" >/dev/null || adb shell input keyevent KEYCODE_BACK; sleep 2; }
 settings() { home; tap "Menu" && tap "Settings"; sleep 3; }
