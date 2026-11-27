@@ -100,7 +100,7 @@ Commit `562c992`, 27 Nov 2026. This is the APK delivered as the release candidat
 | Android 10 (Pixel 6) | ✅ | ✅ 12,500 events, no crash or ANR | ✅ all passed |
 | Android 12 (Pixel 6) | ✅ | ✅ 12,500 events, no crash or ANR | ✅ all passed |
 | Android 14 (Pixel 6) | ✅ | ✅ 12,500 events, no crash or ANR | ✅ all passed |
-| Android 15 (Pixel 6) | ✅ | ✅ 12,500 events, no crash or ANR | not finished: see below |
+| Android 15 (Pixel 6) | ✅ in all 5 runs | ✅ 12,500 events, no crash or ANR (in the 2 runs where the emulator kept going) | ⚠️ never finished: see below |
 | 5" phone, Android 14 | n/a | ✅ 7,500 events, no crash or ANR | ✅ all passed |
 | 10" tablet, Android 14 | n/a | ✅ 7,500 events, no crash or ANR | ✅ all passed |
 | Emulator check, Android 14 | ✅ every step; Auckland 17°C, the same as Open-Meteo | | |
@@ -121,9 +121,15 @@ Commit `562c992`, 27 Nov 2026. This is the APK delivered as the release candidat
   - In the third, the random taps had left Android's quick-settings panel pulled down over the app. The audit then couldn't type into the app's search, so every scenario after it failed ("couldn't add Auckland"); its screen dump shows the panel's Internet, Bluetooth and Flashlight tiles.
   - Android 14's audit had failed the same way in an earlier run and passed when run again.
   - The audit script now closes the panel first, and presses Back when Android 15's tile editor stays open (`scripts/emulator/audit.sh`).
+  - A further fix (Back, for Android 15's tile editor) went into a fifth run. That run's emulator stopped responding during the random testing, before the scenarios.
+  - Android 10, 12 and 14 passed every scenario with the new script.
+  - So the Android 15 scenarios (restart, process death, offline, permissions, large text, dark mode) are covered on 10, 12 and 14 only. The same scenarios passed on Android 15 for commit ce54d01 (0.7.1 work), which has the same code for them apart from the warnings fix.
+  - **Please check Android 15 on your phone if it runs 15.**
   - Android 15's walk-through, names and random testing passed in each run where the emulator kept going.
 - **The 5" phone and the tablet:** the emulator stopped responding in the first run; both passed when run again.
-  - The tablet's first audit also flagged memory: 323 MB, then 437 MB. Two seconds later it read 322 MB again, and the rerun levelled off (343 → 364 MB), so this was a picture briefly held, not a leak.
+  - **The tablet's audit flagged memory in 2 of 3 runs.** Its last reading jumped by about 100 MB (323 → 437 MB, and 369 → 471 MB in the final run). In both, the reading taken a few seconds later was back down (322 MB, 353 MB), and the third run levelled off (343 → 364 MB).
+  - This is a large picture held briefly (the tablet's globes are 2560 pixels wide), not a leak.
+  - The tablet's memory stays within about 320–370 MB once settled. **Worth watching on a real tablet**; phones stay at 140–190 MB.
 - **The emulator check:** Android's own Pixel Launcher stopped responding in the first run. It passed when run again.
 
 **The 24-hour playback on the emulator** (Android 14, one picture a second): it runs from Friday morning to Saturday 05:00. The Moon rises after 01:00 and shows as the real Moon picture in every frame, with no flash to the plain one.
