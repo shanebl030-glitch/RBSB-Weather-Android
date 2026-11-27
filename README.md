@@ -172,9 +172,9 @@ What the app sends, and where:
 - **Search:** what you type when adding a place goes to Open-Meteo's place search.
 - **📍 My location:** the phone's position is rounded to about 100 m (3 decimal
   places) before it's used, stored or sent. The rounded position goes:
-  - to your weather providers and warning services, like a saved place;
-  - to the phone's own geocoder, to name the spot (on most phones that's a Google service);
-  - only if the phone can't name the local area, to OpenStreetMap's Nominatim.
+    - to your weather providers and warning services, like a saved place;
+    - to the phone's own geocoder, to name the spot (on most phones that's a Google service);
+    - only if the phone can't name the local area, to OpenStreetMap's Nominatim.
 
   Names are remembered for 6 hours per spot, so these lookups are rare. Location
   access is only asked for when you turn My location on.
