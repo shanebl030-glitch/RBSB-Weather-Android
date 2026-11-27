@@ -35,8 +35,10 @@ Android only installs an update signed by the same key as the installed app, or 
 **Which signer each version uses:**
 - **Android 9 and newer use the v3 signature: your release key, with the hand-over.** The release is signed with `--rotation-min-sdk-version 28`, so the v3 block holds the release key for Android 9 and newer, and there's no v3.1 block. `apksigner verify` for each version from 29 to 35 (Android 10 to 15, including 12L) shows the v3 signature, made by the release key, as the one used.
 - **The APK also has v1 (JAR) and v2 signatures, made with the old test key.** `apksigner` adds them for the oldest key in the hand-over. *(An earlier version of this page said the APK had none; that was wrong.)*
-  - **Only Android 8.1 and older read them,** and RBSB-Weather can't be installed there (it needs Android 10).
-  - **Android 9 and newer use v3 whenever it's there.** The v2 signature also records that a v3 signature should be present, so a copy with the v3 signature removed is rejected.
+  - **Which versions use them:** v1 and v2 are what Android 8.1 and older rely on. Android 9 and newer support v2 too, but only as a fallback for APKs that have no v3 signature.
+  - **Android 9 and newer use v3 whenever it's there.** When an APK has a v3 signature that applies to that Android version, Android verifies the APK with it and takes the app's signer from it. That signer is the release key, plus the hand-over.
+  - **Removing the v3 signature doesn't help.** The v2 signature records that a v3 signature should be present, so Android 9 and newer reject a copy with the v3 signature taken out. They don't fall back to v2 for it.
+  - **RBSB-Weather's minimum supported version is Android 10,** so every phone that can install it uses the v3 signature.
   - **Any APK that only the test key's signatures vouch for is refused as an update** once a phone has 0.7.2. The emulator tests above used APKs built exactly this way, with the same v1 and v2 signatures.
 - **No supported Android version relies on the test key.**
 
