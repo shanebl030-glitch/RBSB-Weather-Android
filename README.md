@@ -23,10 +23,13 @@ The latest release is **0.7.2** (27 November 2026).
 - A 24-hour chart and the 7-day forecast.
 - Pull down to refresh. It also updates by itself when the weather gets old.
 - Works offline with the last saved forecast.
-- Weather Providers: Open-Meteo and MET Norway (no key), plus OpenWeather,
-  WeatherAPI.com, Visual Crossing, Tomorrow.io and Weather Underground with your
-  own free keys. Choose a primary and backups, test a connection, and choose
-  when to go back to the primary after it fails.
+- Weather Providers: Open-Meteo and MET Norway (no key needed), plus OpenWeather,
+  WeatherAPI.com, Visual Crossing and Tomorrow.io with your own API key, and Weather
+  Underground for eligible users. Weather Underground no longer issues general free
+  developer keys; keys go to eligible users such as Personal Weather Station
+  contributors. Whether a provider offers a key, and its free usage limits, vary
+  between providers and can change, so check each provider's terms. Choose a primary
+  and backups, test a connection, and choose when to go back to the primary after it fails.
 - Forecast playback: an hour a second, or drag through the next 24 hours.
 - The mini forecast in the sky, and animated icons in the 7-day list.
 - Animated home-screen widgets (a looping animation; see the user guide).
@@ -160,14 +163,32 @@ To build on your own computer, you need JDK 17 and the Android SDK:
 
 ## Data and privacy
 
-Only the coordinates of your saved places (and what you type when searching) are
-sent, and only to the weather services you've chosen. If you turn on 📍 My
-location, the phone's position is rounded to about 100 m first and treated
-the same way; if the phone can't name the spot, that rounded position is also
-sent to OpenStreetMap's Nominatim to get the suburb's name. It's never sent anywhere else. Location access is only asked for
-when you turn it on. API keys you enter are
-kept in the app's private storage, apart from the settings, and are excluded
-from phone backups. There's no tracking and no account.
+What the app sends, and where:
+
+- **Weather:** the coordinates of your saved places go to the weather providers you've chosen.
+- **Warnings:** for places in the US or Norway, the coordinates also go to the US
+  National Weather Service or MET Norway, to find the warnings for that spot.
+  MetService and MeteoAlarm warnings come as whole feeds, with no position sent.
+- **Search:** what you type when adding a place goes to Open-Meteo's place search.
+- **📍 My location:** the phone's position is rounded to about 100 m (3 decimal
+  places) before it's used, stored or sent. The rounded position goes:
+    - to your weather providers and warning services, like a saved place;
+    - to the phone's own geocoder, to name the spot (on most phones that's a Google service);
+    - only if the phone can't name the local area, to OpenStreetMap's Nominatim.
+
+  Names are remembered for 6 hours per spot, so these lookups are rare. Location
+  access is only asked for when you turn My location on.
+- **Earthquakes, wind, satellite clouds and update checks** download whole feeds or
+  maps. No position is sent.
+
+**API keys** you enter are kept in the app's private storage, separate from the
+settings. They're protected by Android's app sandbox, not encrypted further. They're
+excluded from Android's cloud backups and from phone-to-phone transfers.
+
+**Your places and settings**, including My location's last rounded position, are
+part of Android's own backup if you have it switched on.
+
+There's no tracking, no analytics and no account.
 
 Weather data by Open-Meteo.com (CC BY 4.0) and MET Norway (CC BY 4.0); with
 your keys, OpenWeather (CC BY-SA 4.0), WeatherAPI.com, Visual Crossing,
