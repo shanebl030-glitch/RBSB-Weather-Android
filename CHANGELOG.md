@@ -4,7 +4,7 @@ Created By Shane BlackbuRn
 
 A separate app from RBSB-Weather for the desktop, with its own versions.
 
-## 0.7.2 – 2026-11-27 (stable release)
+## 0.7.2 – 2026-11-27 (Approved – awaiting publication)
 
 Shane tested the 0.7.2 release candidate on his phone ("everything is working great") and approved it for the stable release. The app is exactly the tested release candidate (commit 562c992); only the signing, the release workflow and the documents changed after it.
 
