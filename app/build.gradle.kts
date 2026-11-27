@@ -18,14 +18,24 @@ android {
     }
 
     signingConfigs {
-        // Test builds (0.x) are signed with a test key kept in the repo, so each new
-        // build installs over the last one. A real release key replaces it before any
-        // public release (see README: "Signing").
+        // Test builds are signed with a test key kept in the repo, so each new test build
+        // installs over the last one. That key is public: it never signs a release.
         create("test") {
             storeFile = rootProject.file("keystore/rbsb-test.keystore")
             storePassword = "rbsbtest"
             keyAlias = "rbsbtest"
             keyPassword = "rbsbtest"
+        }
+        // Releases (from 0.7.2) are signed with Shane's own release key. The key and its
+        // passwords are never in the repository: the build gets them from environment
+        // variables, set by the Release workflow from GitHub's encrypted secrets, or on
+        // Shane's own computer. See README: "Signing".
+        val releaseKeystore = System.getenv("RBSB_RELEASE_KEYSTORE")
+        if (!releaseKeystore.isNullOrBlank()) create("production") {
+            storeFile = file(releaseKeystore)
+            storePassword = System.getenv("RBSB_RELEASE_STORE_PASSWORD")
+            keyAlias = System.getenv("RBSB_RELEASE_KEY_ALIAS")
+            keyPassword = System.getenv("RBSB_RELEASE_KEY_PASSWORD")
         }
     }
 
@@ -35,7 +45,8 @@ android {
         }
         getByName("release") {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("test")
+            // the release key when it's given; otherwise this is a test build (test key)
+            signingConfig = signingConfigs.findByName("production") ?: signingConfigs.getByName("test")
         }
     }
 
