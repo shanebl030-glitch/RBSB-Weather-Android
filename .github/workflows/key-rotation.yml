@@ -11,7 +11,7 @@ jobs:
     timeout-minutes: 60
     strategy:
       fail-fast: false
-      matrix: { api: [34, 35] }
+      matrix: { api: [29, 34, 35] }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -24,20 +24,31 @@ jobs:
           sed -i 's/versionCode = 14/versionCode = 15/' app/build.gradle.kts
           ./gradlew --no-daemon assembleRelease
           cp app/build/outputs/apk/release/app-release.apk v15-test.apk
-      - name: Throwaway new key, lineage, rotated signing
+      - name: Throwaway new key, lineage, rotated signing (the same commands as release.yml)
+        env: { SP: "newpass123", KP: "newpass123", KA: "rbsb-release" }
         run: |
+          set -e
           AS=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1); echo "$AS"
-          keytool -genkeypair -keystore new.jks -storepass newpass123 -keypass newpass123 -alias newkey -keyalg RSA -keysize 4096 -validity 10000 -dname "CN=throwaway test" -noprompt
-          "$AS" rotate --out lineage.bin \
-            --old-signer --ks keystore/rbsb-test.keystore --ks-pass pass:rbsbtest --ks-key-alias rbsbtest --set-installed-data true --set-rollback false --set-permission false --set-shared-uid false --set-auth false \
-            --new-signer --ks new.jks --ks-pass pass:newpass123 --ks-key-alias newkey
-          "$AS" lineage --in lineage.bin --print-certs -v
+          K="$RUNNER_TEMP/release.p12"
+          keytool -genkeypair -storetype PKCS12 -keystore "$K" -storepass "$SP" -alias "$KA" -keyalg RSA -keysize 4096 -validity 10950 -dname "CN=throwaway test" -noprompt
+          export SP KP
+          "$AS" rotate --out "$RUNNER_TEMP/lineage.bin" \
+            --old-signer --ks keystore/rbsb-test.keystore --ks-pass pass:rbsbtest --ks-key-alias rbsbtest \
+              --set-installed-data true --set-permission true --set-rollback false --set-shared-uid false --set-auth false \
+            --new-signer --ks "$K" --ks-pass env:SP --ks-key-alias "$KA" --key-pass env:KP
+          "$AS" lineage --in "$RUNNER_TEMP/lineage.bin" --print-certs -v | grep -E "Signer #|certificate SHA-256|Has "
           for v in v072 v15; do
             "$AS" sign --ks keystore/rbsb-test.keystore --ks-pass pass:rbsbtest --ks-key-alias rbsbtest \
-              --next-signer --ks new.jks --ks-pass pass:newpass123 --ks-key-alias newkey \
-              --lineage lineage.bin --rotation-min-sdk-version 28 --out $v-rot.apk $v-test.apk
-            "$AS" verify --verbose --print-certs $v-rot.apk | grep -E "Verified using|Signer|certificate SHA-256" 
+              --next-signer --ks "$K" --ks-pass env:SP --ks-key-alias "$KA" --key-pass env:KP \
+              --lineage "$RUNNER_TEMP/lineage.bin" --rotation-min-sdk-version 28 \
+              --out $v-rot.apk $v-test.apk
+            "$AS" verify --verbose --print-certs --min-sdk-version 29 $v-rot.apk | tee signer-$v.txt | grep -E "Verified using v3 |V3.0 Signer: certificate SHA-256|^Signer #1 certificate SHA-256"
           done
+          GOT=$(grep -m1 -E "^Signer #1 certificate SHA-256 digest|^V3.0 Signer: certificate SHA-256 digest" signer-v072.txt | awk '{print $NF}')
+          FP=$(keytool -list -v -keystore "$K" -storepass "$SP" -alias "$KA" | grep -m1 "SHA256:" | awk '{print $2}')
+          norm() { echo "$1" | tr -d ': ' | tr 'A-F' 'a-f'; }
+          [ "$(norm "$GOT")" = "$(norm "$FP")" ] && echo "SIGNER CHECK OK ($GOT = keytool $FP)" || { echo "SIGNER CHECK FAILED: $GOT vs $FP"; exit 1; }
+          rm -f "$K"
       - name: Download 0.6.2
         env: { GH_TOKEN: "${{ github.token }}" }
         run: gh release download v0.6.2 -R "$GITHUB_REPOSITORY" -p "rbsb-weather-android_0.6.2.apk" -D base
