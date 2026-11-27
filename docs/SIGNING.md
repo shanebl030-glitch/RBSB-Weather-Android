@@ -32,7 +32,15 @@ Android only installs an update signed by the same key as the installed app, or 
 4. **A later release signed with the release key** installed: "Success". The test-key build was still refused after it.
 5. **A fresh install of 0.7.2** works.
 
-**Which signer each version uses:** the release is signed with `--rotation-min-sdk-version 28`, so the v3 block holds the release key for Android 9 and newer, and there's no v3.1 block. The app needs Android 10, so there are no v1 or v2 signatures either. `apksigner verify` for each version from 29 to 35 (Android 10 to 15, including 12L) shows only the v3 signature, made by the release key. **No version relies on the test key.**
+**Which signer each version uses:**
+- **Android 9 and newer use the v3 signature: your release key, with the hand-over.** The release is signed with `--rotation-min-sdk-version 28`, so the v3 block holds the release key for Android 9 and newer, and there's no v3.1 block. `apksigner verify` for each version from 29 to 35 (Android 10 to 15, including 12L) shows the v3 signature, made by the release key, as the one used.
+- **The APK also has v1 (JAR) and v2 signatures, made with the old test key.** `apksigner` adds them for the oldest key in the hand-over. *(An earlier version of this page said the APK had none; that was wrong.)*
+  - **Only Android 8.1 and older read them,** and RBSB-Weather can't be installed there (it needs Android 10).
+  - **Android 9 and newer use v3 whenever it's there.** The v2 signature also records that a v3 signature should be present, so a copy with the v3 signature removed is rejected.
+  - **Any APK that only the test key's signatures vouch for is refused as an update** once a phone has 0.7.2. The emulator tests above used APKs built exactly this way, with the same v1 and v2 signatures.
+- **No supported Android version relies on the test key.**
+
+**0.7.2's release certificate** (SHA-256): `02:F6:FC:5F:B6:AE:D7:BC:03:6D:51:BB:95:F0:5D:E7:3D:3B:A7:57:1F:5B:96:65:71:1E:FB:B5:DC:7A:2A:60`.
 
 **The one permission the hand-over keeps for the test key:**
 - **Name and level:** `io.github.shanebl030glitch.rbsbweather.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, `protectionLevel="signature"`.
@@ -115,4 +123,4 @@ You check the draft and press **Publish**, which creates the tag.
 sha256sum -c SHA256SUMS
 apksigner verify --print-certs rbsb-weather-android_0.7.2.apk   # from Android's build-tools
 ```
-The signer's SHA-256 must be your release key's fingerprint.
+The signer's SHA-256 must be the release certificate above (`02f6fc5f…2a60`), never the test key's (`a9618b32…e87c`).
