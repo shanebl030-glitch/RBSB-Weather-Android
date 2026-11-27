@@ -445,4 +445,12 @@ Nothing is to be merged, tagged or published until he approves.
   - the 24-hour playback on the emulator plays through the night with the real Moon in every frame.
 - **Release candidate:** 0.7.2 (build 14), from commit 562c992. Nothing is merged, tagged or released.
 
+**Shane (27 Nov, 17:43):** "I've completed testing 0.7.2 on my actual phone, including all the features and fixes, and everything is working great. I'm happy to approve 0.7.2 for the stable release." He asked for:
+- production signing with a key he controls and backs up, never in GitHub, and not the public test key, explaining any uninstall and data loss before proceeding;
+- the final release checks (tested commit, 224 tests, 0 lint errors, APK and signature, checksums, accurate report and notes);
+- PR #7 merged, the tag v0.7.2, and the GitHub release with the APK, SHA256SUMS, audit report and notes;
+- no new features or unrelated changes.
+
+**Signing, without a reinstall:** APK key rotation. The release is signed with Shane's key plus a hand-over signed by the old test key, so it updates 0.6.2 and 0.7.x in place and keeps the data. After it, test-key updates are refused. Tested on emulators with a throwaway key; the first try showed Android refuses the hand-over unless the old key keeps the "permission" capability. The key is made by Shane on his own computer (docs/SIGNING.md), and given to the Release workflow only as encrypted secrets of a `release` environment that needs his approval for each run.
+
 Created By Shane BlackbuRn

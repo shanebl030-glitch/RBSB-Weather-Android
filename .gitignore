@@ -7,7 +7,11 @@ local.properties
 captures/
 .externalNativeBuild/
 .cxx/
-# never commit a real release key
+# never commit a real release key, its passwords or its backups
 release.keystore
 *.jks
+*.p12
+*.pfx
 keystore.properties
+signing.properties
+rbsb-release*

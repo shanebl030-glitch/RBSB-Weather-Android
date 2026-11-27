@@ -2,7 +2,7 @@
 
 Created By Shane BlackbuRn
 
-**Status: release candidate, not released.** Nothing is merged, tagged or published. Shane reviews this report and tests the APK before anything is released.
+**Status: approved for the stable release** (Shane, 27 Nov 2026, after testing 0.7.2 on his phone: "everything is working great"). The release is built from the tested code (commit 562c992), signed with Shane's release key (see docs/SIGNING.md).
 
 Shane asked (27 Nov 2026), after testing 0.7.1 on his phone ("it seems quite stable"):
 1. Fix the outstanding "not responding" (the warnings check holding its lock during slow downloads), with tests for slow connections, timeouts and failed downloads.
@@ -87,7 +87,7 @@ Every lock, every thread and every place the main thread could wait was checked,
 
 ## 5. Final run
 
-Commit `562c992`, 27 Nov 2026. This is the APK delivered as the release candidate.
+Commit `562c992`, 27 Nov 2026. This is the code of the release candidate Shane tested, and of the release. The release is the same build, signed with the release key.
 
 **Results by job:**
 
@@ -136,7 +136,7 @@ Commit `562c992`, 27 Nov 2026. This is the APK delivered as the release candidat
 
 ## 6. Limitations and what's outstanding
 
-- **The signing key (Shane's decision):** test builds are signed with a test key that is in the public repository. A stable public release should use a private release key that only Shane keeps. Changing keys means one uninstall and reinstall.
+- **The signing key:** resolved for the release. Releases are signed with Shane's own key, with a hand-over from the old public test key, so no reinstall is needed (docs/SIGNING.md).
 - **Only on a real phone:**
   - smoothness (the emulators draw in software, so their frame times say nothing about a phone);
   - battery over a day;

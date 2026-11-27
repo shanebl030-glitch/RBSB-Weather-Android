@@ -4,7 +4,21 @@ Created By Shane BlackbuRn
 
 A separate app from RBSB-Weather for the desktop, with its own versions.
 
-## 0.7.2 – 2026-11-27 (release candidate, not released)
+## 0.7.2 – 2026-11-27 (stable release)
+
+Shane tested the 0.7.2 release candidate on his phone ("everything is working great") and approved it for the stable release. The app is exactly the tested release candidate (commit 562c992); only the signing, the release workflow and the documents changed after it.
+
+### Signing (release preparation)
+- **Releases are now signed with Shane's own release key,** which is never in the repository. The public test key signs only test builds of branches.
+- **No uninstall:** 0.7.2 carries a key hand-over (APK key rotation, signature scheme v3) from the test key. It installs over 0.6.2, 0.7.0 and 0.7.1 and keeps all data. After it, Android refuses updates signed only with the test key.
+  - Tested on emulators with a throwaway key: the update installs and keeps the saved place, a later test-key build is refused, and a later release installs.
+  - The test key keeps the "installed data" and "permission" capabilities. Without "permission" the update was refused (`INSTALL_FAILED_DUPLICATE_PERMISSION`).
+- **New Release workflow** (`.github/workflows/release.yml`):
+  - it runs by hand, from main, after Shane approves it in the `release` environment;
+  - it runs all tests and lint, signs, checks the signer is the release key and not the test key, and makes `SHA256SUMS`;
+  - it creates a draft GitHub release for Shane to publish.
+- **New `docs/SIGNING.md`:** how the key is made, backed up and given to the workflow.
+
 
 Shane tested 0.7.1 on his phone: "it seems quite stable". He asked for the outstanding "not responding" to be fixed, then a final audit of the whole app and a release candidate.
 

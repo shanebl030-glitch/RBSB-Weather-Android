@@ -70,15 +70,14 @@ From RBSB-Weather for Android 0.6.2 on Android 14 (the warning screens use an ex
 
 ## Install
 
-1. On your phone, download `rbsb-weather-android_0.6.2.apk` from the
+1. On your phone, download `rbsb-weather-android_0.7.2.apk` from the
    [latest release](https://github.com/shanebl030-glitch/RBSB-Weather-Android/releases/latest).
-   (Test builds of work in progress are on the
-   [test-builds branch](https://github.com/shanebl030-glitch/RBSB-Weather-Android/tree/test-builds).)
 2. Open it. Android asks to allow installing apps from this source (for example
    Chrome or Files). Allow it once.
 3. Tap **Install**.
 
-New test builds install over the old one, and your places are kept.
+A new release installs over the one you have, and your places are kept. This includes 0.7.2 over
+0.6.2: see [Signing](#signing).
 
 To check the download, compare its SHA-256 with `SHA256SUMS`.
 
@@ -122,12 +121,16 @@ update feature and no warning.
 
 ## Signing
 
-Test builds (0.x) are signed with a **test key** kept in this repository
-(`keystore/rbsb-test.keystore`), so every test build installs over the last.
+**Releases** (from 0.7.2) are signed with Shane's own **release key**. It is never in this repository; only the Release workflow uses it, from GitHub's encrypted secrets, after Shane approves each run.
 
-Before any public release, a private release key replaces it. That key is kept
-by Shane and never put in the repository. Moving from the test key to the
-release key means uninstalling the test build once.
+**Before 0.7.2,** every build was signed with a **test key** kept in this repository (`keystore/rbsb-test.keystore`). The test key now signs only test builds of branches (on the [test-builds branch](https://github.com/shanebl030-glitch/RBSB-Weather-Android/tree/test-builds)), never a release.
+
+**No uninstalling is needed.** 0.7.2 carries a key hand-over (APK key rotation): a record, signed by the test key, that hands the app over to the release key.
+- It installs over 0.6.2, 0.7.0 or 0.7.1 and keeps all your data.
+- From then on, Android refuses any update signed only with the test key.
+- **The one exception:** test builds made after 0.7.2 don't install over a release, and a release doesn't install over them.
+
+Details, and how to check a release's signature: [docs/SIGNING.md](docs/SIGNING.md).
 
 ## Building
 
