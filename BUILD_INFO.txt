@@ -1,0 +1,5 @@
+RBSB-Weather for Android 0.7.2 (test build)
+Branch: claude/readme-providers-privacy
+Commit: b9ed55f3974d6dc79b955748d633c9aa2a9794f0
+Built: 2026-11-27T09:33:18Z by GitHub Actions run 45974297542
+Created By Shane BlackbuRn
